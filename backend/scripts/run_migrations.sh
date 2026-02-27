@@ -17,7 +17,9 @@ if [ -z "${DATABASE_URL:-}" ]; then
   exit 1
 fi
 
-echo "Running migrations against: ${DATABASE_URL%%@*}@***"
+# Log target host without leaking credentials
+DB_HOST="${DATABASE_URL#*@}"
+echo "Running migrations against: ***@${DB_HOST}"
 
 # Create tracking table if it doesn't exist
 psql "$DATABASE_URL" -q <<'SQL'
