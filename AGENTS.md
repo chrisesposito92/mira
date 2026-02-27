@@ -51,7 +51,8 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `agents/` | LangGraph StateGraphs, nodes, prompts, tools |
 | `auth/` | Supabase JWT verification |
 | `db/` | Supabase client, repository pattern |
-| `m3ter/` | m3ter SDK wrapper, entity push, auth |
+| `m3ter/` | m3ter SDK wrapper, entity push, auth, credential encryption |
+| `schemas/` | Pydantic v2 request/response models, shared enums |
 | `rag/` | Embeddings, chunking, retrieval |
 | `scraper/` | Playwright docs crawler |
 | `services/` | Business logic layer |
@@ -136,3 +137,5 @@ Full architecture: `docs/ARCHITECTURE.md`
 - shadcn-svelte `components.json` requires `tailwind.baseColor` field (set to `"zinc"`)
 - Dark mode uses `mode-watcher` (not manual class toggling) — `ModeWatcher` component in root layout, `toggleMode` for the toggle button
 - Never use `supabase.auth.getSession()` alone on the server — always use `safeGetSession()` which calls `getUser()` first to validate the JWT
+- Unit tests: Use `TestClient(app)` without `with` (context manager) to avoid triggering the lifespan, which calls `get_db_pool()` and requires a real Postgres connection
+- Unit tests: Use `app.dependency_overrides` with `try/finally` to guarantee cleanup — prevents leaked auth overrides between tests
