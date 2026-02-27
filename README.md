@@ -47,11 +47,13 @@ npm run dev:backend
 docker compose up -d
 ```
 
-### Test
+### Test & Lint
 
 ```bash
 npm run test:frontend   # Vitest
-npm run test:backend    # Pytest
+npm run test:backend    # Pytest (all tests, needs Supabase)
+npm run lint:frontend   # ESLint + Prettier
+npm run lint:backend    # Ruff
 npm run check           # svelte-check
 ```
 
@@ -67,6 +69,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full details.
 | 1 | Monorepo scaffolding | Done |
 | 2 | Database schema, RLS, pgvector, auth config | Done |
 | 3 | Frontend auth flow & app shell | Done |
+| 3.5 | CI, testing & linting infrastructure | Done |
 | 4 | Backend core API (CRUD endpoints) | Not started |
 | 5+ | Dashboard, scraper/RAG, agent workflows, ... | Not started |
 
