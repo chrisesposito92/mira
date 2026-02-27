@@ -1,0 +1,16 @@
+{
+  "name": "mira",
+  "private": true,
+  "description": "Metering Intelligence & Rating Architect — AI-powered m3ter configuration assistant",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && uvicorn app.main:app --reload --port 8000",
+    "build": "cd frontend && npm run build",
+    "check": "cd frontend && npm run check",
+    "test:frontend": "cd frontend && npm run test",
+    "test:backend": "cd backend && pytest",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && ruff check .",
+    "format:backend": "cd backend && ruff format ."
+  }
+}

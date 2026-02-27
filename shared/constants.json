@@ -1,0 +1,51 @@
+{
+  "entityTypes": [
+    "product",
+    "meter",
+    "aggregation",
+    "compound_aggregation",
+    "plan_template",
+    "plan",
+    "pricing",
+    "account",
+    "account_plan",
+    "measurement"
+  ],
+  "objectStatuses": [
+    "draft",
+    "approved",
+    "rejected",
+    "pushed",
+    "push_failed"
+  ],
+  "workflowTypes": [
+    "product_meter_aggregation",
+    "plan_pricing",
+    "account_setup",
+    "usage_submission"
+  ],
+  "workflowStatuses": [
+    "pending",
+    "running",
+    "interrupted",
+    "completed",
+    "failed"
+  ],
+  "useCaseStatuses": [
+    "draft",
+    "in_progress",
+    "completed"
+  ],
+  "billingFrequencies": [
+    "monthly",
+    "quarterly",
+    "annually"
+  ],
+  "pricingTypes": [
+    "per_unit",
+    "tiered",
+    "volume",
+    "stairstep",
+    "counter"
+  ]
+}
