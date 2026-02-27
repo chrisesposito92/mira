@@ -13,9 +13,11 @@ class DocumentResponse(BaseModel):
     project_id: UUID
     filename: str
     file_type: str
-    file_size: int
-    status: DocumentStatus
-    chunk_count: int | None = None
+    storage_path: str
+    processing_status: DocumentStatus
+    chunk_count: int = 0
+    file_size_bytes: int | None = None
+    error_message: str | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -54,9 +54,9 @@ class BillingFrequency(StrEnum):
 
 
 class ConnectionStatus(StrEnum):
-    untested = "untested"
-    connected = "connected"
-    failed = "failed"
+    active = "active"
+    inactive = "inactive"
+    error = "error"
 
 
 class DocumentStatus(StrEnum):
@@ -70,7 +70,6 @@ class MessageRole(StrEnum):
     user = "user"
     assistant = "assistant"
     system = "system"
-    tool = "tool"
 
 
 class MessageResponse(BaseModel):

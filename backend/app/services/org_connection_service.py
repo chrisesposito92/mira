@@ -12,16 +12,13 @@ from app.schemas.org_connections import OrgConnectionCreate, OrgConnectionUpdate
 
 
 async def create_org_connection(supabase: Client, user_id: UUID, data: OrgConnectionCreate) -> dict:
-    encrypted_client_id = encrypt_value(data.client_id)
-    encrypted_client_secret = encrypt_value(data.client_secret)
     row = {
         "user_id": str(user_id),
         "org_id": data.org_id,
         "org_name": data.org_name,
         "api_url": data.api_url,
-        "encrypted_client_id": encrypted_client_id,
-        "encrypted_client_secret": encrypted_client_secret,
-        "status": "untested",
+        "client_id": encrypt_value(data.client_id),
+        "client_secret": encrypt_value(data.client_secret),
     }
     result = supabase.table("org_connections").insert(row).execute()
     return _strip_secrets(result.data[0])
@@ -54,16 +51,15 @@ def get_org_connection(supabase: Client, user_id: UUID, connection_id: UUID) -> 
 def update_org_connection(
     supabase: Client, user_id: UUID, connection_id: UUID, data: OrgConnectionUpdate
 ) -> dict:
-    # Verify ownership
     get_org_connection(supabase, user_id, connection_id)
 
     updates = data.model_dump(exclude_unset=True)
     if "client_id" in updates and updates["client_id"] is not None:
-        updates["encrypted_client_id"] = encrypt_value(updates.pop("client_id"))
+        updates["client_id"] = encrypt_value(updates["client_id"])
     else:
         updates.pop("client_id", None)
     if "client_secret" in updates and updates["client_secret"] is not None:
-        updates["encrypted_client_secret"] = encrypt_value(updates.pop("client_secret"))
+        updates["client_secret"] = encrypt_value(updates["client_secret"])
     else:
         updates.pop("client_secret", None)
 
@@ -81,7 +77,6 @@ def update_org_connection(
 
 
 def delete_org_connection(supabase: Client, user_id: UUID, connection_id: UUID) -> None:
-    # Verify ownership
     get_org_connection(supabase, user_id, connection_id)
 
     supabase.table("org_connections").delete().eq("id", str(connection_id)).eq(
@@ -90,7 +85,7 @@ def delete_org_connection(supabase: Client, user_id: UUID, connection_id: UUID) 
 
 
 async def test_org_connection(supabase: Client, user_id: UUID, connection_id: UUID) -> dict:
-    # Get the full row including encrypted fields
+    # Get the full row including encrypted credential columns
     result = (
         supabase.table("org_connections")
         .select("*")
@@ -102,8 +97,8 @@ async def test_org_connection(supabase: Client, user_id: UUID, connection_id: UU
         raise HTTPException(status_code=404, detail="Org connection not found")
     row = result.data[0]
 
-    client_id = decrypt_value(row["encrypted_client_id"])
-    client_secret = decrypt_value(row["encrypted_client_secret"])
+    client_id = decrypt_value(row["client_id"])
+    client_secret = decrypt_value(row["client_secret"])
 
     m3ter = M3terClient(
         org_id=row["org_id"],
@@ -114,7 +109,7 @@ async def test_org_connection(supabase: Client, user_id: UUID, connection_id: UU
     test_result = await m3ter.test_connection()
 
     now = datetime.now(UTC).isoformat()
-    new_status = "connected" if test_result["success"] else "failed"
+    new_status = "active" if test_result["success"] else "error"
     supabase.table("org_connections").update({"status": new_status, "last_tested_at": now}).eq(
         "id", str(connection_id)
     ).execute()
@@ -123,7 +118,7 @@ async def test_org_connection(supabase: Client, user_id: UUID, connection_id: UU
 
 
 def _strip_secrets(row: dict) -> dict:
-    """Remove encrypted credential fields from response."""
-    row.pop("encrypted_client_id", None)
-    row.pop("encrypted_client_secret", None)
+    """Remove encrypted credential columns from response."""
+    row.pop("client_id", None)
+    row.pop("client_secret", None)
     return row

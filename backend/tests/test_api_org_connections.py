@@ -13,9 +13,9 @@ def _conn_row(**overrides):
         "org_id": "org-abc",
         "org_name": "Test Org",
         "api_url": "https://api.m3ter.com",
-        "encrypted_client_id": "enc_cid",
-        "encrypted_client_secret": "enc_csec",
-        "status": "untested",
+        "client_id": "enc_cid",
+        "client_secret": "enc_csec",
+        "status": "inactive",
         "last_tested_at": None,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat(),
@@ -39,10 +39,9 @@ class TestCreateOrgConnection:
         )
         assert resp.status_code == 201
         data = resp.json()
-        # client_secret and encrypted fields should NOT be in response
+        # Encrypted credential columns should be stripped from response
+        assert "client_id" not in data
         assert "client_secret" not in data
-        assert "encrypted_client_id" not in data
-        assert "encrypted_client_secret" not in data
 
 
 class TestListOrgConnections:
@@ -51,8 +50,8 @@ class TestListOrgConnections:
         resp = authed_client.get("/api/org-connections")
         assert resp.status_code == 200
         for item in resp.json():
-            assert "encrypted_client_id" not in item
-            assert "encrypted_client_secret" not in item
+            assert "client_id" not in item
+            assert "client_secret" not in item
 
 
 class TestGetOrgConnection:

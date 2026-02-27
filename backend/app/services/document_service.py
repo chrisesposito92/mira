@@ -30,12 +30,14 @@ async def upload_document(
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File size exceeds 10 MB limit")
 
+    # storage_path is a placeholder — actual file storage is deferred to Phase 6
     row = {
         "project_id": str(project_id),
         "filename": file.filename,
         "file_type": ext,
-        "file_size": len(content),
-        "status": "pending",
+        "file_size_bytes": len(content),
+        "storage_path": f"pending/{project_id}/{file.filename}",
+        "processing_status": "pending",
     }
     result = supabase.table("documents").insert(row).execute()
     return result.data[0]

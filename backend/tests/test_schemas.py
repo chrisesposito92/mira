@@ -46,7 +46,7 @@ class TestEnums:
         assert set(BillingFrequency) == {"monthly", "quarterly", "annually"}
 
     def test_connection_status_values(self):
-        assert set(ConnectionStatus) == {"untested", "connected", "failed"}
+        assert set(ConnectionStatus) == {"active", "inactive", "error"}
 
     def test_document_status_values(self):
         assert set(DocumentStatus) == {"pending", "processing", "ready", "failed"}
