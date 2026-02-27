@@ -50,4 +50,4 @@ async def delete_document(
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ) -> None:
-    svc.delete_document(supabase, user_id, document_id)
+    await svc.delete_document(supabase, user_id, document_id)

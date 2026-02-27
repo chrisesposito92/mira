@@ -56,6 +56,10 @@ docker-compose.override.yml
 # Worktrees
 .worktrees/
 
+# Scraped data and uploads
+backend/data/
+backend/uploads/
+
 # Misc
 *.log
 *.tmp

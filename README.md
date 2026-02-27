@@ -71,6 +71,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full details.
 | 3 | Frontend auth flow & app shell | Done |
 | 3.5 | CI, testing & linting infrastructure | Done |
 | 4 | Backend core API (CRUD endpoints) | Done |
-| 5+ | Dashboard, scraper/RAG, agent workflows, ... | Not started |
+| 6 | m3ter docs scraper & RAG embedding pipeline | Done |
+| 5, 7+ | Dashboard, agent workflows, ... | Not started |
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for full phase details.

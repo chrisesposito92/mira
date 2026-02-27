@@ -18,6 +18,7 @@ dependencies = [
     "langchain-openai>=0.3.0",
     "langchain-anthropic>=0.3.0",
     "langchain-google-genai>=2.0.0",
+    "langchain-text-splitters>=0.3.0",
     "langgraph-checkpoint-postgres>=2.0.0",
     "asyncpg>=0.30.0",
     "m3ter>=0.8.0",

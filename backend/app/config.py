@@ -26,5 +26,22 @@ class Settings(BaseSettings):
     # Encryption key for m3ter credentials
     encryption_key: str = ""
 
+    # Embedding
+    embedding_model: str = "text-embedding-3-small"
+    embedding_batch_size: int = 100
+
+    # RAG
+    chunk_size: int = 4000
+    chunk_overlap: int = 200
+    retrieval_k: int = 5
+
+    # Scraper
+    m3ter_docs_url: str = "https://docs.m3ter.com"
+    scraper_concurrency: int = 5
+    scraper_delay: float = 0.5
+
+    # File storage
+    upload_dir: str = "uploads"
+
 
 settings = Settings()

@@ -2,6 +2,7 @@
 
 import io
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 from tests.conftest import MOCK_USER_ID
@@ -102,5 +103,18 @@ class TestDeleteDocument:
         row = _doc_row(id=did)
         row["projects"] = {"user_id": str(MOCK_USER_ID)}
         mock_supabase._table_data["documents"] = [row]
-        resp = authed_client.delete(f"/api/documents/{did}")
+        with (
+            patch(
+                "app.services.document_service.get_db_pool",
+                AsyncMock(return_value=AsyncMock()),
+            ),
+            patch(
+                "app.services.document_service.delete_by_source_id",
+                AsyncMock(return_value=0),
+            ),
+            patch(
+                "app.services.document_service.Path.unlink",
+            ),
+        ):
+            resp = authed_client.delete(f"/api/documents/{did}")
         assert resp.status_code == 204
