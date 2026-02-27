@@ -4,13 +4,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.db import close_db_pool, get_db_pool
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    await get_db_pool()
     yield
     # Shutdown
+    await close_db_pool()
 
 
 def create_app() -> FastAPI:

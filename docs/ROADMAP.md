@@ -60,23 +60,23 @@ Phase 1 (Scaffold)
 
 **~12 migration files** | Depends on: Phase 1
 
-- [ ] Enable pgvector extension
-- [ ] Migration: `org_connections` table (client_id/secret encrypted, org_id, api_url, connection status)
-- [ ] Migration: `projects` table (user_id, org_connection_id FK, customer_name, name, description, default_model_id)
-- [ ] Migration: `use_cases` table (project_id FK, title, description, contract_start_date, billing_frequency, currency, target_billing_model, notes, status enum)
-- [ ] Migration: `workflows` table (use_case_id FK, workflow_type enum, thread_id, model_id, status enum, interrupt_payload JSONB)
-- [ ] Migration: `generated_objects` table (use_case_id FK, entity_type enum, name, code, data JSONB, status enum, validation_errors JSONB, m3ter_id, depends_on UUID[])
-- [ ] Migration: `chat_messages` table (workflow_id FK, role enum, content, metadata JSONB)
-- [ ] Migration: `documents` table (project_id FK, filename, file_type, storage_path, processing_status, chunk_count)
-- [ ] Migration: `embeddings` table (source_type, content, metadata JSONB, embedding vector(1536), project_id nullable)
-- [ ] Migration: `profiles` table + trigger on auth.users insert
-- [ ] HNSW index on embeddings.embedding column
-- [ ] RLS policies on all tables (user can only access own data)
-- [ ] Supabase Auth configured (email/password + magic link)
-- [ ] **Verify**: Migrations apply cleanly
-- [ ] **Verify**: RLS verified (user A can't read user B's data)
-- [ ] **Verify**: pgvector accepts vectors
-- [ ] **Verify**: Auth signup/login works
+- [x] Enable pgvector extension
+- [x] Migration: `org_connections` table (client_id/secret encrypted, org_id, api_url, connection status)
+- [x] Migration: `projects` table (user_id, org_connection_id FK, customer_name, name, description, default_model_id)
+- [x] Migration: `use_cases` table (project_id FK, title, description, contract_start_date, billing_frequency, currency, target_billing_model, notes, status enum)
+- [x] Migration: `workflows` table (use_case_id FK, workflow_type enum, thread_id, model_id, status enum, interrupt_payload JSONB)
+- [x] Migration: `generated_objects` table (use_case_id FK, entity_type enum, name, code, data JSONB, status enum, validation_errors JSONB, m3ter_id, depends_on UUID[])
+- [x] Migration: `chat_messages` table (workflow_id FK, role enum, content, metadata JSONB)
+- [x] Migration: `documents` table (project_id FK, filename, file_type, storage_path, processing_status, chunk_count)
+- [x] Migration: `embeddings` table (source_type, content, metadata JSONB, embedding vector(1536), project_id nullable)
+- [x] Migration: `profiles` table + trigger on auth.users insert
+- [x] HNSW index on embeddings.embedding column
+- [x] RLS policies on all tables (user can only access own data)
+- [x] Supabase Auth configured (email/password + magic link)
+- [x] **Verify**: Migrations apply cleanly
+- [x] **Verify**: RLS verified (user A can't read user B's data)
+- [x] **Verify**: pgvector accepts vectors
+- [x] **Verify**: Auth signup/login works
 
 ---
 

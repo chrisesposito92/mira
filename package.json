@@ -11,6 +11,7 @@
     "test:backend": "cd backend && pytest",
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && ruff check .",
-    "format:backend": "cd backend && ruff format ."
+    "format:backend": "cd backend && ruff format .",
+    "migrate": "cd backend && bash scripts/run_migrations.sh"
   }
 }
