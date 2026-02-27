@@ -29,6 +29,11 @@ pytest tests/ -v              # Run all backend tests (including integration)
 pytest -m "not integration"   # Run unit tests only (no Supabase needed)
 pytest tests/test_health.py   # Single test file
 
+# Scraper & Embeddings (must activate venv first)
+cd backend && source .venv/bin/activate
+python -m scripts.scrape_m3ter_docs   # Scrape m3ter docs → backend/data/m3ter_docs/*.json
+python -m scripts.seed_embeddings     # Seed pgvector from scraped JSON (requires DB + OpenAI key)
+
 # Docker
 docker compose up -d          # Local Supabase (postgres:54322, auth:54321, studio:54323)
 ```
@@ -53,8 +58,8 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `db/` | Supabase client, repository pattern |
 | `m3ter/` | m3ter SDK wrapper, entity push, auth, credential encryption |
 | `schemas/` | Pydantic v2 request/response models, shared enums |
-| `rag/` | Embeddings, chunking, retrieval |
-| `scraper/` | Playwright docs crawler |
+| `rag/` | Text chunking, OpenAI embeddings, pgvector ingestion, two-source retrieval |
+| `scraper/` | m3ter docs crawler (httpx + llms.txt manifest) |
 | `services/` | Business logic layer |
 | `validation/` | Per-entity validators + cross-entity checks |
 
