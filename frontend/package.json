@@ -12,6 +12,8 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@internationalized/date": "^3.11.0",
+		"@lucide/svelte": "^0.561.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@sveltejs/kit": "^2.50.2",
@@ -20,13 +22,18 @@
 		"shadcn-svelte": "^1.1.1",
 		"svelte": "^5.51.0",
 		"svelte-check": "^4.3.6",
+		"svelte-sonner": "^1.0.7",
 		"tailwindcss": "^4.2.1",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
+		"@supabase/ssr": "^0.8.0",
+		"@supabase/supabase-js": "^2.98.0",
 		"bits-ui": "^2.16.2",
 		"clsx": "^2.1.1",
+		"lucide-svelte": "^0.575.0",
+		"mode-watcher": "^1.1.0",
 		"tailwind-merge": "^3.5.0",
 		"tailwind-variants": "^3.2.2"
 	}
