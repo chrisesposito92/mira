@@ -57,9 +57,7 @@ def get_project(supabase: Client, user_id: UUID, project_id: UUID) -> dict:
     return result.data[0]
 
 
-def update_project(
-    supabase: Client, user_id: UUID, project_id: UUID, data: ProjectUpdate
-) -> dict:
+def update_project(supabase: Client, user_id: UUID, project_id: UUID, data: ProjectUpdate) -> dict:
     get_project(supabase, user_id, project_id)
 
     updates = data.model_dump(exclude_unset=True)

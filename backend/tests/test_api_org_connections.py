@@ -72,9 +72,7 @@ class TestUpdateOrgConnection:
     def test_update_success(self, authed_client, mock_supabase, fernet_key):
         cid = str(uuid4())
         mock_supabase._table_data["org_connections"] = [_conn_row(id=cid)]
-        resp = authed_client.patch(
-            f"/api/org-connections/{cid}", json={"org_name": "Updated Org"}
-        )
+        resp = authed_client.patch(f"/api/org-connections/{cid}", json={"org_name": "Updated Org"})
         assert resp.status_code == 200
 
 

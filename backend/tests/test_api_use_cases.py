@@ -43,9 +43,7 @@ class TestCreateUseCase:
         # Project lookup for ownership check
         mock_supabase._table_data["projects"] = [_project_row(id=pid)]
         mock_supabase._table_data["use_cases"] = [_use_case_row(project_id=pid)]
-        resp = authed_client.post(
-            f"/api/projects/{pid}/use-cases", json={"title": "New Use Case"}
-        )
+        resp = authed_client.post(f"/api/projects/{pid}/use-cases", json={"title": "New Use Case"})
         assert resp.status_code == 201
 
 
@@ -83,9 +81,7 @@ class TestUpdateUseCase:
         row = _use_case_row(id=ucid)
         row["projects"] = {"user_id": str(MOCK_USER_ID)}
         mock_supabase._table_data["use_cases"] = [row]
-        resp = authed_client.patch(
-            f"/api/use-cases/{ucid}", json={"title": "Updated Title"}
-        )
+        resp = authed_client.patch(f"/api/use-cases/{ucid}", json={"title": "Updated Title"})
         assert resp.status_code == 200
 
 

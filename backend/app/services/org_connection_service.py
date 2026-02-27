@@ -11,9 +11,7 @@ from app.m3ter.encryption import decrypt_value, encrypt_value
 from app.schemas.org_connections import OrgConnectionCreate, OrgConnectionUpdate
 
 
-async def create_org_connection(
-    supabase: Client, user_id: UUID, data: OrgConnectionCreate
-) -> dict:
+async def create_org_connection(supabase: Client, user_id: UUID, data: OrgConnectionCreate) -> dict:
     encrypted_client_id = encrypt_value(data.client_id)
     encrypted_client_secret = encrypt_value(data.client_secret)
     row = {
@@ -91,9 +89,7 @@ def delete_org_connection(supabase: Client, user_id: UUID, connection_id: UUID) 
     ).execute()
 
 
-async def test_org_connection(
-    supabase: Client, user_id: UUID, connection_id: UUID
-) -> dict:
+async def test_org_connection(supabase: Client, user_id: UUID, connection_id: UUID) -> dict:
     # Get the full row including encrypted fields
     result = (
         supabase.table("org_connections")
@@ -119,9 +115,9 @@ async def test_org_connection(
 
     now = datetime.now(UTC).isoformat()
     new_status = "connected" if test_result["success"] else "failed"
-    supabase.table("org_connections").update(
-        {"status": new_status, "last_tested_at": now}
-    ).eq("id", str(connection_id)).execute()
+    supabase.table("org_connections").update({"status": new_status, "last_tested_at": now}).eq(
+        "id", str(connection_id)
+    ).execute()
 
     return test_result
 

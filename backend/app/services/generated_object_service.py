@@ -18,11 +18,7 @@ def list_objects(
     # Verify ownership through use_case → project chain
     _verify_use_case_ownership(supabase, user_id, use_case_id)
 
-    query = (
-        supabase.table("generated_objects")
-        .select("*")
-        .eq("use_case_id", str(use_case_id))
-    )
+    query = supabase.table("generated_objects").select("*").eq("use_case_id", str(use_case_id))
     if entity_type:
         query = query.eq("entity_type", entity_type)
     if status:
@@ -57,28 +53,18 @@ def update_object(
     if not updates:
         return get_object(supabase, user_id, object_id)
 
-    result = (
-        supabase.table("generated_objects")
-        .update(updates)
-        .eq("id", str(object_id))
-        .execute()
-    )
+    result = supabase.table("generated_objects").update(updates).eq("id", str(object_id)).execute()
     return result.data[0]
 
 
-def bulk_update_status(
-    supabase: Client, user_id: UUID, ids: list[UUID], status: str
-) -> list[dict]:
+def bulk_update_status(supabase: Client, user_id: UUID, ids: list[UUID], status: str) -> list[dict]:
     # Verify ownership of each object
     for obj_id in ids:
         get_object(supabase, user_id, obj_id)
 
     str_ids = [str(i) for i in ids]
     result = (
-        supabase.table("generated_objects")
-        .update({"status": status})
-        .in_("id", str_ids)
-        .execute()
+        supabase.table("generated_objects").update({"status": status}).in_("id", str_ids).execute()
     )
     return result.data
 

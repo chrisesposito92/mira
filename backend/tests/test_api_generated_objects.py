@@ -51,9 +51,7 @@ class TestListObjects:
         mock_supabase._table_data["generated_objects"] = [
             _object_row(use_case_id=ucid, entity_type="meter"),
         ]
-        resp = authed_client.get(
-            f"/api/use-cases/{ucid}/objects?entity_type=meter&status=draft"
-        )
+        resp = authed_client.get(f"/api/use-cases/{ucid}/objects?entity_type=meter&status=draft")
         assert resp.status_code == 200
 
 

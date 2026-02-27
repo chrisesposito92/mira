@@ -9,9 +9,7 @@ from app.schemas.use_cases import UseCaseCreate, UseCaseUpdate
 from app.services.project_service import get_project
 
 
-def create_use_case(
-    supabase: Client, user_id: UUID, project_id: UUID, data: UseCaseCreate
-) -> dict:
+def create_use_case(supabase: Client, user_id: UUID, project_id: UUID, data: UseCaseCreate) -> dict:
     # Verify project ownership
     get_project(supabase, user_id, project_id)
 
@@ -66,9 +64,7 @@ def update_use_case(
     if "contract_start_date" in updates and updates["contract_start_date"] is not None:
         updates["contract_start_date"] = updates["contract_start_date"].isoformat()
 
-    result = (
-        supabase.table("use_cases").update(updates).eq("id", str(use_case_id)).execute()
-    )
+    result = supabase.table("use_cases").update(updates).eq("id", str(use_case_id)).execute()
     return result.data[0]
 
 
