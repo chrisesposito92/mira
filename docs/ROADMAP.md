@@ -84,16 +84,16 @@ Phase 1 (Scaffold)
 
 **~25 files** | Depends on: Phase 1, Phase 2
 
-- [ ] `hooks.server.ts` — Supabase SSR auth
-- [ ] `hooks.client.ts` — Client-side Supabase init
-- [ ] Auth pages: login, register
-- [ ] Auth callback handler route
-- [ ] App shell: sidebar layout
-- [ ] App shell: header with user menu
-- [ ] App shell: breadcrumbs
-- [ ] Theme toggle (dark mode support)
-- [ ] Auth store (Svelte 5 runes)
-- [ ] Route guards + redirect logic (unauthenticated → login)
+- [x] `hooks.server.ts` — Supabase SSR auth
+- [x] `hooks.client.ts` — Client-side Supabase init
+- [x] Auth pages: login, register
+- [x] Auth callback handler route
+- [x] App shell: sidebar layout
+- [x] App shell: header with user menu
+- [x] App shell: breadcrumbs
+- [x] Theme toggle (dark mode support)
+- [x] Auth store (Svelte 5 runes)
+- [x] Route guards + redirect logic (unauthenticated → login)
 - [ ] **Verify**: Auth store state transitions work
 - [ ] **Verify**: Login flow works end-to-end
 - [ ] **Verify**: Unauthenticated users redirected to login

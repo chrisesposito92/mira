@@ -25,3 +25,5 @@ export type UseCaseStatus = 'draft' | 'in_progress' | 'completed';
 export type BillingFrequency = 'monthly' | 'quarterly' | 'annually';
 
 export type PricingType = 'per_unit' | 'tiered' | 'volume' | 'stairstep' | 'counter';
+
+export type { UserProfile } from './auth.js';
