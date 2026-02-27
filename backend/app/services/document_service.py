@@ -54,15 +54,19 @@ async def upload_document(
     doc_id = doc["id"]
 
     # Save file to disk using document UUID for uniqueness
-    upload_path = Path(settings.upload_dir) / str(project_id)
-    upload_path.mkdir(parents=True, exist_ok=True)
-    file_path = upload_path / f"{doc_id}_{safe_filename}"
-    file_path.write_bytes(content)
+    try:
+        upload_path = Path(settings.upload_dir) / str(project_id)
+        upload_path.mkdir(parents=True, exist_ok=True)
+        file_path = upload_path / f"{doc_id}_{safe_filename}"
+        file_path.write_bytes(content)
+    except OSError:
+        # File write failed — clean up the orphaned DB row
+        logger.exception("File write failed for document %s", doc_id)
+        supabase.table("documents").delete().eq("id", doc_id).execute()
+        raise HTTPException(status_code=500, detail="Failed to save uploaded file")
 
     # Update storage_path now that file is written
-    supabase.table("documents").update({"storage_path": str(file_path)}).eq(
-        "id", doc_id
-    ).execute()
+    supabase.table("documents").update({"storage_path": str(file_path)}).eq("id", doc_id).execute()
 
     # Process document (extract text, chunk, embed)
     try:
@@ -77,6 +81,10 @@ async def upload_document(
         )
     except Exception:
         logger.exception("Document processing failed for %s", doc_id)
+        # Ensure status reflects the failure
+        supabase.table("documents").update(
+            {"processing_status": "failed", "error_message": "Processing setup failed"}
+        ).eq("id", doc_id).execute()
 
     # Re-fetch to get updated status
     refreshed = supabase.table("documents").select("*").eq("id", doc_id).execute()
