@@ -16,18 +16,18 @@
 	<Card.Content>
 		{#if form?.success}
 			<div class="space-y-4 text-center">
-				<p class="text-sm text-muted-foreground">
-					Check your email at <span class="font-medium text-foreground">{form.email}</span> to
-					confirm your account.
+				<p class="text-muted-foreground text-sm">
+					Check your email at <span class="text-foreground font-medium">{form.email}</span> to confirm
+					your account.
 				</p>
-				<a href="/login" class="text-sm text-primary underline-offset-4 hover:underline">
+				<a href="/login" class="text-primary text-sm underline-offset-4 hover:underline">
 					Back to login
 				</a>
 			</div>
 		{:else}
 			<form method="POST" use:enhance class="space-y-4">
 				{#if form?.error}
-					<div class="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+					<div class="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
 						{form.error}
 					</div>
 				{/if}
@@ -78,7 +78,7 @@
 	</Card.Content>
 	{#if !form?.success}
 		<Card.Footer class="justify-center">
-			<p class="text-sm text-muted-foreground">
+			<p class="text-muted-foreground text-sm">
 				Already have an account?
 				<a href="/login" class="text-primary underline-offset-4 hover:underline">Sign in</a>
 			</p>

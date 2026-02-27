@@ -10,21 +10,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 				cookiesToSet.forEach(({ name, value, options }) => {
 					event.cookies.set(name, value, { ...options, path: '/' });
 				});
-			}
-		}
+			},
+		},
 	});
 
 	event.locals.safeGetSession = async () => {
 		const {
 			data: { user },
-			error
+			error,
 		} = await event.locals.supabase.auth.getUser();
 		if (error) {
 			return { session: null, user: null };
 		}
 
 		const {
-			data: { session }
+			data: { session },
 		} = await event.locals.supabase.auth.getSession();
 		return { session, user };
 	};
@@ -32,6 +32,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	return resolve(event, {
 		filterSerializedResponseHeaders(name) {
 			return name === 'content-range' || name === 'x-supabase-api-version';
-		}
+		},
 	});
 };

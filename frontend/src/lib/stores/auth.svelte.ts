@@ -9,7 +9,7 @@ class AuthStore {
 	isAuthenticated = $derived(!!this.session);
 
 	displayName = $derived(
-		this.profile?.full_name || this.user?.user_metadata?.full_name || this.user?.email || ''
+		this.profile?.full_name || this.user?.user_metadata?.full_name || this.user?.email || '',
 	);
 
 	userInitials = $derived.by(() => {

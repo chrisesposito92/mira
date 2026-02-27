@@ -12,7 +12,7 @@ export const GET: RequestHandler = async ({ url, locals: { supabase } }) => {
 	if (token_hash && type) {
 		const { error } = await supabase.auth.verifyOtp({
 			token_hash,
-			type: type as 'email' | 'signup' | 'recovery' | 'invite'
+			type: type as 'email' | 'signup' | 'recovery' | 'invite',
 		});
 
 		if (!error) {

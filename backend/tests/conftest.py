@@ -54,13 +54,9 @@ def apply_migrations():
     global _migrations_applied
     if _migrations_applied:
         return "already applied"
-    script = os.path.join(
-        os.path.dirname(__file__), "..", "scripts", "run_migrations.sh"
-    )
+    script = os.path.join(os.path.dirname(__file__), "..", "scripts", "run_migrations.sh")
     env = {**os.environ, "DATABASE_URL": DATABASE_URL}
-    result = subprocess.run(
-        ["bash", script], capture_output=True, text=True, env=env
-    )
+    result = subprocess.run(["bash", script], capture_output=True, text=True, env=env)
     if result.returncode != 0:
         pytest.fail(f"Migration failed:\n{result.stderr}\n{result.stdout}")
     _migrations_applied = True

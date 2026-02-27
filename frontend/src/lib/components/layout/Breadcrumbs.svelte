@@ -8,7 +8,7 @@
 		orgs: 'Org Connections',
 		'use-cases': 'Use Cases',
 		'control-panel': 'Control Panel',
-		settings: 'Settings'
+		settings: 'Settings',
 	};
 
 	const crumbs = $derived.by(() => {
@@ -18,7 +18,7 @@
 			href += `/${segment}`;
 			return {
 				label: labelMap[segment] || decodeURIComponent(segment),
-				href
+				href,
 			};
 		});
 	});
