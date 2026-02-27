@@ -10,14 +10,23 @@ npm run dev:frontend          # SvelteKit dev server on :5173
 npm run dev:backend           # FastAPI on :8000 (uvicorn --reload)
 npm run build                 # Build frontend (Vercel adapter)
 npm run check                 # svelte-check TypeScript validation
-npm run test:frontend         # Vitest
+npm run test:frontend         # Vitest (colocated tests in src/**/*.test.ts)
 npm run test:backend          # pytest (run from backend/ with venv active)
+npm run lint:frontend         # eslint + prettier --check
 npm run lint:backend          # ruff check
 npm run format:backend        # ruff format
 
+# Frontend (from frontend/)
+npm run test                  # vitest run
+npm run test:watch            # vitest (watch mode)
+npm run lint                  # eslint . && prettier --check .
+npm run lint:fix              # eslint . --fix && prettier --write .
+npm run format                # prettier --write .
+
 # Backend (must activate venv first)
 cd backend && source .venv/bin/activate
-pytest tests/ -v              # Run all backend tests
+pytest tests/ -v              # Run all backend tests (including integration)
+pytest -m "not integration"   # Run unit tests only (no Supabase needed)
 pytest tests/test_health.py   # Single test file
 
 # Docker
