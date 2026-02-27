@@ -120,11 +120,11 @@ Phase 1 (Scaffold)
 - [x] `.github/workflows/ci.yml` — frontend + backend parallel jobs
 - [x] Prettier baseline formatting applied to all frontend code
 - [x] Ruff format baseline applied to all backend code
-- [ ] **Verify**: `npm run lint` passes
-- [ ] **Verify**: `npm run test` passes (2 seed tests)
-- [ ] **Verify**: `npm run build` still works
-- [ ] **Verify**: `pytest -m "not integration"` passes
-- [ ] **Verify**: CI workflow triggers and both jobs green
+- [X] **Verify**: `npm run lint` passes
+- [X] **Verify**: `npm run test` passes (2 seed tests)
+- [X] **Verify**: `npm run build` still works
+- [X] **Verify**: `pytest -m "not integration"` passes
+- [X] **Verify**: CI workflow triggers and both jobs green
 
 ---
 
@@ -132,25 +132,25 @@ Phase 1 (Scaffold)
 
 **~35 files** | Depends on: Phase 2
 
-- [ ] Supabase JWT middleware for FastAPI
-- [ ] Pydantic models for all entities (org_connections, projects, use_cases, documents, generated_objects, workflows)
-- [ ] CRUD routes: org connections (create, list, get, update, delete, test connection)
-- [ ] CRUD routes: projects (create, list, get, update, delete)
-- [ ] CRUD routes: use cases (create, list, get, update, delete)
-- [ ] CRUD routes: documents (upload, list, get, delete)
-- [ ] CRUD routes: generated objects (list, get, update status, bulk update)
-- [ ] m3ter client wrapper (OAuth2 auth, connection test)
-- [ ] Credential encryption (Fernet) for m3ter client_id/secret
-- [ ] CORS config for frontend origin
+- [x] Supabase JWT middleware for FastAPI
+- [x] Pydantic models for all entities (org_connections, projects, use_cases, documents, generated_objects, workflows)
+- [x] CRUD routes: org connections (create, list, get, update, delete, test connection)
+- [x] CRUD routes: projects (create, list, get, update, delete)
+- [x] CRUD routes: use cases (create, list, get, update, delete)
+- [x] CRUD routes: documents (upload, list, get, delete)
+- [x] CRUD routes: generated objects (list, get, update status, bulk update)
+- [x] m3ter client wrapper (OAuth2 auth, connection test)
+- [x] Credential encryption (Fernet) for m3ter client_id/secret
+- [x] CORS config for frontend origin
 - **Tests**:
-  - [ ] API endpoint tests with httpx TestClient + dependency overrides (mock Supabase)
-  - [ ] Auth middleware tests (valid JWT, expired JWT, missing JWT)
-  - [ ] Pydantic model validation tests
-  - [ ] Encryption round-trip test (encrypt → decrypt → verify)
-- [ ] **Verify**: Each endpoint tested with httpx TestClient
-- [ ] **Verify**: 401 returned without valid JWT
-- [ ] **Verify**: RLS enforced through API
-- [ ] **Verify**: File upload validation works
+  - [x] API endpoint tests with httpx TestClient + dependency overrides (mock Supabase)
+  - [x] Auth middleware tests (valid JWT, expired JWT, missing JWT)
+  - [x] Pydantic model validation tests
+  - [x] Encryption round-trip test (encrypt → decrypt → verify)
+- [x] **Verify**: Each endpoint tested with httpx TestClient
+- [x] **Verify**: 401 returned without valid JWT
+- [x] **Verify**: RLS enforced through API
+- [x] **Verify**: File upload validation works
 
 ---
 

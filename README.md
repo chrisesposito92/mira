@@ -70,7 +70,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full details.
 | 2 | Database schema, RLS, pgvector, auth config | Done |
 | 3 | Frontend auth flow & app shell | Done |
 | 3.5 | CI, testing & linting infrastructure | Done |
-| 4 | Backend core API (CRUD endpoints) | Not started |
+| 4 | Backend core API (CRUD endpoints) | Done |
 | 5+ | Dashboard, scraper/RAG, agent workflows, ... | Not started |
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for full phase details.
