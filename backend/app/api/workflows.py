@@ -20,7 +20,7 @@ async def list_workflows(
     use_case_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> list[dict]:
     return svc.list_workflows(supabase, user_id, use_case_id)
 
 
@@ -29,5 +29,5 @@ async def get_workflow(
     workflow_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.get_workflow(supabase, user_id, workflow_id)

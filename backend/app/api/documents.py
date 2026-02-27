@@ -22,7 +22,7 @@ async def upload_document(
     file: UploadFile,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return await svc.upload_document(supabase, user_id, project_id, file)
 
 
@@ -31,7 +31,7 @@ async def list_documents(
     project_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> list[dict]:
     return svc.list_documents(supabase, user_id, project_id)
 
 
@@ -40,7 +40,7 @@ async def get_document(
     document_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.get_document(supabase, user_id, document_id)
 
 
@@ -49,5 +49,5 @@ async def delete_document(
     document_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> None:
     svc.delete_document(supabase, user_id, document_id)

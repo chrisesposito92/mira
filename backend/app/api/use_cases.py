@@ -22,7 +22,7 @@ async def create_use_case(
     data: UseCaseCreate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.create_use_case(supabase, user_id, project_id, data)
 
 
@@ -31,7 +31,7 @@ async def list_use_cases(
     project_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> list[dict]:
     return svc.list_use_cases(supabase, user_id, project_id)
 
 
@@ -40,7 +40,7 @@ async def get_use_case(
     use_case_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.get_use_case(supabase, user_id, use_case_id)
 
 
@@ -50,7 +50,7 @@ async def update_use_case(
     data: UseCaseUpdate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.update_use_case(supabase, user_id, use_case_id, data)
 
 
@@ -59,5 +59,5 @@ async def delete_use_case(
     use_case_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> None:
     svc.delete_use_case(supabase, user_id, use_case_id)

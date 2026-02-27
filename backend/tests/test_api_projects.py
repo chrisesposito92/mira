@@ -86,6 +86,9 @@ class TestProjectNoAuth:
         from app.main import app
 
         app.dependency_overrides.clear()
-        client = TestClient(app, raise_server_exceptions=False)
-        resp = client.get("/api/projects")
-        assert resp.status_code in (401, 403)
+        try:
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.get("/api/projects")
+            assert resp.status_code in (401, 403)
+        finally:
+            app.dependency_overrides.clear()

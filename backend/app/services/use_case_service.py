@@ -55,19 +55,27 @@ def get_use_case(supabase: Client, user_id: UUID, use_case_id: UUID) -> dict:
 def update_use_case(
     supabase: Client, user_id: UUID, use_case_id: UUID, data: UseCaseUpdate
 ) -> dict:
-    get_use_case(supabase, user_id, use_case_id)
+    existing = get_use_case(supabase, user_id, use_case_id)
 
     updates = data.model_dump(exclude_unset=True)
     if not updates:
-        return get_use_case(supabase, user_id, use_case_id)
+        return existing
 
     if "contract_start_date" in updates and updates["contract_start_date"] is not None:
         updates["contract_start_date"] = updates["contract_start_date"].isoformat()
 
-    result = supabase.table("use_cases").update(updates).eq("id", str(use_case_id)).execute()
+    result = (
+        supabase.table("use_cases")
+        .update(updates)
+        .eq("id", str(use_case_id))
+        .eq("project_id", existing["project_id"])
+        .execute()
+    )
     return result.data[0]
 
 
 def delete_use_case(supabase: Client, user_id: UUID, use_case_id: UUID) -> None:
-    get_use_case(supabase, user_id, use_case_id)
-    supabase.table("use_cases").delete().eq("id", str(use_case_id)).execute()
+    existing = get_use_case(supabase, user_id, use_case_id)
+    supabase.table("use_cases").delete().eq("id", str(use_case_id)).eq(
+        "project_id", existing["project_id"]
+    ).execute()

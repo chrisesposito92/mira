@@ -17,7 +17,7 @@ async def create_project(
     data: ProjectCreate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.create_project(supabase, user_id, data)
 
 
@@ -25,7 +25,7 @@ async def create_project(
 async def list_projects(
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> list[dict]:
     return svc.list_projects(supabase, user_id)
 
 
@@ -34,7 +34,7 @@ async def get_project(
     project_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.get_project(supabase, user_id, project_id)
 
 
@@ -44,7 +44,7 @@ async def update_project(
     data: ProjectUpdate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.update_project(supabase, user_id, project_id, data)
 
 
@@ -53,5 +53,5 @@ async def delete_project(
     project_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> None:
     svc.delete_project(supabase, user_id, project_id)

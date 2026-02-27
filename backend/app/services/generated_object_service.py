@@ -47,24 +47,36 @@ def get_object(supabase: Client, user_id: UUID, object_id: UUID) -> dict:
 def update_object(
     supabase: Client, user_id: UUID, object_id: UUID, data: GeneratedObjectUpdate
 ) -> dict:
-    get_object(supabase, user_id, object_id)
+    existing = get_object(supabase, user_id, object_id)
 
     updates = data.model_dump(exclude_unset=True)
     if not updates:
-        return get_object(supabase, user_id, object_id)
+        return existing
 
-    result = supabase.table("generated_objects").update(updates).eq("id", str(object_id)).execute()
+    result = (
+        supabase.table("generated_objects")
+        .update(updates)
+        .eq("id", str(object_id))
+        .eq("use_case_id", existing["use_case_id"])
+        .execute()
+    )
     return result.data[0]
 
 
 def bulk_update_status(supabase: Client, user_id: UUID, ids: list[UUID], status: str) -> list[dict]:
-    # Verify ownership of each object
+    # Verify ownership of each object and collect use_case_ids for defense-in-depth
+    verified_use_case_ids: set[str] = set()
     for obj_id in ids:
-        get_object(supabase, user_id, obj_id)
+        obj = get_object(supabase, user_id, obj_id)
+        verified_use_case_ids.add(obj["use_case_id"])
 
     str_ids = [str(i) for i in ids]
     result = (
-        supabase.table("generated_objects").update({"status": status}).in_("id", str_ids).execute()
+        supabase.table("generated_objects")
+        .update({"status": status})
+        .in_("id", str_ids)
+        .in_("use_case_id", list(verified_use_case_ids))
+        .execute()
     )
     return result.data
 

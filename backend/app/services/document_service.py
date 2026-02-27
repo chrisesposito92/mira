@@ -1,5 +1,6 @@
 """Service layer for documents CRUD."""
 
+from pathlib import PurePosixPath
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile
@@ -31,12 +32,13 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="File size exceeds 10 MB limit")
 
     # storage_path is a placeholder — actual file storage is deferred to Phase 6
+    safe_filename = PurePosixPath(file.filename or "upload").name
     row = {
         "project_id": str(project_id),
-        "filename": file.filename,
+        "filename": safe_filename,
         "file_type": ext,
         "file_size_bytes": len(content),
-        "storage_path": f"pending/{project_id}/{file.filename}",
+        "storage_path": f"pending/{project_id}/{safe_filename}",
         "processing_status": "pending",
     }
     result = supabase.table("documents").insert(row).execute()
@@ -71,5 +73,7 @@ def get_document(supabase: Client, user_id: UUID, document_id: UUID) -> dict:
 
 
 def delete_document(supabase: Client, user_id: UUID, document_id: UUID) -> None:
-    get_document(supabase, user_id, document_id)
-    supabase.table("documents").delete().eq("id", str(document_id)).execute()
+    existing = get_document(supabase, user_id, document_id)
+    supabase.table("documents").delete().eq("id", str(document_id)).eq(
+        "project_id", existing["project_id"]
+    ).execute()

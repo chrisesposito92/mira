@@ -119,6 +119,4 @@ async def test_org_connection(supabase: Client, user_id: UUID, connection_id: UU
 
 def _strip_secrets(row: dict) -> dict:
     """Remove encrypted credential columns from response."""
-    row.pop("client_id", None)
-    row.pop("client_secret", None)
-    return row
+    return {k: v for k, v in row.items() if k not in ("client_id", "client_secret")}

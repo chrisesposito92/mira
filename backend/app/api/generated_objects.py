@@ -27,7 +27,7 @@ async def list_objects(
     status_filter: str | None = Query(None, alias="status"),
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> list[dict]:
     return svc.list_objects(supabase, user_id, use_case_id, entity_type, status_filter)
 
 
@@ -36,7 +36,7 @@ async def get_object(
     object_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.get_object(supabase, user_id, object_id)
 
 
@@ -46,7 +46,7 @@ async def update_object(
     data: GeneratedObjectUpdate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.update_object(supabase, user_id, object_id, data)
 
 
@@ -55,6 +55,6 @@ async def bulk_update_status(
     data: BulkStatusUpdate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> MessageResponse:
     updated = svc.bulk_update_status(supabase, user_id, data.ids, data.status)
     return MessageResponse(message=f"Updated {len(updated)} objects to '{data.status}'")

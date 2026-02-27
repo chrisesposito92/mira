@@ -22,7 +22,7 @@ async def create_org_connection(
     data: OrgConnectionCreate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return await svc.create_org_connection(supabase, user_id, data)
 
 
@@ -30,7 +30,7 @@ async def create_org_connection(
 async def list_org_connections(
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> list[dict]:
     return svc.list_org_connections(supabase, user_id)
 
 
@@ -39,7 +39,7 @@ async def get_org_connection(
     connection_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.get_org_connection(supabase, user_id, connection_id)
 
 
@@ -49,7 +49,7 @@ async def update_org_connection(
     data: OrgConnectionUpdate,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return svc.update_org_connection(supabase, user_id, connection_id, data)
 
 
@@ -58,7 +58,7 @@ async def delete_org_connection(
     connection_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> None:
     svc.delete_org_connection(supabase, user_id, connection_id)
 
 
@@ -67,5 +67,5 @@ async def test_org_connection(
     connection_id: UUID,
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
-):
+) -> dict:
     return await svc.test_org_connection(supabase, user_id, connection_id)

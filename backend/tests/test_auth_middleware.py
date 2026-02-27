@@ -76,15 +76,23 @@ class TestAuthEndpoint:
 
         from app.main import app
 
-        client = TestClient(app, raise_server_exceptions=False)
-        resp = client.get("/api/projects")
-        assert resp.status_code in (401, 403)
+        app.dependency_overrides.clear()
+        try:
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.get("/api/projects")
+            assert resp.status_code in (401, 403)
+        finally:
+            app.dependency_overrides.clear()
 
     def test_invalid_bearer_token(self, monkeypatch):
         from fastapi.testclient import TestClient
 
         from app.main import app
 
-        client = TestClient(app, raise_server_exceptions=False)
-        resp = client.get("/api/projects", headers={"Authorization": "Bearer garbage"})
-        assert resp.status_code == 401
+        app.dependency_overrides.clear()
+        try:
+            client = TestClient(app, raise_server_exceptions=False)
+            resp = client.get("/api/projects", headers={"Authorization": "Bearer garbage"})
+            assert resp.status_code == 401
+        finally:
+            app.dependency_overrides.clear()

@@ -4,6 +4,7 @@ import json
 import os
 import ssl as _ssl_module
 import subprocess
+from collections.abc import Generator
 from unittest.mock import MagicMock
 from uuid import UUID
 
@@ -136,7 +137,7 @@ def mock_user_id() -> UUID:
 
 
 @pytest.fixture
-def fernet_key(monkeypatch):
+def fernet_key(monkeypatch) -> str:
     """Set a test Fernet key in settings."""
     monkeypatch.setenv("ENCRYPTION_KEY", TEST_FERNET_KEY)
     from app.config import Settings
@@ -156,40 +157,40 @@ class MockPostgrestResponse:
 class MockPostgrestBuilder:
     """Chainable mock that supports .table().select().eq()...execute() pattern."""
 
-    def __init__(self, data: list[dict] | None = None):
+    def __init__(self, data: list[dict] | None = None) -> None:
         self._data = data or []
 
-    def select(self, *args, **kwargs):
+    def select(self, *args: object, **kwargs: object) -> "MockPostgrestBuilder":
         return self
 
-    def insert(self, row, **kwargs):
+    def insert(self, row: dict, **kwargs: object) -> "MockPostgrestBuilder":
         # Keep pre-configured mock data (simulates DB returning full row with defaults)
         return self
 
-    def update(self, values, **kwargs):
+    def update(self, values: dict, **kwargs: object) -> "MockPostgrestBuilder":
         if self._data:
             for row in self._data:
                 row.update(values)
         return self
 
-    def delete(self, **kwargs):
+    def delete(self, **kwargs: object) -> "MockPostgrestBuilder":
         return self
 
-    def eq(self, column, value):
+    def eq(self, column: str, value: str) -> "MockPostgrestBuilder":
         return self
 
-    def in_(self, column, values):
+    def in_(self, column: str, values: list[str]) -> "MockPostgrestBuilder":
         return self
 
-    def order(self, column, **kwargs):
+    def order(self, column: str, **kwargs: object) -> "MockPostgrestBuilder":
         return self
 
-    def execute(self):
+    def execute(self) -> MockPostgrestResponse:
         return MockPostgrestResponse(self._data)
 
 
 @pytest.fixture
-def mock_supabase():
+def mock_supabase() -> MagicMock:
     """Return a mock Supabase client with configurable table data.
 
     Usage:
@@ -200,7 +201,7 @@ def mock_supabase():
     client = MagicMock()
     client._table_data = {}
 
-    def _table(name):
+    def _table(name: str) -> MockPostgrestBuilder:
         data = client._table_data.get(name, [])
         return MockPostgrestBuilder(data)
 
@@ -209,7 +210,7 @@ def mock_supabase():
 
 
 @pytest.fixture
-def authed_client(mock_supabase):
+def authed_client(mock_supabase: MagicMock) -> Generator[TestClient, None, None]:
     """TestClient with get_current_user overridden to return MOCK_USER_ID.
 
     Does NOT use context manager to avoid triggering lifespan (get_db_pool),
