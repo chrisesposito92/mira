@@ -6,6 +6,6 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession }, cooki
 	return {
 		session,
 		user,
-		cookies: cookies.getAll().filter((c) => c.name.startsWith('sb-'))
+		cookies: cookies.getAll().filter((c) => c.name.startsWith('sb-')),
 	};
 };

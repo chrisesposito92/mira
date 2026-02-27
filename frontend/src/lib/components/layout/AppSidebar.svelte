@@ -7,7 +7,7 @@
 	const navItems = [
 		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
 		{ title: 'Projects', url: '/projects', icon: FolderKanban },
-		{ title: 'Org Connections', url: '/orgs', icon: Building2 }
+		{ title: 'Org Connections', url: '/orgs', icon: Building2 },
 	];
 
 	function isActive(url: string): boolean {
@@ -19,9 +19,7 @@
 	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton class="h-10 font-bold tracking-tight">
-					MIRA
-				</Sidebar.MenuButton>
+				<Sidebar.MenuButton class="h-10 font-bold tracking-tight">MIRA</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
@@ -32,9 +30,7 @@
 				<Sidebar.Menu>
 					{#each navItems as item}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton
-								isActive={isActive(item.url)}
-							>
+							<Sidebar.MenuButton isActive={isActive(item.url)}>
 								{#snippet child({ props })}
 									<a href={item.url} {...props}>
 										<item.icon class="size-4" />
@@ -54,11 +50,11 @@
 			<Sidebar.MenuItem>
 				<div class="flex items-center gap-2 px-2 py-1.5 text-sm">
 					<div
-						class="flex size-6 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground"
+						class="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-full text-[10px] font-medium"
 					>
 						{authStore.userInitials}
 					</div>
-					<span class="truncate text-muted-foreground">{authStore.displayName}</span>
+					<span class="text-muted-foreground truncate">{authStore.displayName}</span>
 				</div>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>

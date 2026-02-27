@@ -12,7 +12,7 @@ import pytest
 
 from tests.conftest import ANON_KEY, AUTH_URL, TEST_PASSWORD
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 

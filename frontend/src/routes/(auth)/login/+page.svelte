@@ -16,7 +16,7 @@
 	<Card.Content>
 		<form method="POST" use:enhance class="space-y-4">
 			{#if form?.error}
-				<div class="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+				<div class="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
 					{form.error}
 				</div>
 			{/if}
@@ -42,7 +42,7 @@
 		</form>
 	</Card.Content>
 	<Card.Footer class="justify-center">
-		<p class="text-sm text-muted-foreground">
+		<p class="text-muted-foreground text-sm">
 			Don't have an account?
 			<a href="/register" class="text-primary underline-offset-4 hover:underline">Sign up</a>
 		</p>

@@ -5,7 +5,7 @@ import uuid
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 
 async def _create_auth_user(conn, email: str) -> str:
@@ -197,16 +197,12 @@ async def test_project_scoped_embeddings_isolation(db_conn, two_users):
     )
 
     await _set_rls_context(db_conn, user_a)
-    count_a = await db_conn.fetchval(
-        "SELECT count(*) FROM embeddings WHERE project_id IS NOT NULL"
-    )
+    count_a = await db_conn.fetchval("SELECT count(*) FROM embeddings WHERE project_id IS NOT NULL")
     assert count_a == 1
 
     await _reset_to_postgres(db_conn)
     await _set_rls_context(db_conn, user_b)
-    count_b = await db_conn.fetchval(
-        "SELECT count(*) FROM embeddings WHERE project_id IS NOT NULL"
-    )
+    count_b = await db_conn.fetchval("SELECT count(*) FROM embeddings WHERE project_id IS NOT NULL")
     assert count_b == 0
 
 
@@ -240,6 +236,6 @@ async def test_cascade_delete_project(db_conn, two_users):
         "SELECT count(*) FROM use_cases WHERE project_id = $1", project_id
     )
     assert uc_count == 0
-    assert await db_conn.fetchval(
-        "SELECT count(*) FROM workflows WHERE use_case_id = $1", uc_id
-    ) == 0
+    assert (
+        await db_conn.fetchval("SELECT count(*) FROM workflows WHERE use_case_id = $1", uc_id) == 0
+    )

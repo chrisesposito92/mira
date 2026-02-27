@@ -9,5 +9,5 @@ export const actions: Actions = {
 	default: async ({ locals: { supabase } }) => {
 		await supabase.auth.signOut();
 		redirect(303, '/login');
-	}
+	},
 };

@@ -15,7 +15,7 @@
 		<DropdownMenu.Label>
 			<div class="flex flex-col">
 				<span class="text-sm font-medium">{authStore.displayName}</span>
-				<span class="text-xs text-muted-foreground">{authStore.user?.email ?? ''}</span>
+				<span class="text-muted-foreground text-xs">{authStore.user?.email ?? ''}</span>
 			</div>
 		</DropdownMenu.Label>
 		<DropdownMenu.Separator />

@@ -2,7 +2,7 @@
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 
 async def test_insert_and_query_vector(db_conn):

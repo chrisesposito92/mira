@@ -2,7 +2,7 @@
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 EXPECTED_TABLES = [
     "profiles",
@@ -32,9 +32,7 @@ EXPECTED_ENUMS = [
 
 async def test_all_tables_exist(db_conn):
     """All 9 application tables should exist in the public schema."""
-    rows = await db_conn.fetch(
-        "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
-    )
+    rows = await db_conn.fetch("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
     table_names = {r["tablename"] for r in rows}
     for table in EXPECTED_TABLES:
         assert table in table_names, f"Table '{table}' not found in public schema"
@@ -57,9 +55,7 @@ async def test_all_enums_exist(db_conn):
 
 async def test_pgvector_extension_enabled(db_conn):
     """pgvector extension should be installed."""
-    row = await db_conn.fetchrow(
-        "SELECT 1 FROM pg_extension WHERE extname = 'vector'"
-    )
+    row = await db_conn.fetchrow("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
     assert row is not None, "pgvector extension not installed"
 
 
@@ -113,13 +109,9 @@ async def test_updated_at_trigger_fires(db_conn):
     )
 
     # UPDATE should trigger set_updated_at() which sets updated_at = now()
-    await db_conn.execute(
-        "UPDATE org_connections SET org_name = 'updated' WHERE id = $1", row_id
-    )
+    await db_conn.execute("UPDATE org_connections SET org_name = 'updated' WHERE id = $1", row_id)
 
-    updated = await db_conn.fetchval(
-        "SELECT updated_at FROM org_connections WHERE id = $1", row_id
-    )
+    updated = await db_conn.fetchval("SELECT updated_at FROM org_connections WHERE id = $1", row_id)
     # The trigger should have set updated_at to now() which is much later than 2020
     assert updated.year >= 2026, f"Trigger did not fire, updated_at is {updated}"
 

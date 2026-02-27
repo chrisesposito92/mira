@@ -6,10 +6,11 @@
 Phase 1 (Scaffold)
   ├── Phase 2 (DB + Auth)
   │     ├── Phase 3 (Frontend Auth)
-  │     │     └── Phase 5 (Dashboard) ← also needs Phase 4
-  │     │           ├── Phase 8 (Chat UI) ← also needs Phase 7
-  │     │           ├── Phase 11 (Control Panel) ← also needs Phase 8
-  │     │           └── Phase 13 (Doc Upload) ← also needs Phase 6
+  │     │     └── Phase 3.5 (CI + Testing Infra) ← gates all subsequent PRs
+  │     │           └── Phase 5 (Dashboard) ← also needs Phase 4
+  │     │                 ├── Phase 8 (Chat UI) ← also needs Phase 7
+  │     │                 ├── Phase 11 (Control Panel) ← also needs Phase 8
+  │     │                 └── Phase 13 (Doc Upload) ← also needs Phase 6
   │     ├── Phase 4 (Backend API)
   │     │     ├── Phase 7 (Agent Core) ← also needs Phase 6
   │     │     │     ├── Phase 9 (Plans/Pricing)
@@ -101,6 +102,32 @@ Phase 1 (Scaffold)
 
 ---
 
+## Phase 3.5: CI, Testing & Linting Infrastructure
+
+**~8 new files, ~8 modified** | Depends on: Phase 3
+
+- [x] Frontend: vitest + @testing-library/svelte + jsdom
+- [x] Frontend: eslint + typescript-eslint + eslint-plugin-svelte + prettier
+- [x] `frontend/vitest.config.ts` — jsdom env, colocated tests, sveltekit plugin
+- [x] `frontend/src/tests/setup.ts` — jest-dom matchers
+- [x] `frontend/eslint.config.js` — flat config (svelte + typescript + prettier)
+- [x] `frontend/.prettierrc` — tabs, single quotes, 100 width, svelte + tailwindcss plugins
+- [x] `frontend/.prettierignore`
+- [x] Frontend scripts: `test`, `test:watch`, `lint`, `lint:fix`, `format`
+- [x] Seed test: `utils.test.ts` — cn() utility
+- [x] Seed test: `auth.svelte.test.ts` — AuthStore class
+- [x] Backend: pytest `integration` marker on DB-dependent tests
+- [x] `.github/workflows/ci.yml` — frontend + backend parallel jobs
+- [x] Prettier baseline formatting applied to all frontend code
+- [x] Ruff format baseline applied to all backend code
+- [ ] **Verify**: `npm run lint` passes
+- [ ] **Verify**: `npm run test` passes (2 seed tests)
+- [ ] **Verify**: `npm run build` still works
+- [ ] **Verify**: `pytest -m "not integration"` passes
+- [ ] **Verify**: CI workflow triggers and both jobs green
+
+---
+
 ## Phase 4: Backend Core API — CRUD Endpoints
 
 **~35 files** | Depends on: Phase 2
@@ -115,6 +142,11 @@ Phase 1 (Scaffold)
 - [ ] m3ter client wrapper (OAuth2 auth, connection test)
 - [ ] Credential encryption (Fernet) for m3ter client_id/secret
 - [ ] CORS config for frontend origin
+- **Tests**:
+  - [ ] API endpoint tests with httpx TestClient + dependency overrides (mock Supabase)
+  - [ ] Auth middleware tests (valid JWT, expired JWT, missing JWT)
+  - [ ] Pydantic model validation tests
+  - [ ] Encryption round-trip test (encrypt → decrypt → verify)
 - [ ] **Verify**: Each endpoint tested with httpx TestClient
 - [ ] **Verify**: 401 returned without valid JWT
 - [ ] **Verify**: RLS enforced through API
@@ -134,6 +166,10 @@ Phase 1 (Scaffold)
 - [ ] File upload UI (drag-and-drop) on project page
 - [ ] Org connections page (add, test, manage credentials)
 - [ ] Project store (Svelte 5 runes)
+- **Tests**:
+  - [ ] API service tests (mock fetch)
+  - [ ] Project store tests (CRUD state management)
+  - [ ] Component tests for project/use-case cards
 - [ ] **Verify**: API services work (mocked)
 - [ ] **Verify**: Project store reactivity
 - [ ] **Verify**: Component rendering
@@ -153,6 +189,11 @@ Phase 1 (Scaffold)
 - [ ] `services/document_processor.py` — PDF/DOCX parsing + chunking + embedding
 - [ ] Script: `scripts/scrape_m3ter_docs.py`
 - [ ] Script: `scripts/seed_embeddings.py`
+- **Tests**:
+  - [ ] Chunker unit tests (size, overlap, boundary handling)
+  - [ ] Embedding dimension tests (mock OpenAI)
+  - [ ] Retriever tests (mock pgvector)
+  - [ ] Document processor tests with fixture files
 - [ ] **Verify**: Scraper fetches pages successfully
 - [ ] **Verify**: Chunker splits correctly (size + overlap)
 - [ ] **Verify**: Embeddings have correct dimension (1536)
@@ -181,6 +222,10 @@ Phase 1 (Scaffold)
 - [ ] `validation/rules/product.py` — Product validation rules
 - [ ] `validation/rules/meter.py` — Meter validation rules
 - [ ] `validation/rules/aggregation.py` — Aggregation validation rules
+- **Tests**:
+  - [ ] Node unit tests (mocked LLM responses)
+  - [ ] Graph traversal test (verify state transitions)
+  - [ ] Validation rule tests per entity type
 - [ ] **Verify**: Each node works (mocked LLM)
 - [ ] **Verify**: State transitions correct through full graph
 - [ ] **Verify**: Approval gate pauses and resumes correctly
@@ -208,6 +253,11 @@ Phase 1 (Scaffold)
 - [ ] Use case page with chat interface (`routes/(app)/projects/[projectId]/use-cases/[useCaseId]/`)
 - [ ] LLM model selector dropdown
 - [ ] Connection status indicator
+- **Tests**:
+  - [ ] Chat store tests (message append, stream state, workflow state)
+  - [ ] WebSocket client tests (mock WS)
+  - [ ] ObjectCard component tests
+  - [ ] ClarificationQuestion component tests
 - [ ] **Verify**: Chat store (message append, stream, workflow state)
 - [ ] **Verify**: ObjectCard renders with action buttons
 - [ ] **Verify**: ClarificationQuestion renders options correctly
@@ -228,6 +278,9 @@ Phase 1 (Scaffold)
 - [ ] `validation/rules/plan_template.py` — PlanTemplate validation
 - [ ] `validation/rules/plan.py` — Plan validation
 - [ ] `validation/rules/pricing.py` — Pricing validation (type-specific)
+- **Tests**:
+  - [ ] Validation rules for plan_template, plan, pricing (all 5 pricing types)
+  - [ ] Graph traversal test (state transitions)
 - [ ] **Verify**: Each node works independently
 - [ ] **Verify**: All pricing types handled (tiered/volume/stairstep/per-unit/counter)
 - [ ] **Verify**: Cross-entity references valid (pricing → plan → template)
@@ -244,6 +297,10 @@ Phase 1 (Scaffold)
 - [ ] `validation/rules/account_plan.py` — AccountPlan validation
 - [ ] `validation/rules/measurement.py` — Measurement validation (batch ≤1000, payload ≤512KB)
 - [ ] `validation/cross_entity.py` — Full referential integrity checks across all entity types
+- **Tests**:
+  - [ ] Account/AccountPlan/Measurement validation tests
+  - [ ] Cross-entity referential integrity tests
+  - [ ] Batch limit tests (≤1000 measurements, ≤512KB)
 - [ ] **Verify**: Account references valid plans
 - [ ] **Verify**: Usage references valid meters/accounts
 - [ ] **Verify**: Batch limits respected (≤1000 measurements, ≤512KB)
@@ -264,6 +321,9 @@ Phase 1 (Scaffold)
 - [ ] Component: ManualObjectForm (create object without agent)
 - [ ] Control panel page (`routes/(app)/projects/[projectId]/control-panel/`)
 - [ ] Toast notifications for sync results
+- **Tests**:
+  - [ ] Objects store tests (tree grouping, selection)
+  - [ ] Component tests for ObjectTree, SyncStatusBadge
 - [ ] **Verify**: Objects store (tree grouping, selection)
 - [ ] **Verify**: Tree renders correct hierarchy
 - [ ] **Verify**: JSON editor validates on edit
@@ -280,6 +340,10 @@ Phase 1 (Scaffold)
 - [ ] `m3ter/mapper.py` — Clean/transform payloads for m3ter API format
 - [ ] `api/m3ter_sync.py` — Push, bulk push, status check endpoints
 - [ ] WebSocket notifications for sync progress
+- **Tests**:
+  - [ ] m3ter client tests (mock httpx)
+  - [ ] Dependency ordering test
+  - [ ] Payload mapper tests
 - [ ] **Verify**: Client methods work (mocked HTTP)
 - [ ] **Verify**: Dependency ordering correct (Product before Meter before Aggregation, etc.)
 - [ ] **Verify**: Push success/failure handling
@@ -298,6 +362,10 @@ Phase 1 (Scaffold)
 - [ ] Backend: Processing status tracking (pending/processing/ready/failed)
 - [ ] RAG: Combined m3ter docs + user docs search
 - [ ] RAG: Source attribution in retrieved context
+- **Tests**:
+  - [ ] Upload component test (drag-drop, progress state)
+  - [ ] Document upload endpoint test
+  - [ ] Processing status test
 - [ ] **Verify**: PDF/DOCX extraction works correctly
 - [ ] **Verify**: Upload → chunk → embed → search pipeline works end-to-end
 - [ ] **Verify**: Agent receives relevant user doc context in RAG results
@@ -317,27 +385,34 @@ Phase 1 (Scaffold)
 - [ ] Keyboard shortcuts (Cmd+Enter to send, Escape to cancel, etc.)
 - [ ] Responsive layout (tablet + desktop)
 - [ ] Accessibility audit fixes
+- **Tests**:
+  - [ ] Error boundary test
+  - [ ] Empty state tests
+  - [ ] Keyboard shortcut tests
 - [ ] **Verify**: Error/empty states render correctly
 - [ ] **Verify**: Keyboard shortcuts work
 - [ ] **Verify**: Lighthouse accessibility score >90
 
 ---
 
-## Phase 15: E2E Testing Suite
+## Phase 15: E2E & Integration Testing
 
-**~30 test files** | Depends on: Phase 14
+**~20 test files** | Depends on: Phase 14
 
-- [ ] E2E: Auth flow (register, login, logout)
-- [ ] E2E: Dashboard (create project, navigate)
-- [ ] E2E: Project management (create use case, upload file)
-- [ ] E2E: Chat workflow (launch, answer clarification, approve objects)
-- [ ] E2E: Control panel (view tree, edit object, push)
-- [ ] E2E: Org connections (add, test, delete)
+- [ ] Install `@playwright/test` in frontend
+- [ ] `playwright.config.ts` configuration
+- [ ] Add Supabase Docker service to CI for integration tests
+- [ ] Playwright E2E: Auth flow (register, login, logout)
+- [ ] Playwright E2E: Dashboard (create project, navigate)
+- [ ] Playwright E2E: Project management (create use case, upload file)
+- [ ] Playwright E2E: Chat workflow (launch, answer clarification, approve objects)
+- [ ] Playwright E2E: Control panel (view tree, edit object, push)
+- [ ] Playwright E2E: Org connections (add, test, delete)
 - [ ] Backend integration: Full workflow end-to-end (Workflow 1 → 2 → 3)
 - [ ] Backend integration: RAG pipeline (scrape → chunk → embed → retrieve)
 - [ ] Backend integration: m3ter sync (push → verify → status)
-- [ ] GitHub Actions CI: svelte-check + vitest + pytest + Playwright
 - [ ] **Verify**: All E2E tests pass
+- [ ] **Verify**: All integration tests pass with real Supabase
 - [ ] **Verify**: CI pipeline green
 
 ---
