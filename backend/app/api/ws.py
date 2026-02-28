@@ -67,7 +67,10 @@ async def _invoke_and_send_result(
         ).eq("id", workflow_id).execute()
         await websocket.send_json({"type": "error", "message": "Workflow failed"})
         save_message_internal(
-            supabase, workflow_id, MessageRole.system, "Workflow failed",
+            supabase,
+            workflow_id,
+            MessageRole.system,
+            "Workflow failed",
             metadata={"error": str(exc)},
         )
         return False
@@ -88,7 +91,9 @@ async def _invoke_and_send_result(
         await websocket.send_json(payload)
         interrupt_type = payload.get("type", "interrupt")
         save_message_internal(
-            supabase, workflow_id, MessageRole.assistant,
+            supabase,
+            workflow_id,
+            MessageRole.assistant,
             f"Waiting for user input: {interrupt_type}",
             metadata={"payload": payload},
         )
@@ -111,7 +116,9 @@ async def _invoke_and_send_result(
         }
     )
     save_message_internal(
-        supabase, workflow_id, MessageRole.assistant,
+        supabase,
+        workflow_id,
+        MessageRole.assistant,
         "Workflow completed successfully.",
     )
     return False
@@ -186,7 +193,9 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
                     "decisions": message.get("decisions", []),
                 }
                 save_message_internal(
-                    supabase, workflow_id, MessageRole.user,
+                    supabase,
+                    workflow_id,
+                    MessageRole.user,
                     "Entity decisions submitted",
                     metadata={"payload": decisions_payload},
                 )
@@ -197,7 +206,9 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
                 }
                 await websocket.send_json(status_msg)
                 save_message_internal(
-                    supabase, workflow_id, MessageRole.assistant,
+                    supabase,
+                    workflow_id,
+                    MessageRole.assistant,
                     status_msg["message"],
                     metadata={"payload": status_msg},
                 )
@@ -222,7 +233,9 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
                     "answers": message.get("answers", []),
                 }
                 save_message_internal(
-                    supabase, workflow_id, MessageRole.user,
+                    supabase,
+                    workflow_id,
+                    MessageRole.user,
                     "Clarification answers submitted",
                     metadata={"payload": clarify_payload},
                 )
@@ -233,7 +246,9 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
                 }
                 await websocket.send_json(status_msg)
                 save_message_internal(
-                    supabase, workflow_id, MessageRole.assistant,
+                    supabase,
+                    workflow_id,
+                    MessageRole.assistant,
                     status_msg["message"],
                     metadata={"payload": status_msg},
                 )
