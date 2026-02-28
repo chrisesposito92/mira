@@ -36,6 +36,7 @@ class WorkflowState(TypedDict, total=False):
     aggregation_decisions: list[dict]
 
     # Tracking
+    thread_id: str  # LangGraph thread_id — unique per workflow run
     messages: list[dict]  # chat-style message log
     current_step: str  # for progress tracking
     error: str | None  # terminal error

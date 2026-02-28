@@ -141,6 +141,7 @@ async def start_workflow(supabase: Client, user_id: UUID, use_case_id: UUID, mod
         "project_id": str(project_id),
         "model_id": model_id,
         "user_id": str(user_id),
+        "thread_id": thread_id,
     }
     config = {"configurable": {"thread_id": thread_id}}
 

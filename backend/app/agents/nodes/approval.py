@@ -88,6 +88,8 @@ async def approve_entities(state: WorkflowState) -> dict:
         supabase.table("generated_objects").insert(rows_to_insert).execute()
 
     approved_entities = list(entities)
+    decided_indices: set[int] = set()
+
     for decision in decisions:
         if not isinstance(decision, dict):
             continue
@@ -97,6 +99,7 @@ async def approve_entities(state: WorkflowState) -> dict:
         if idx < 0 or idx >= len(entity_ids):
             continue
 
+        decided_indices.add(idx)
         obj_id = entity_ids[idx]
 
         if action == "approve":
@@ -121,6 +124,15 @@ async def approve_entities(state: WorkflowState) -> dict:
                 update_fields["name"] = edited_data.get("name", "")
                 update_fields["code"] = edited_data.get("code", "")
             supabase.table("generated_objects").update(update_fields).eq("id", obj_id).execute()
+
+    # Promote undecided entities to approved in DB so state and DB stay consistent
+    # (entities without explicit decisions flow through in state, so their DB rows
+    # must not remain as draft)
+    for idx, obj_id in enumerate(entity_ids):
+        if idx not in decided_indices:
+            supabase.table("generated_objects").update({"status": ObjectStatus.approved}).eq(
+                "id", obj_id
+            ).execute()
 
     # Filter out rejected entities (None entries)
     approved_entities = [e for e in approved_entities if e is not None]

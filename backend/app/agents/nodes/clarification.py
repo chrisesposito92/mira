@@ -12,9 +12,11 @@ from app.agents.state import WorkflowState
 
 logger = logging.getLogger(__name__)
 
-# Cache generated questions by use_case_id so that LangGraph's node re-execution
+# Cache generated questions by thread_id so that LangGraph's node re-execution
 # on interrupt resume reuses the exact questions the user originally answered
 # (answers are index-based, so regenerated questions would cause mismatches).
+# Keyed by thread_id (unique per workflow run) to avoid collisions between
+# concurrent workflows for the same use case.
 _question_cache: dict[str, list] = {}
 
 
@@ -24,14 +26,14 @@ async def generate_clarifications(state: WorkflowState) -> dict:
     Uses the LLM to produce targeted multiple-choice questions based on the
     analysis, then pauses the graph via interrupt() so the user can respond.
 
-    Questions are cached by use_case_id so that the inevitable re-execution on
+    Questions are cached by thread_id so that the inevitable re-execution on
     resume produces the same questions the user answered (interrupt answers are
     index-based).
     """
     analysis = state.get("analysis", "")
     model_id = state["model_id"]
-    use_case_id = state.get("use_case_id", "")
-    cache_key = f"{use_case_id}:clarification"
+    thread_id = state.get("thread_id", "")
+    cache_key = f"{thread_id}:clarification"
 
     questions = _question_cache.get(cache_key)
     if questions is None:
