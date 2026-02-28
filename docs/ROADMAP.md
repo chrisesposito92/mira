@@ -158,22 +158,22 @@ Phase 1 (Scaffold)
 
 **~35 files** | Depends on: Phase 3, Phase 4
 
-- [ ] API client layer (`services/api.ts` base, `services/projects.ts`, `services/use-cases.ts`, etc.)
-- [ ] Dashboard page with project grid
-- [ ] Project detail page with use case list
-- [ ] Create project dialog (name, customer_name, description, org connection, default model)
-- [ ] Create use case dialog (title, description, billing_frequency, currency, target_billing_model, contract dates, notes)
-- [ ] File upload UI (drag-and-drop) on project page
-- [ ] Org connections page (add, test, manage credentials)
-- [ ] Project store (Svelte 5 runes)
+- [x] API client layer (`services/api.ts` base, `services/projects.ts`, `services/use-cases.ts`, etc.)
+- [x] Dashboard page with project grid
+- [x] Project detail page with use case list
+- [x] Create project dialog (name, customer_name, description, org connection, default model)
+- [x] Create use case dialog (title, description, billing_frequency, currency, target_billing_model, contract dates, notes)
+- [x] File upload UI (drag-and-drop) on project page
+- [x] Org connections page (add, test, manage credentials)
+- [x] Project store (Svelte 5 runes)
 - **Tests**:
-  - [ ] API service tests (mock fetch)
-  - [ ] Project store tests (CRUD state management)
-  - [ ] Component tests for project/use-case cards
-- [ ] **Verify**: API services work (mocked)
-- [ ] **Verify**: Project store reactivity
-- [ ] **Verify**: Component rendering
-- [ ] **Verify**: Create → navigate → view flow works
+  - [x] API service tests (mock fetch)
+  - [x] Project store tests (CRUD state management)
+  - [x] Component tests for project/use-case cards
+- [x] **Verify**: API services work (mocked)
+- [x] **Verify**: Project store reactivity
+- [x] **Verify**: Component rendering
+- [x] **Verify**: Create → navigate → view flow works
 
 ---
 
