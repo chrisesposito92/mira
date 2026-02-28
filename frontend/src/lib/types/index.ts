@@ -27,3 +27,19 @@ export type BillingFrequency = 'monthly' | 'quarterly' | 'annually';
 export type PricingType = 'per_unit' | 'tiered' | 'volume' | 'stairstep' | 'counter';
 
 export type { UserProfile } from './auth.js';
+
+export type {
+	ConnectionStatus,
+	DocumentStatus,
+	Project,
+	ProjectCreate,
+	ProjectUpdate,
+	UseCase,
+	UseCaseCreate,
+	UseCaseUpdate,
+	Document,
+	OrgConnection,
+	OrgConnectionCreate,
+	OrgConnectionUpdate,
+	OrgConnectionTestResult,
+} from './api.js';

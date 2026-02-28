@@ -10,8 +10,9 @@
 		{ title: 'Org Connections', url: '/orgs', icon: Building2 },
 	];
 
-	function isActive(url: string): boolean {
-		return page.url.pathname === url || page.url.pathname.startsWith(url + '/');
+	function isActive(item: (typeof navItems)[0]): boolean {
+		const path = page.url.pathname;
+		return path === item.url || path.startsWith(item.url + '/');
 	}
 </script>
 
@@ -30,7 +31,7 @@
 				<Sidebar.Menu>
 					{#each navItems as item}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={isActive(item.url)}>
+							<Sidebar.MenuButton isActive={isActive(item)}>
 								{#snippet child({ props })}
 									<a href={item.url} {...props}>
 										<item.icon class="size-4" />
