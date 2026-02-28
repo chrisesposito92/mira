@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from app.api.chat_messages import router as chat_messages_router
 from app.api.documents import router as documents_router
 from app.api.generated_objects import router as generated_objects_router
 from app.api.org_connections import router as org_connections_router
@@ -17,4 +18,5 @@ api_router.include_router(use_cases_router)
 api_router.include_router(documents_router)
 api_router.include_router(generated_objects_router)
 api_router.include_router(workflows_router)
+api_router.include_router(chat_messages_router)
 api_router.include_router(ws_router)

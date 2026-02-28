@@ -14,3 +14,7 @@ export type WithoutChildrenOrChild<T> = T extends infer U ? Omit<U, 'children' |
 export type WithoutChildren<T> = Omit<T, 'children'>;
 
 export type WithoutChild<T> = Omit<T, 'child'>;
+
+export function snakeToTitle(s: string): string {
+	return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}

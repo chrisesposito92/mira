@@ -170,7 +170,7 @@
 			{:else}
 				<div class="grid gap-4 sm:grid-cols-2">
 					{#each projectStore.sortedUseCases as uc (uc.id)}
-						<UseCaseCard useCase={uc} />
+						<UseCaseCard useCase={uc} projectId={data.project.id} />
 					{/each}
 				</div>
 			{/if}
