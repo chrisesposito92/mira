@@ -71,7 +71,9 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full details.
 | 3 | Frontend auth flow & app shell | Done |
 | 3.5 | CI, testing & linting infrastructure | Done |
 | 4 | Backend core API (CRUD endpoints) | Done |
+| 5 | Frontend dashboard & project management | Done |
 | 6 | m3ter docs scraper & RAG embedding pipeline | Done |
-| 5, 7+ | Dashboard, agent workflows, ... | Not started |
+| 7 | LangGraph agent core (Products/Meters/Aggregations) | Done |
+| 8+ | Chat UI, plans/pricing, accounts, control panel, ... | Not started |
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for full phase details.

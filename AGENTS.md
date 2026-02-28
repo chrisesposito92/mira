@@ -53,7 +53,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 | Directory | Purpose |
 |-----------|---------|
 | `api/` | FastAPI route handlers |
-| `agents/` | LangGraph StateGraphs, nodes, prompts, tools |
+| `agents/` | LangGraph StateGraphs, nodes, prompts, tools (see Agent Structure below) |
 | `auth/` | Supabase JWT verification |
 | `db/` | Supabase client, repository pattern |
 | `m3ter/` | m3ter SDK wrapper, entity push, auth, credential encryption |
@@ -62,6 +62,23 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `scraper/` | m3ter docs crawler (httpx + llms.txt manifest) |
 | `services/` | Business logic layer |
 | `validation/` | Per-entity validators + cross-entity checks |
+
+### Agent Structure (`backend/app/agents/`)
+
+| Directory | Purpose |
+|-----------|---------|
+| `state.py` | `WorkflowState` TypedDict — full graph state definition |
+| `llm_factory.py` | Multi-model registry + `get_llm()` via `init_chat_model()` (5 models) |
+| `checkpointer.py` | `AsyncPostgresSaver` setup reusing `get_db_pool()` |
+| `nodes/analysis.py` | Analyze use case (fetch from DB + RAG + LLM) |
+| `nodes/clarification.py` | Generate clarification questions with `interrupt()` |
+| `nodes/generation.py` | Generate Products, Meters, Aggregations (separate functions) |
+| `nodes/validation.py` | Run validation rules on generated entities |
+| `nodes/approval.py` | Persist entities to DB, `interrupt()` for user approval |
+| `graphs/product_meter_agg.py` | Full StateGraph: analyze → [clarify?] → generate → validate → approve (×3 entity types) |
+| `prompts/product_meter.py` | System prompts with m3ter domain knowledge + hardcoded schemas |
+| `tools/rag_tool.py` | RAG retrieval wrapper for agent nodes |
+| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation) |
 
 ### Frontend Structure (`frontend/src/`)
 
@@ -109,6 +126,9 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **m3ter auth**: OAuth2 client credentials per org, tokens cached 5hrs
 - **RAG**: Two-source retrieval (m3ter docs + user docs), pgvector cosine similarity
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
+- **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
+- **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
+- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity
 
 ### Frontend Auth (Supabase SSR)
 
@@ -144,3 +164,6 @@ Full architecture: `docs/ARCHITECTURE.md`
 - Never use `supabase.auth.getSession()` alone on the server — always use `safeGetSession()` which calls `getUser()` first to validate the JWT
 - Unit tests: Use `TestClient(app)` without `with` (context manager) to avoid triggering the lifespan, which calls `get_db_pool()` and requires a real Postgres connection
 - Unit tests: Use `app.dependency_overrides` with `try/finally` to guarantee cleanup — prevents leaked auth overrides between tests
+- LangGraph `graph.ainvoke()` raises an exception on `interrupt()` — catch it, then read state via `graph.aget_state()` to extract the interrupt payload
+- Use `from datetime import UTC` (not `timezone.utc`) — ruff UP017 rule enforces this
+- Mock Supabase rows for ownership checks must include join data (e.g., `use_cases.projects.user_id`) or queries return 404
