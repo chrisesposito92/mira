@@ -40,7 +40,7 @@
 		if (isEdit && editConnection) {
 			onupdate?.(editConnection.id, {
 				org_name: orgName.trim() || null,
-				api_url: apiUrl.trim() || null,
+				api_url: apiUrl.trim() || undefined,
 				client_id: clientId.trim() || null,
 				client_secret: clientSecret.trim() || null,
 			});

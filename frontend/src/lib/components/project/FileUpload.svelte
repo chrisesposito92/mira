@@ -61,7 +61,7 @@
 		<p class="text-sm font-medium">
 			{uploading ? 'Uploading...' : 'Drop file here or click to browse'}
 		</p>
-		<p class="text-muted-foreground mt-1 text-xs">PDF, CSV, JSON, TXT, XLSX</p>
+		<p class="text-muted-foreground mt-1 text-xs">PDF, DOCX, TXT, CSV</p>
 	</button>
 
 	<input
@@ -69,7 +69,7 @@
 		type="file"
 		class="hidden"
 		onchange={handleFileSelect}
-		accept=".pdf,.csv,.json,.txt,.xlsx"
+		accept=".pdf,.docx,.txt,.csv"
 	/>
 
 	<!-- Document list -->
