@@ -74,6 +74,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full details.
 | 5 | Frontend dashboard & project management | Done |
 | 6 | m3ter docs scraper & RAG embedding pipeline | Done |
 | 7 | LangGraph agent core (Products/Meters/Aggregations) | Done |
-| 8+ | Chat UI, plans/pricing, accounts, control panel, ... | Not started |
+| 8 | Frontend chat interface (workflow UI, WebSocket, HITL) | Done |
+| 9+ | Plans/pricing, accounts, control panel, m3ter sync, ... | Not started |
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for full phase details.

@@ -13,7 +13,8 @@ from app.agents.graphs.product_meter_agg import build_product_meter_agg_graph
 from app.agents.utils import extract_interrupt_payload
 from app.auth.jwt import verify_token
 from app.db.client import get_supabase_client
-from app.schemas.common import WorkflowStatus
+from app.schemas.common import MessageRole, WorkflowStatus
+from app.services.chat_message_service import save_message_internal
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,16 @@ async def _invoke_and_send_result(
             {"status": WorkflowStatus.failed, "error_message": str(exc), "updated_at": now}
         ).eq("id", workflow_id).execute()
         await websocket.send_json({"type": "error", "message": "Workflow failed"})
+        save_message_internal(
+            supabase,
+            workflow_id,
+            MessageRole.system,
+            "Workflow failed",
+            metadata={
+                "error": str(exc),
+                "payload": {"type": "error", "message": "Workflow failed"},
+            },
+        )
         return False
 
     # Check for interrupt
@@ -81,6 +92,20 @@ async def _invoke_and_send_result(
             }
         ).eq("id", workflow_id).execute()
         await websocket.send_json(payload)
+        interrupt_type = payload.get("type", "interrupt")
+        saved = save_message_internal(
+            supabase,
+            workflow_id,
+            MessageRole.assistant,
+            f"Waiting for user input: {interrupt_type}",
+            metadata={"payload": payload},
+        )
+        if saved is None:
+            logger.warning(
+                "Interrupt payload for workflow %s not persisted — "
+                "chat history will be incomplete on reconnect",
+                workflow_id,
+            )
         return True
 
     # Workflow completed
@@ -98,6 +123,13 @@ async def _invoke_and_send_result(
             "type": "complete",
             "message": "Workflow completed successfully.",
         }
+    )
+    save_message_internal(
+        supabase,
+        workflow_id,
+        MessageRole.assistant,
+        "Workflow completed successfully.",
+        metadata={"payload": {"type": "complete", "message": "Workflow completed successfully."}},
     )
     return False
 
@@ -166,12 +198,29 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
             msg_type = message.get("type")
 
             if msg_type == "resume":
-                await websocket.send_json(
-                    {
-                        "type": "status",
-                        "step": "resuming",
-                        "message": "Processing your decisions...",
-                    }
+                decisions_payload = {
+                    "type": "user_decision",
+                    "decisions": message.get("decisions", []),
+                }
+                save_message_internal(
+                    supabase,
+                    workflow_id,
+                    MessageRole.user,
+                    "Entity decisions submitted",
+                    metadata={"payload": decisions_payload},
+                )
+                status_msg = {
+                    "type": "status",
+                    "step": "resuming",
+                    "message": "Processing your decisions...",
+                }
+                await websocket.send_json(status_msg)
+                save_message_internal(
+                    supabase,
+                    workflow_id,
+                    MessageRole.assistant,
+                    status_msg["message"],
+                    metadata={"payload": status_msg},
                 )
                 now = datetime.now(UTC).isoformat()
                 supabase.table("workflows").update(
@@ -189,12 +238,29 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
                     break
 
             elif msg_type == "clarify":
-                await websocket.send_json(
-                    {
-                        "type": "status",
-                        "step": "processing_clarification",
-                        "message": "Processing your answers...",
-                    }
+                clarify_payload = {
+                    "type": "user_clarification",
+                    "answers": message.get("answers", []),
+                }
+                save_message_internal(
+                    supabase,
+                    workflow_id,
+                    MessageRole.user,
+                    "Clarification answers submitted",
+                    metadata={"payload": clarify_payload},
+                )
+                status_msg = {
+                    "type": "status",
+                    "step": "processing_clarification",
+                    "message": "Processing your answers...",
+                }
+                await websocket.send_json(status_msg)
+                save_message_internal(
+                    supabase,
+                    workflow_id,
+                    MessageRole.assistant,
+                    status_msg["message"],
+                    metadata={"payload": status_msg},
                 )
                 now = datetime.now(UTC).isoformat()
                 supabase.table("workflows").update(

@@ -185,6 +185,9 @@ class MockPostgrestBuilder:
     def order(self, column: str, **kwargs: object) -> "MockPostgrestBuilder":
         return self
 
+    def limit(self, count: int) -> "MockPostgrestBuilder":
+        return self
+
     def execute(self) -> MockPostgrestResponse:
         return MockPostgrestResponse(self._data)
 

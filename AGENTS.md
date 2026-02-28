@@ -85,7 +85,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 | Directory | Purpose |
 |-----------|---------|
 | `lib/components/ui/` | shadcn-svelte base components |
-| `lib/components/chat/` | Chat UI (AgentMessage, ObjectCard, etc.) |
+| `lib/components/chat/` | Chat UI (ChatContainer, EntityCard, ClarificationCard, WorkflowLauncher, etc.) |
 | `lib/components/control-panel/` | Object tree, JSON editor |
 | `lib/components/project/` | Project/use case cards |
 | `lib/components/layout/` | Sidebar, header, breadcrumbs |
@@ -129,6 +129,18 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
 - **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity
+
+### Frontend Chat Interface
+
+- **WorkflowStore**: Single unified store (`stores/workflow.svelte.ts`) — manages messages, workflow state, WS connection, pending interactions. No separate WebSocket store.
+- **WebSocketClient**: Class in `services/websocket.ts` — NOT a singleton, owned by WorkflowStore. Auto-reconnect with exponential backoff (1s→30s, max 5 attempts).
+- **WorkflowService**: Factory function `createWorkflowService(client)` in `services/workflow.ts` — REST calls for start, get, list, models, messages.
+- **Chat messages**: Persisted to `chat_messages` DB table via `save_message_internal()` at 7 WS flow points. `GET/POST /api/workflows/{id}/messages` endpoints with ownership checks.
+- **Component tree**: `ChatContainer` → `ChatMessage` (dispatcher) → `EntityCard` | `ClarificationCard` | status/complete/error renders.
+- **Interactive vs historical**: Only the last `entities`/`clarification` message shows action buttons. Prior ones display as read-only summaries.
+- **Entity decisions**: Accumulated per-entity in store; auto-submitted when all entities have decisions.
+- **Workflow route**: `/projects/[projectId]/use-cases/[useCaseId]/workflow/` — loads use case, models, and restores interrupted workflows.
+- **Chat message types**: Discriminated union `ChatMessage` with 7 variants: `status`, `entities`, `clarification`, `user_decision`, `user_clarification`, `complete`, `error`.
 
 ### Frontend Auth (Supabase SSR)
 
