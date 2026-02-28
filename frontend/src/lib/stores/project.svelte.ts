@@ -96,11 +96,14 @@ class ProjectStore {
 	// --- Use Cases ---
 
 	async loadUseCases(service: UseCaseService, projectId: string) {
+		this.loading = true;
 		this.error = null;
 		try {
 			this.useCases = await service.list(projectId);
 		} catch (e) {
 			this.error = e instanceof Error ? e.message : 'Failed to load use cases';
+		} finally {
+			this.loading = false;
 		}
 	}
 
@@ -143,11 +146,14 @@ class ProjectStore {
 	// --- Documents ---
 
 	async loadDocuments(service: DocumentService, projectId: string) {
+		this.loading = true;
 		this.error = null;
 		try {
 			this.documents = await service.list(projectId);
 		} catch (e) {
 			this.error = e instanceof Error ? e.message : 'Failed to load documents';
+		} finally {
+			this.loading = false;
 		}
 	}
 

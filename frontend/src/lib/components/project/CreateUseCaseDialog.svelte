@@ -12,7 +12,7 @@
 		oncreate,
 	}: {
 		open: boolean;
-		oncreate?: (data: UseCaseCreate) => void;
+		oncreate?: (data: UseCaseCreate) => void | Promise<void>;
 	} = $props();
 
 	let title = $state('');
@@ -22,21 +22,27 @@
 	let targetBillingModel = $state('');
 	let contractStartDate = $state('');
 	let notes = $state('');
+	let submitting = $state(false);
 
-	function handleSubmit(e: SubmitEvent) {
+	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		if (!title.trim()) return;
-		oncreate?.({
-			title: title.trim(),
-			description: description.trim() || null,
-			billing_frequency: (billingFrequency as BillingFrequency) || null,
-			currency: currency || 'USD',
-			target_billing_model: targetBillingModel.trim() || null,
-			contract_start_date: contractStartDate || null,
-			notes: notes.trim() || null,
-		});
-		reset();
-		open = false;
+		if (!title.trim() || submitting) return;
+		submitting = true;
+		try {
+			await oncreate?.({
+				title: title.trim(),
+				description: description.trim() || null,
+				billing_frequency: (billingFrequency as BillingFrequency) || null,
+				currency: currency || 'USD',
+				target_billing_model: targetBillingModel.trim() || null,
+				contract_start_date: contractStartDate || null,
+				notes: notes.trim() || null,
+			});
+			reset();
+			open = false;
+		} finally {
+			submitting = false;
+		}
 	}
 
 	function reset() {
@@ -110,7 +116,9 @@
 			</div>
 			<Dialog.Footer>
 				<Button variant="outline" type="button" onclick={() => (open = false)}>Cancel</Button>
-				<Button type="submit" disabled={!title.trim()}>Create Use Case</Button>
+				<Button type="submit" disabled={!title.trim() || submitting}>
+					{submitting ? 'Creating...' : 'Create Use Case'}
+				</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>

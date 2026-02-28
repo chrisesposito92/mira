@@ -13,8 +13,8 @@
 	}: {
 		open: boolean;
 		editConnection?: OrgConnection | null;
-		oncreate?: (data: OrgConnectionCreate) => void;
-		onupdate?: (id: string, data: OrgConnectionUpdate) => void;
+		oncreate?: (data: OrgConnectionCreate) => void | Promise<void>;
+		onupdate?: (id: string, data: OrgConnectionUpdate) => void | Promise<void>;
 	} = $props();
 
 	let orgName = $state('');
@@ -22,6 +22,7 @@
 	let apiUrl = $state('https://api.m3ter.com');
 	let clientId = $state('');
 	let clientSecret = $state('');
+	let submitting = $state(false);
 
 	const isEdit = $derived(!!editConnection);
 
@@ -35,27 +36,37 @@
 		}
 	});
 
-	function handleSubmit(e: SubmitEvent) {
+	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		if (isEdit && editConnection) {
-			onupdate?.(editConnection.id, {
-				org_name: orgName.trim() || null,
-				api_url: apiUrl.trim() || undefined,
-				client_id: clientId.trim() || null,
-				client_secret: clientSecret.trim() || null,
-			});
-		} else {
-			if (!orgName.trim() || !orgId.trim() || !clientId.trim() || !clientSecret.trim()) return;
-			oncreate?.({
-				org_name: orgName.trim(),
-				org_id: orgId.trim(),
-				api_url: apiUrl.trim() || 'https://api.m3ter.com',
-				client_id: clientId.trim(),
-				client_secret: clientSecret.trim(),
-			});
+		if (submitting) return;
+		submitting = true;
+		try {
+			if (isEdit && editConnection) {
+				await onupdate?.(editConnection.id, {
+					org_name: orgName.trim() || null,
+					// undefined omits from PATCH — api_url column is NOT NULL
+					api_url: apiUrl.trim() || undefined,
+					client_id: clientId.trim() || null,
+					client_secret: clientSecret.trim() || null,
+				});
+			} else {
+				if (!orgName.trim() || !orgId.trim() || !clientId.trim() || !clientSecret.trim()) {
+					submitting = false;
+					return;
+				}
+				await oncreate?.({
+					org_name: orgName.trim(),
+					org_id: orgId.trim(),
+					api_url: apiUrl.trim() || 'https://api.m3ter.com',
+					client_id: clientId.trim(),
+					client_secret: clientSecret.trim(),
+				});
+			}
+			reset();
+			open = false;
+		} finally {
+			submitting = false;
 		}
-		reset();
-		open = false;
 	}
 
 	function reset() {
@@ -115,7 +126,13 @@
 			</div>
 			<Dialog.Footer>
 				<Button variant="outline" type="button" onclick={() => (open = false)}>Cancel</Button>
-				<Button type="submit">{isEdit ? 'Update' : 'Add Connection'}</Button>
+				<Button type="submit" disabled={submitting}>
+					{#if submitting}
+						{isEdit ? 'Updating...' : 'Adding...'}
+					{:else}
+						{isEdit ? 'Update' : 'Add Connection'}
+					{/if}
+				</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>

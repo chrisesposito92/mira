@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { StatusBadge } from '$lib/components/project';
+	import { cn } from '$lib/utils.js';
 	import { Upload, FileText, Trash2 } from 'lucide-svelte';
 	import type { Document } from '$lib/types';
 
@@ -45,9 +46,10 @@
 	<!-- Drop zone -->
 	<button
 		type="button"
-		class="border-muted-foreground/25 hover:border-primary/50 flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors {dragOver
-			? 'border-primary bg-primary/5'
-			: ''}"
+		class={cn(
+			'border-muted-foreground/25 hover:border-primary/50 flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors',
+			dragOver && 'border-primary bg-primary/5',
+		)}
 		ondragover={(e) => {
 			e.preventDefault();
 			dragOver = true;

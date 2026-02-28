@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Select from '$lib/components/ui/select';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import {
@@ -25,13 +26,23 @@
 
 	let createUcOpen = $state(false);
 	let uploading = $state(false);
-	let selectedConnectionId = $state(data.project.org_connection_id ?? '');
+	let selectedConnectionId = $state('');
+	let updatingConnection = $state(false);
+	let deleteOpen = $state(false);
 
 	$effect(() => {
 		projectStore.currentProject = data.project;
 		projectStore.useCases = data.useCases;
 		projectStore.documents = data.documents;
-		selectedConnectionId = data.project.org_connection_id ?? '';
+		if (!updatingConnection) {
+			selectedConnectionId = data.project.org_connection_id ?? '';
+		}
+
+		return () => {
+			projectStore.currentProject = null;
+			projectStore.useCases = [];
+			projectStore.documents = [];
+		};
 	});
 
 	function getServices() {
@@ -55,13 +66,16 @@
 
 	async function handleUpload(file: File) {
 		uploading = true;
-		const { documentService } = getServices();
-		const doc = await projectStore.uploadDocument(documentService, data.project.id, file);
-		uploading = false;
-		if (doc) {
-			toast.success(`Uploaded ${file.name}`);
-		} else {
-			toast.error(projectStore.error ?? 'Failed to upload');
+		try {
+			const { documentService } = getServices();
+			const doc = await projectStore.uploadDocument(documentService, data.project.id, file);
+			if (doc) {
+				toast.success(`Uploaded ${file.name}`);
+			} else {
+				toast.error(projectStore.error ?? 'Failed to upload');
+			}
+		} finally {
+			uploading = false;
 		}
 	}
 
@@ -73,24 +87,29 @@
 	}
 
 	async function handleConnectionChange(connId: string) {
+		updatingConnection = true;
 		const previousId = selectedConnectionId;
 		selectedConnectionId = connId;
-		const { projectService } = getServices();
-		const result = await projectStore.updateProject(projectService, data.project.id, {
-			org_connection_id: connId || null,
-		});
-		if (result) {
-			toast.success('Connection updated');
-		} else {
-			selectedConnectionId = previousId;
-			toast.error(projectStore.error ?? 'Failed to update connection');
+		try {
+			const { projectService } = getServices();
+			const result = await projectStore.updateProject(projectService, data.project.id, {
+				org_connection_id: connId || null,
+			});
+			if (result) {
+				toast.success('Connection updated');
+			} else {
+				selectedConnectionId = previousId;
+				toast.error(projectStore.error ?? 'Failed to update connection');
+			}
+		} finally {
+			updatingConnection = false;
 		}
 	}
 
-	async function handleDeleteProject() {
-		if (!confirm('Are you sure? This will delete the project and all its data.')) return;
+	async function confirmDeleteProject() {
 		const { projectService } = getServices();
 		const ok = await projectStore.deleteProject(projectService, data.project.id);
+		deleteOpen = false;
 		if (ok) {
 			toast.success('Project deleted');
 			goto('/dashboard');
@@ -196,7 +215,7 @@
 				<p class="text-muted-foreground mt-1 text-sm">
 					Permanently delete this project and all its data.
 				</p>
-				<Button variant="destructive" size="sm" class="mt-3" onclick={handleDeleteProject}>
+				<Button variant="destructive" size="sm" class="mt-3" onclick={() => (deleteOpen = true)}>
 					<Trash2 class="mr-1 size-4" />
 					Delete Project
 				</Button>
@@ -206,3 +225,24 @@
 </div>
 
 <CreateUseCaseDialog bind:open={createUcOpen} oncreate={handleCreateUseCase} />
+
+<AlertDialog.Root bind:open={deleteOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Delete Project</AlertDialog.Title>
+			<AlertDialog.Description>
+				Are you sure? This will permanently delete the project and all its data. This action cannot
+				be undone.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+				onclick={confirmDeleteProject}
+			>
+				Delete Project
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

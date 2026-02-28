@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { ProjectCard, CreateProjectDialog, EmptyState } from '$lib/components/project';
 	import { projectStore } from '$lib/stores';
@@ -22,6 +22,7 @@
 		const project = await projectStore.createProject(service, formData);
 		if (project) {
 			toast.success('Project created');
+			await invalidate('app:projects');
 			goto(`/projects/${project.id}`);
 		} else {
 			toast.error(projectStore.error ?? 'Failed to create project');

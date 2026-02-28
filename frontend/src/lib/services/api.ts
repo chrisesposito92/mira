@@ -14,15 +14,23 @@ export class ApiClient {
 	constructor(
 		private baseUrl: string,
 		private supabase: SupabaseClient,
+		private accessToken?: string,
 	) {}
 
 	private async headers(): Promise<Record<string, string>> {
-		const {
-			data: { session },
-		} = await this.supabase.auth.getSession();
 		const headers: Record<string, string> = {};
-		if (session?.access_token) {
-			headers['Authorization'] = `Bearer ${session.access_token}`;
+		let token = this.accessToken;
+		if (!token) {
+			// Browser-only fallback — getSession() is safe in the browser.
+			// Server-side callers must pass a pre-validated accessToken instead
+			// (see AGENTS.md: never use getSession() alone on the server).
+			const {
+				data: { session },
+			} = await this.supabase.auth.getSession();
+			token = session?.access_token;
+		}
+		if (token) {
+			headers['Authorization'] = `Bearer ${token}`;
 		}
 		return headers;
 	}
@@ -98,7 +106,9 @@ export class ApiClient {
 	}
 }
 
-export function createApiClient(supabase: SupabaseClient): ApiClient {
-	const baseUrl = import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000';
-	return new ApiClient(baseUrl, supabase);
+export function createApiClient(supabase: SupabaseClient, accessToken?: string): ApiClient {
+	// Uses import.meta.env for testability — $env/static/public is unavailable in vitest.
+	// Use || (not ??) so empty string also falls back to default.
+	const baseUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+	return new ApiClient(baseUrl, supabase, accessToken);
 }

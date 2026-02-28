@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import {
 		OrgConnectionCard,
 		CreateOrgConnectionDialog,
@@ -16,6 +17,7 @@
 	let createOpen = $state(false);
 	let editConnection = $state<OrgConnection | null>(null);
 	let testingId = $state<string | null>(null);
+	let deleteTarget = $state<string | null>(null);
 
 	$effect(() => {
 		orgConnectionStore.connections = data.connections;
@@ -41,9 +43,14 @@
 	}
 
 	async function handleDelete(id: string) {
-		if (!confirm('Delete this org connection?')) return;
+		deleteTarget = id;
+	}
+
+	async function confirmDelete() {
+		if (!deleteTarget) return;
 		const service = getService();
-		const ok = await orgConnectionStore.deleteConnection(service, id);
+		const ok = await orgConnectionStore.deleteConnection(service, deleteTarget);
+		deleteTarget = null;
 		if (ok) toast.success('Connection deleted');
 		else toast.error(orgConnectionStore.error ?? 'Failed to delete');
 	}
@@ -112,3 +119,28 @@
 	oncreate={handleCreate}
 	onupdate={handleUpdate}
 />
+
+<AlertDialog.Root
+	open={!!deleteTarget}
+	onOpenChange={(v) => {
+		if (!v) deleteTarget = null;
+	}}
+>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Delete Connection</AlertDialog.Title>
+			<AlertDialog.Description>
+				Are you sure you want to delete this org connection? This action cannot be undone.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel onclick={() => (deleteTarget = null)}>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+				onclick={confirmDelete}
+			>
+				Delete
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

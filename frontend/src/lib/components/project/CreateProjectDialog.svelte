@@ -14,25 +14,31 @@
 	}: {
 		open: boolean;
 		connections?: OrgConnection[];
-		oncreate?: (data: ProjectCreate) => void;
+		oncreate?: (data: ProjectCreate) => void | Promise<void>;
 	} = $props();
 
 	let name = $state('');
 	let customerName = $state('');
 	let description = $state('');
 	let orgConnectionId = $state('');
+	let submitting = $state(false);
 
-	function handleSubmit(e: SubmitEvent) {
+	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-		if (!name.trim()) return;
-		oncreate?.({
-			name: name.trim(),
-			customer_name: customerName.trim() || null,
-			description: description.trim() || null,
-			org_connection_id: orgConnectionId || null,
-		});
-		reset();
-		open = false;
+		if (!name.trim() || submitting) return;
+		submitting = true;
+		try {
+			await oncreate?.({
+				name: name.trim(),
+				customer_name: customerName.trim() || null,
+				description: description.trim() || null,
+				org_connection_id: orgConnectionId || null,
+			});
+			reset();
+			open = false;
+		} finally {
+			submitting = false;
+		}
 	}
 
 	function reset() {
@@ -90,7 +96,9 @@
 			{/if}
 			<Dialog.Footer>
 				<Button variant="outline" type="button" onclick={() => (open = false)}>Cancel</Button>
-				<Button type="submit" disabled={!name.trim()}>Create Project</Button>
+				<Button type="submit" disabled={!name.trim() || submitting}>
+					{submitting ? 'Creating...' : 'Create Project'}
+				</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
