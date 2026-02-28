@@ -18,6 +18,7 @@ export interface Workflow {
 	workflow_type: WorkflowType;
 	status: WorkflowStatus;
 	thread_id: string | null;
+	model_id: string | null;
 	interrupt_payload: Record<string, unknown> | null;
 	error_message: string | null;
 	started_at: string | null;
@@ -191,7 +192,7 @@ export type WsConnectionState = 'disconnected' | 'connecting' | 'connected' | 'r
 // --- Chat Message Persistence ---
 
 export interface ChatMessageCreate {
-	role: string;
+	role: 'user' | 'assistant' | 'system';
 	content: string;
 	metadata?: Record<string, unknown>;
 }

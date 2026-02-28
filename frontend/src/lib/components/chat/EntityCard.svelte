@@ -4,6 +4,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import EntityEditDialog from './EntityEditDialog.svelte';
 	import { Check, Pencil, X, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-svelte';
+	import { cn } from '$lib/utils.js';
 	import type { EntityError, EntityDecision } from '$lib/types/workflow.js';
 
 	let {
@@ -103,7 +104,12 @@
 			{#if errors.length > 0}
 				<div class="mt-2 space-y-1">
 					{#each errors as err}
-						<p class="text-xs {err.severity === 'error' ? 'text-destructive' : 'text-yellow-600'}">
+						<p
+							class={cn(
+								'text-xs',
+								err.severity === 'error' ? 'text-destructive' : 'text-yellow-600',
+							)}
+						>
 							<span class="font-medium">{err.field}:</span>
 							{err.message}
 						</p>

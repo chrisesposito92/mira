@@ -41,6 +41,7 @@ class WorkflowStore {
 
 	private ws: WebSocketClient | null = null;
 	private messageCounter = 0;
+	private restoredFromHistory = false;
 
 	private nextId(): string {
 		return `msg-${Date.now()}-${++this.messageCounter}`;
@@ -125,6 +126,11 @@ class WorkflowStore {
 					entities: msg.entities,
 				};
 				this.pendingDecisions = [];
+				// Skip appending if this is a replay of already-restored history
+				if (this.restoredFromHistory) {
+					this.restoredFromHistory = false;
+					break;
+				}
 				this.messages = [
 					...this.messages,
 					{
@@ -141,6 +147,11 @@ class WorkflowStore {
 			case 'clarification':
 				this.thinking = false;
 				this.pendingClarification = msg.questions;
+				// Skip appending if this is a replay of already-restored history
+				if (this.restoredFromHistory) {
+					this.restoredFromHistory = false;
+					break;
+				}
 				this.messages = [
 					...this.messages,
 					{
@@ -190,6 +201,9 @@ class WorkflowStore {
 	}
 
 	submitDecision(decision: EntityDecision) {
+		// Deduplicate by index — ignore if this entity already has a decision
+		if (this.pendingDecisions.some((d) => d.index === decision.index)) return;
+
 		this.pendingDecisions = [...this.pendingDecisions, decision];
 
 		// If all entities have decisions, send the resume
@@ -249,6 +263,9 @@ class WorkflowStore {
 		this.workflow = workflow;
 		if (persistedMessages && persistedMessages.length > 0) {
 			this.messages = persistedMessages.map((m) => this.persistedToChatMessage(m));
+			// Flag that history was loaded — the next entities/clarification WS message
+			// is a replay of the current interrupt and should not be appended again
+			this.restoredFromHistory = true;
 		}
 		this.connectWebSocket(workflow.id, token);
 	}
@@ -337,6 +354,7 @@ class WorkflowStore {
 		this.pendingClarification = null;
 		this.pendingDecisions = [];
 		this.messageCounter = 0;
+		this.restoredFromHistory = false;
 	}
 }
 

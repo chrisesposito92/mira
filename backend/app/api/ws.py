@@ -71,7 +71,10 @@ async def _invoke_and_send_result(
             workflow_id,
             MessageRole.system,
             "Workflow failed",
-            metadata={"error": str(exc)},
+            metadata={
+                "error": str(exc),
+                "payload": {"type": "error", "message": "Workflow failed"},
+            },
         )
         return False
 
@@ -90,13 +93,19 @@ async def _invoke_and_send_result(
         ).eq("id", workflow_id).execute()
         await websocket.send_json(payload)
         interrupt_type = payload.get("type", "interrupt")
-        save_message_internal(
+        saved = save_message_internal(
             supabase,
             workflow_id,
             MessageRole.assistant,
             f"Waiting for user input: {interrupt_type}",
             metadata={"payload": payload},
         )
+        if saved is None:
+            logger.warning(
+                "Interrupt payload for workflow %s not persisted — "
+                "chat history will be incomplete on reconnect",
+                workflow_id,
+            )
         return True
 
     # Workflow completed
@@ -120,6 +129,7 @@ async def _invoke_and_send_result(
         workflow_id,
         MessageRole.assistant,
         "Workflow completed successfully.",
+        metadata={"payload": {"type": "complete", "message": "Workflow completed successfully."}},
     )
     return False
 

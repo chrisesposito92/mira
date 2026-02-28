@@ -15,6 +15,7 @@ class WorkflowResponse(BaseModel):
     workflow_type: WorkflowType
     status: WorkflowStatus
     thread_id: str | None = None
+    model_id: str | None = None
     interrupt_payload: dict | None = None
     error_message: str | None = None
     started_at: datetime | None = None

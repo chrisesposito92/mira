@@ -9,6 +9,7 @@
 	import type { EntityDecision, ClarificationAnswer } from '$lib/types/workflow.js';
 
 	let { data } = $props();
+	let restored = false;
 
 	function getService() {
 		const client = createApiClient(data.supabase);
@@ -20,8 +21,9 @@
 		workflowStore.models = data.models;
 		workflowStore.workflows = data.workflows;
 
-		// Restore interrupted workflow if exists
-		if (data.interruptedWorkflow && data.session?.access_token) {
+		// Restore interrupted workflow once (skip on subsequent $effect re-runs from session refresh)
+		if (!restored && data.interruptedWorkflow && data.session?.access_token) {
+			restored = true;
 			workflowStore.restoreFromInterrupt(
 				data.interruptedWorkflow,
 				data.session.access_token,
@@ -63,8 +65,7 @@
 	const showChat = $derived(workflowStore.workflow !== null);
 
 	const modelName = $derived(
-		workflowStore.models.find((m) => m.id === workflowStore.workflow?.thread_id)?.display_name ??
-			'',
+		workflowStore.models.find((m) => m.id === workflowStore.workflow?.model_id)?.display_name ?? '',
 	);
 </script>
 

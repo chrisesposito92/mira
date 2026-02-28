@@ -53,7 +53,7 @@ describe('WorkflowService', () => {
 	it('saveMessage calls POST /api/workflows/:id/messages with body', async () => {
 		const client = mockClient();
 		const service = createWorkflowService(client);
-		const data = { role: 'user', content: 'hello', metadata: { payload: {} } };
+		const data = { role: 'user' as const, content: 'hello', metadata: { payload: {} } };
 		await service.saveMessage('wf-1', data);
 		expect(client.post).toHaveBeenCalledWith('/api/workflows/wf-1/messages', data);
 	});

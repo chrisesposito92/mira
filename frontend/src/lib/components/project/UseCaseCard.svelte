@@ -2,6 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { StatusBadge } from '$lib/components/project';
 	import { DollarSign, ArrowRight } from 'lucide-svelte';
+	import { cn } from '$lib/utils.js';
 	import type { UseCase } from '$lib/types';
 
 	let {
@@ -25,7 +26,7 @@
 
 <a
 	href={workflowHref}
-	class="block transition-shadow hover:shadow-md {workflowHref ? 'cursor-pointer' : ''}"
+	class={cn('block transition-shadow hover:shadow-md', workflowHref && 'cursor-pointer')}
 >
 	<Card.Root>
 		<Card.Header>

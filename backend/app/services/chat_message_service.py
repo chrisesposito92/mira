@@ -62,7 +62,13 @@ def save_message_internal(
     content: str,
     metadata: dict | None = None,
 ) -> dict | None:
-    """Save a chat message without auth check — for internal WS handler use only."""
+    """Save a chat message without auth check — for internal WS handler use only.
+
+    Returns the saved row dict on success, or None on failure.
+    Failures are logged at WARNING level. Callers should check the return value
+    and surface persistence failures to the user when appropriate (e.g. via a
+    WebSocket warning message).
+    """
     try:
         row = {
             "workflow_id": workflow_id,
@@ -73,5 +79,9 @@ def save_message_internal(
         result = supabase.table("chat_messages").insert(row).execute()
         return result.data[0] if result.data else None
     except Exception:
-        logger.exception("Failed to save chat message for workflow %s", workflow_id)
+        logger.warning(
+            "Failed to persist chat message for workflow %s — chat history may be incomplete",
+            workflow_id,
+            exc_info=True,
+        )
         return None

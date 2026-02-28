@@ -135,7 +135,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **WorkflowStore**: Single unified store (`stores/workflow.svelte.ts`) — manages messages, workflow state, WS connection, pending interactions. No separate WebSocket store.
 - **WebSocketClient**: Class in `services/websocket.ts` — NOT a singleton, owned by WorkflowStore. Auto-reconnect with exponential backoff (1s→30s, max 5 attempts).
 - **WorkflowService**: Factory function `createWorkflowService(client)` in `services/workflow.ts` — REST calls for start, get, list, models, messages.
-- **Chat messages**: Persisted to `chat_messages` DB table via `save_message_internal()` at 6 WS flow points. `GET/POST /api/workflows/{id}/messages` endpoints with ownership checks.
+- **Chat messages**: Persisted to `chat_messages` DB table via `save_message_internal()` at 7 WS flow points. `GET/POST /api/workflows/{id}/messages` endpoints with ownership checks.
 - **Component tree**: `ChatContainer` → `ChatMessage` (dispatcher) → `EntityCard` | `ClarificationCard` | status/complete/error renders.
 - **Interactive vs historical**: Only the last `entities`/`clarification` message shows action buttons. Prior ones display as read-only summaries.
 - **Entity decisions**: Accumulated per-entity in store; auto-submitted when all entities have decisions.
