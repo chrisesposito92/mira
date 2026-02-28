@@ -11,6 +11,7 @@ Flow:
 """
 
 from langgraph.graph import END, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from app.agents.checkpointer import get_checkpointer
 from app.agents.nodes.analysis import analyze_use_case
@@ -88,7 +89,7 @@ def _build_graph() -> StateGraph:
 _compiled_graph = None
 
 
-async def build_product_meter_agg_graph():
+async def build_product_meter_agg_graph() -> CompiledStateGraph:
     """Return the cached compiled graph, building it on first call."""
     global _compiled_graph
     if _compiled_graph is not None:

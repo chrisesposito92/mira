@@ -120,6 +120,7 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
     """
     user_id = await _authenticate_ws(websocket)
     if not user_id:
+        await websocket.accept()
         await websocket.close(code=4001, reason="Unauthorized")
         return
 
@@ -199,7 +200,7 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
                 supabase.table("workflows").update(
                     {"status": WorkflowStatus.running, "updated_at": now}
                 ).eq("id", workflow_id).execute()
-                await _invoke_and_send_result(
+                should_continue = await _invoke_and_send_result(
                     websocket,
                     graph,
                     config,
@@ -207,6 +208,8 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
                     supabase,
                     workflow_id,
                 )
+                if not should_continue:
+                    break
 
             else:
                 await websocket.send_json(

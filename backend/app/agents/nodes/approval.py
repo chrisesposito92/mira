@@ -2,7 +2,7 @@
 
 import json
 import logging
-from uuid import uuid4
+from uuid import NAMESPACE_DNS, uuid5
 
 from langgraph.types import interrupt
 
@@ -48,6 +48,7 @@ async def approve_entities(state: WorkflowState) -> dict:
     entities = state.get(entities_key, [])
     errors = state.get(errors_key, [])
     use_case_id = state.get("use_case_id", "")
+    thread_id = state.get("thread_id", "")
 
     # Build interrupt payload (no DB insert yet — LangGraph re-executes the node
     # from the top on resume, so inserting before interrupt() would create duplicates)
@@ -69,8 +70,8 @@ async def approve_entities(state: WorkflowState) -> dict:
 
     entity_ids: list[str] = []
     rows_to_insert = []
-    for entity in entities:
-        obj_id = str(uuid4())
+    for i, entity in enumerate(entities):
+        obj_id = str(uuid5(NAMESPACE_DNS, f"{thread_id}:{entity_type}:{i}"))
         entity_ids.append(obj_id)
         rows_to_insert.append(
             {
@@ -85,7 +86,7 @@ async def approve_entities(state: WorkflowState) -> dict:
         )
 
     if rows_to_insert:
-        supabase.table("generated_objects").insert(rows_to_insert).execute()
+        supabase.table("generated_objects").upsert(rows_to_insert).execute()
 
     approved_entities = list(entities)
     decided_indices: set[int] = set()

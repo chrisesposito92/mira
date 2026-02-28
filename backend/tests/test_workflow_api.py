@@ -1,5 +1,6 @@
 """Tests for workflow API endpoints (Phase 7)."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -30,7 +31,9 @@ def _workflow_row(use_case_id: str | None = None, **overrides) -> dict:
 
 
 @pytest.fixture
-def authed_client_with_data(mock_supabase):
+def authed_client_with_data(
+    mock_supabase: MagicMock,
+) -> Generator[tuple[TestClient, MagicMock], None, None]:
     """TestClient with mocked auth and configurable table data."""
     from app.dependencies import get_current_user, get_supabase
     from app.main import app

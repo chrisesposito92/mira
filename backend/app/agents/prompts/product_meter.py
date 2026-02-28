@@ -137,12 +137,11 @@ A Meter defines how usage data is ingested and structured. Required fields:
 - **name** (str): Human-readable meter name (e.g., "API Request Meter")
 - **code** (str): Unique machine code, lowercase with underscores (e.g., "api_request_meter")
 - **dataFields** (list): Fields that capture usage dimensions:
-  - **name** (str): Human-readable field name
   - **code** (str): Machine code for the field
-  - **category** (str): One of "WHO", "WHAT", "WHERE", "MEASURE", "METADATA", "OTHER"
+  - **category** (str): One of "WHO", "WHAT", "WHERE", "MEASURE",
+    "METADATA", "OTHER", "INCOME", "COST"
   - **unit** (str, optional): Unit of measurement (e.g., "requests", "bytes", "seconds")
 - **derivedFields** (list, optional): Calculated fields based on dataFields:
-  - **name** (str): Human-readable name
   - **code** (str): Machine code
   - **calculation** (str): Expression using dataField codes
   - **unit** (str, optional): Unit of result
@@ -152,9 +151,9 @@ Example:
   "name": "API Request Meter",
   "code": "api_request_meter",
   "dataFields": [
-    {{"name": "Request Count", "code": "request_count", "category": "MEASURE", "unit": "requests"}},
-    {{"name": "Region", "code": "region", "category": "WHERE"}},
-    {{"name": "Endpoint", "code": "endpoint", "category": "WHAT"}}
+    {{"code": "request_count", "category": "MEASURE", "unit": "requests"}},
+    {{"code": "region", "category": "WHERE"}},
+    {{"code": "endpoint", "category": "WHAT"}}
   ],
   "derivedFields": []
 }}
@@ -180,7 +179,7 @@ Example:
 Generate Meter configurations that:
 - Capture all usage dimensions identified in the analysis
 - Use appropriate data field categories \
-(WHO=customer, WHAT=resource, WHERE=location, MEASURE=quantity)
+(WHO=customer, WHAT=resource, WHERE=location, MEASURE=quantity, INCOME=revenue, COST=cost)
 - Have unique, descriptive codes
 - Reference the products they meter for
 
@@ -192,13 +191,13 @@ Respond with a JSON array of meter objects:
     "name": "<meter name>",
     "code": "<unique_snake_case_code>",
     "dataFields": [
-      {{"name": "<field>", "code": "<code>",
-        "category": "<WHO|WHAT|WHERE|MEASURE|METADATA|OTHER>",
+      {{"code": "<code>",
+        "category": "<WHO|WHAT|WHERE|MEASURE|METADATA|OTHER|INCOME|COST>",
         "unit": "<optional unit>"}},
       ...
     ],
     "derivedFields": [
-      {{"name": "<field>", "code": "<code>",
+      {{"code": "<code>",
         "calculation": "<expression>",
         "unit": "<optional unit>"}},
       ...

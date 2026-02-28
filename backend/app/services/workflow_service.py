@@ -129,23 +129,36 @@ async def start_workflow(supabase: Client, user_id: UUID, use_case_id: UUID, mod
             "workflow_type": WorkflowType.product_meter_aggregation,
             "status": WorkflowStatus.running,
             "thread_id": thread_id,
+            "model_id": model_id,
             "started_at": now,
             "created_at": now,
             "updated_at": now,
         }
     ).execute()
 
-    graph = await build_product_meter_agg_graph()
-    initial_state = {
-        "use_case_id": str(use_case_id),
-        "project_id": str(project_id),
-        "model_id": model_id,
-        "user_id": str(user_id),
-        "thread_id": thread_id,
-    }
-    config = {"configurable": {"thread_id": thread_id}}
+    try:
+        graph = await build_product_meter_agg_graph()
+        initial_state = {
+            "use_case_id": str(use_case_id),
+            "project_id": str(project_id),
+            "model_id": model_id,
+            "user_id": str(user_id),
+            "thread_id": thread_id,
+        }
+        config = {"configurable": {"thread_id": thread_id}}
 
-    return await _invoke_and_handle(graph, config, initial_state, supabase, workflow_id)
+        return await _invoke_and_handle(graph, config, initial_state, supabase, workflow_id)
+    except Exception as exc:
+        logger.exception("Failed to build or invoke graph for workflow %s", workflow_id)
+        _update_workflow(
+            supabase,
+            workflow_id,
+            {
+                "status": WorkflowStatus.failed,
+                "error_message": str(exc),
+            },
+        )
+        raise HTTPException(status_code=500, detail="Workflow failed to start") from exc
 
 
 async def resume_workflow(

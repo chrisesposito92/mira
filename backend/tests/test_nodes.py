@@ -16,14 +16,14 @@ from app.agents.nodes.validation import validate_entities
 
 
 @pytest.fixture
-def mock_llm():
+def mock_llm() -> AsyncMock:
     """Create a mock LLM that returns configurable JSON responses."""
     llm = AsyncMock()
     return llm
 
 
 @pytest.fixture
-def base_state():
+def base_state() -> dict:
     """Base workflow state for testing."""
     return {
         "use_case_id": "uc-111",
