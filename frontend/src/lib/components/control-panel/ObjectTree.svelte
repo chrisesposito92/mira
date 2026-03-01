@@ -9,12 +9,14 @@
 		tree,
 		selectedObjectId = null,
 		selectedIds = new Set<string>(),
+		pushingIds = new Set<string>(),
 		onselect,
 		ontoggle,
 	}: {
 		tree: EntityGroup[];
 		selectedObjectId: string | null;
 		selectedIds: Set<string>;
+		pushingIds?: Set<string>;
 		onselect: (id: string) => void;
 		ontoggle: (id: string) => void;
 	} = $props();
@@ -59,6 +61,7 @@
 							{object}
 							isSelected={selectedIds.has(object.id)}
 							isActive={object.id === selectedObjectId}
+							isPushing={pushingIds.has(object.id)}
 							{onselect}
 							{ontoggle}
 						/>

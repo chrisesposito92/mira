@@ -371,21 +371,39 @@ Phase 1 (Scaffold)
 
 ## Phase 12: m3ter Push & Sync Integration
 
-**~20 files** | Depends on: Phase 4, Phase 11
+**19 files (10 new, 9 modified)** | Depends on: Phase 4, Phase 11
 
-- [ ] `m3ter/client.py` — Full SDK wrapper (auth, token caching, CRUD per entity type)
-- [ ] `m3ter/entities.py` — Dependency-ordered push, reference resolution (internal UUID → m3ter UUID)
-- [ ] `m3ter/mapper.py` — Clean/transform payloads for m3ter API format
-- [ ] `api/m3ter_sync.py` — Push, bulk push, status check endpoints
-- [ ] WebSocket notifications for sync progress
+- [x] `m3ter/client.py` — Full SDK wrapper (auth, token caching with 4h50m TTL, retry logic, CRUD per entity type, Config + Ingest API)
+- [x] `m3ter/mapper.py` — Allowlist-based payload mapper (strip internal fields, filter to m3ter-accepted fields, remove nulls)
+- [x] `m3ter/entities.py` — Dependency-ordered push engine, ReferenceResolver (internal UUID → m3ter UUID), stop-on-failure chain
+- [x] `services/push_service.py` — Push orchestration (single/bulk push, org connection resolution, credential decryption, eligibility checks)
+- [x] `api/m3ter_sync.py` — REST endpoints: GET push status, POST single push, POST bulk push
+- [x] `schemas/m3ter_sync.py` — Pydantic models for push request/response
+- [x] `api/ws.py` — WebSocket `/ws/push/{use_case_id}` endpoint with real-time per-entity progress streaming
+- [x] `api/router.py` — m3ter sync router registration
+- [x] Frontend: `types/push.ts` — PushWsMessage discriminated union, PushSession, PushObjectProgress, REST response types
+- [x] Frontend: `services/generated-objects.ts` — pushObject, pushObjects, getPushStatus methods
+- [x] Frontend: `services/push-websocket.ts` — Lightweight PushWebSocketClient (no reconnect)
+- [x] Frontend: `stores/objects.svelte.ts` — Push state management (pushSession, pushableSelectedIds, bulk push via WS)
+- [x] Frontend: PushProgressPanel component (progress bar, per-entity status icons, dismiss)
+- [x] Frontend: PushConfirmDialog component (AlertDialog with entity breakdown, dependency warning)
+- [x] Frontend: ObjectEditor — "Push to m3ter" button (green), "Retry Push" for push_failed, enhanced m3ter_id badge
+- [x] Frontend: BulkActions — "Push Selected (N)" button with pushable count
+- [x] Frontend: ObjectTreeNode — isPushing spinner animation
+- [x] Frontend: StatusBadge — pushing status (blue, "Pushing...")
+- [x] Frontend: Control panel page — full push flow wiring (single, bulk, confirm dialog, progress panel)
 - **Tests**:
-  - [ ] m3ter client tests (mock httpx)
-  - [ ] Dependency ordering test
-  - [ ] Payload mapper tests
-- [ ] **Verify**: Client methods work (mocked HTTP)
-- [ ] **Verify**: Dependency ordering correct (Product before Meter before Aggregation, etc.)
-- [ ] **Verify**: Push success/failure handling
-- [ ] **Verify**: Reference resolution maps internal→m3ter UUIDs
+  - [x] M3terClient tests (token caching, retry logic, per-entity CRUD — 11 tests)
+  - [x] Payload mapper tests (all entity types, field stripping, None removal — 11 tests)
+  - [x] ReferenceResolver tests (register/resolve, preload, missing ref error — 6 tests)
+  - [x] Push ordering tests (correct sort, stop-on-failure, skip pushed — 7 tests)
+  - [x] Push service tests (org resolution, eligibility, ownership — 8 tests)
+- [x] **Verify**: 415 backend tests pass (43 new + 372 existing, 0 regressions)
+- [x] **Verify**: 95 frontend tests pass (0 regressions)
+- [x] **Verify**: svelte-check 0 errors, Ruff lint clean, ESLint + Prettier clean
+- [x] **Verify**: Dependency ordering correct (Product → Meter → Aggregation → PlanTemplate → Plan → Pricing → Account → AccountPlan)
+- [x] **Verify**: Reference resolution maps internal→m3ter UUIDs with stop-on-failure chain
+- [x] **Verify**: Real-time WebSocket push progress streaming works (async on_progress callback)
 
 ---
 

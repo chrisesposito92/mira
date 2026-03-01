@@ -1,20 +1,29 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
 	import { Separator } from '$lib/components/ui/separator';
 	import StatusBadge from '$lib/components/project/StatusBadge.svelte';
 	import JsonEditor from './JsonEditor.svelte';
 	import { snakeToTitle } from '$lib/utils.js';
+	import { Upload } from 'lucide-svelte';
 	import type { GeneratedObject, GeneratedObjectUpdate } from '$lib/types';
+	import { PUSHABLE_STATUSES } from '$lib/stores/objects.svelte.js';
 
 	let {
 		object = null,
 		saving = false,
+		pushing = false,
 		onupdate,
+		onpush,
 	}: {
 		object: GeneratedObject | null;
 		saving?: boolean;
+		pushing?: boolean;
 		onupdate: (id: string, data: GeneratedObjectUpdate) => void;
+		onpush?: (id: string) => void;
 	} = $props();
+
+	const isPushable = $derived(object !== null && PUSHABLE_STATUSES.has(object.status));
 
 	let editedJson = $state('');
 	let jsonValid = $state(true);
@@ -86,7 +95,14 @@
 				<StatusBadge status={object.status} />
 			</div>
 			{#if object.m3ter_id}
-				<p class="text-muted-foreground text-xs">m3ter ID: {object.m3ter_id}</p>
+				<div class="flex items-center gap-2">
+					<Badge
+						variant="outline"
+						class="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300"
+					>
+						m3ter ID: {object.m3ter_id}
+					</Badge>
+				</div>
 			{/if}
 			<div class="text-muted-foreground flex gap-4 text-xs">
 				<span>Created: {formatDate(object.created_at)}</span>
@@ -135,6 +151,17 @@
 			{/if}
 			{#if object.status !== 'rejected'}
 				<Button size="sm" variant="outline" disabled={saving} onclick={handleReject}>Reject</Button>
+			{/if}
+			{#if isPushable}
+				<Button
+					size="sm"
+					class="bg-green-600 text-white hover:bg-green-700"
+					disabled={pushing || saving}
+					onclick={() => object && onpush?.(object.id)}
+				>
+					<Upload class="mr-1 size-3.5" />
+					{object.status === 'push_failed' ? 'Retry Push' : 'Push to m3ter'}
+				</Button>
 			{/if}
 		</div>
 	</div>

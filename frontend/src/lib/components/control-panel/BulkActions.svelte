@@ -2,6 +2,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import { Upload } from 'lucide-svelte';
 	import { snakeToTitle } from '$lib/utils.js';
 	import { ENTITY_TYPE_ORDER, OBJECT_STATUSES } from '$lib/stores/objects.svelte.js';
 	import type { EntityType, ObjectStatus } from '$lib/types';
@@ -12,22 +13,28 @@
 		searchQuery = '',
 		selectedCount = 0,
 		totalCount = 0,
+		pushableCount = 0,
+		pushing = false,
 		onfilterEntityType,
 		onfilterStatus,
 		onsearch,
 		onapprove,
 		onreject,
+		onpush,
 	}: {
 		filterEntityType: EntityType | '';
 		filterStatus: ObjectStatus | '';
 		searchQuery: string;
 		selectedCount: number;
 		totalCount: number;
+		pushableCount?: number;
+		pushing?: boolean;
 		onfilterEntityType: (value: EntityType | '') => void;
 		onfilterStatus: (value: ObjectStatus | '') => void;
 		onsearch: (value: string) => void;
 		onapprove: () => void;
 		onreject: () => void;
+		onpush?: () => void;
 	} = $props();
 </script>
 
@@ -85,6 +92,15 @@
 		</Button>
 		<Button size="sm" variant="outline" disabled={selectedCount === 0} onclick={onreject}>
 			Reject Selected
+		</Button>
+		<Button
+			size="sm"
+			class="bg-green-600 text-white hover:bg-green-700"
+			disabled={pushableCount === 0 || pushing}
+			onclick={() => onpush?.()}
+		>
+			<Upload class="mr-1 size-3.5" />
+			Push Selected ({pushableCount})
 		</Button>
 	</div>
 </div>

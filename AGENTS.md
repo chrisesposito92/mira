@@ -101,7 +101,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 |-----------|---------|
 | `lib/components/ui/` | shadcn-svelte base components |
 | `lib/components/chat/` | Chat UI (ChatContainer, EntityCard, ClarificationCard, WorkflowLauncher, etc.) |
-| `lib/components/control-panel/` | ObjectTree, ObjectTreeNode, ObjectEditor, JsonEditor (CodeMirror 6), BulkActions |
+| `lib/components/control-panel/` | ObjectTree, ObjectTreeNode, ObjectEditor, JsonEditor (CodeMirror 6), BulkActions, PushProgressPanel, PushConfirmDialog |
 | `lib/components/project/` | Project/use case cards |
 | `lib/components/layout/` | Sidebar, header, breadcrumbs |
 | `lib/stores/` | Svelte 5 runes ($state-based) |
@@ -138,7 +138,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 - **HITL**: LangGraph `interrupt()` → WebSocket sends to frontend → user approves/edits/rejects → `Command(resume=decision)`
 - **Entity push order**: Product → Meter → Aggregation → CompoundAgg → PlanTemplate → Plan → Pricing → Account → AccountPlan (Config API). Measurements are submitted separately via the Ingest API.
-- **m3ter auth**: OAuth2 client credentials per org, tokens cached 5hrs
+- **m3ter auth**: OAuth2 client credentials per org, tokens cached 4h50m (10min buffer on 5hr m3ter token)
 - **RAG**: Two-source retrieval (m3ter docs + user docs), pgvector cosine similarity
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
@@ -161,14 +161,26 @@ Full architecture: `docs/ARCHITECTURE.md`
 ### Frontend Control Panel
 
 - **ObjectsStore**: Class-based Svelte 5 runes singleton (`stores/objects.svelte.ts`) — manages objects list, filtering (entity type, status, search), tree grouping by entity type in push order, multi-select, single-object selection, CRUD operations (including `createObject`).
-- **GeneratedObjectService**: Factory function `createGeneratedObjectService(client)` in `services/generated-objects.ts` — REST calls for listObjects, getObject, updateObject, bulkUpdateStatus, createObject, getTemplates.
+- **GeneratedObjectService**: Factory function `createGeneratedObjectService(client)` in `services/generated-objects.ts` — REST calls for listObjects, getObject, updateObject, bulkUpdateStatus, createObject, getTemplates, pushObject, pushObjects, getPushStatus.
 - **Control panel route**: `/projects/[projectId]/use-cases/[useCaseId]/control-panel/` — 2-panel layout with ObjectTree (left) + ObjectEditor (right), BulkActions toolbar above, "+ New Object" button for manual creation.
 - **CreateObjectDialog**: Modal dialog (`components/control-panel/CreateObjectDialog.svelte`) — entity type selector (9 types, excludes `compound_aggregation` which has no schema/validator), name/code fields, JsonEditor with per-entity-type templates. JSON shape validated before submission. Dialog stays open on failure to preserve user input. Returns `boolean` from `oncreate` callback to signal success/failure.
 - **Object templates**: `GET /api/objects/templates` returns JSON templates per entity type, generated from `m3ter_schema.py` schemas with sensible defaults.
 - **Manual object creation**: `POST /api/use-cases/{id}/objects` creates objects with server-side validation via `validate_entity()`. Objects start as `draft` with any validation errors serialized.
 - **JsonEditor**: CodeMirror 6 integration (`components/control-panel/JsonEditor.svelte`) — JSON syntax highlighting, linting, dark mode via mode-watcher, line numbers, bracket matching, fold gutters.
 - **Tree structure**: Objects grouped by entity type in push order (product → meter → aggregation → ... → measurement). Collapsible groups with count badges. Supports multi-select via checkboxes.
-- **StatusBadge**: Extended with object statuses: approved (blue), rejected (muted), pushed (green), push_failed (red).
+- **StatusBadge**: Extended with object statuses: approved (blue), rejected (muted), pushed (green), push_failed (red), pushing (blue, "Pushing...").
+
+### m3ter Push & Sync
+
+- **M3terClient**: Enhanced OAuth2 client (`m3ter/client.py`) — class-level token cache with 4h50m TTL, lazy-init persistent httpx client, retry logic (3 attempts, backoff [1, 2, 5]s, retryable: 429/500/502/503/504), per-entity create methods for all 9 entity types, Config API + Ingest API support.
+- **Payload mapper**: Allowlist-based (`m3ter/mapper.py`) — per-entity-type field sets derived from `m3ter_schema.py`, strips internal fields (`id`, `index`), removes None values.
+- **Reference resolver**: `ReferenceResolver` class (`m3ter/entities.py`) — maps MIRA UUIDs to m3ter UUIDs incrementally as entities push, pre-loads from already-pushed objects, raises `ReferenceResolutionError` on missing references.
+- **Push engine**: `push_entities_ordered()` (`m3ter/entities.py`) — sorts by canonical PUSH_ORDER (product → meter → aggregation → plan_template → plan → pricing → account → account_plan), resolves references, maps payloads, pushes to m3ter, updates DB, stops chain on first failure. Supports async `on_progress` callback for real-time WebSocket streaming.
+- **Push service**: `push_service.py` — orchestrates single/bulk push with ownership checks, status validation (approved/push_failed only), org connection resolution via project → org_connections chain, credential decryption.
+- **Push API**: `GET /api/use-cases/{id}/push/status` (readiness info), `POST /api/objects/{id}/push` (single), `POST /api/use-cases/{id}/push` (bulk with optional object_ids filter).
+- **Push WebSocket**: `ws://host/ws/push/{use_case_id}?token={token}` — real-time per-entity progress streaming. Client sends `start_push`, server streams `push_started` → `push_progress` (per entity) → `push_complete`.
+- **Frontend push flow**: ObjectEditor "Push to m3ter" button (single push via REST) → BulkActions "Push Selected" button → PushConfirmDialog (AlertDialog with entity breakdown + dependency warning) → PushWebSocketClient (lightweight, no reconnect) → PushProgressPanel (progress bar, per-entity status icons, dismiss on complete).
+- **ObjectsStore push state**: `pushSession` (active session tracking), `pushing` flag, `pushableSelectedIds` derived, `handlePushMessage()` updates both session and objects array from WS messages.
 
 ### Frontend Auth (Supabase SSR)
 

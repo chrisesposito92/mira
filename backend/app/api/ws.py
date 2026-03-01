@@ -1,4 +1,4 @@
-"""WebSocket endpoint for real-time workflow streaming."""
+"""WebSocket endpoints for real-time workflow streaming and push progress."""
 
 import json
 import logging
@@ -292,5 +292,146 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
         logger.exception("WebSocket error for workflow %s", workflow_id)
         try:
             await websocket.send_json({"type": "error", "message": "Internal server error"})
+        except Exception:
+            pass
+
+
+@router.websocket("/ws/push/{use_case_id}")
+async def push_ws(websocket: WebSocket, use_case_id: str) -> None:
+    """WebSocket endpoint for real-time push progress.
+
+    Message protocol (JSON):
+    Client → Server:
+        {type: "start_push", object_ids: [...] | null}
+
+    Server → Client:
+        {type: "push_started", total: N}
+        {type: "push_progress", entity_id: str, entity_type: str, success: bool,
+         m3ter_id: str|null, error: str|null, completed: N, total: N}
+        {type: "push_complete", total: N, succeeded: N, failed: N, skipped: N}
+        {type: "push_error", message: str}
+    """
+    user_id = await _authenticate_ws(websocket)
+    if not user_id:
+        await websocket.accept()
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
+
+    await websocket.accept()
+
+    # Verify use case ownership
+    supabase = get_supabase_client()
+    uc_result = (
+        supabase.table("use_cases")
+        .select("id, projects!inner(user_id)")
+        .eq("id", use_case_id)
+        .execute()
+    )
+    if not uc_result.data:
+        await websocket.send_json({"type": "push_error", "message": "Use case not found"})
+        await websocket.close()
+        return
+
+    uc_owner = uc_result.data[0].get("projects", {}).get("user_id")
+    if uc_owner != str(user_id):
+        await websocket.send_json({"type": "push_error", "message": "Use case not found"})
+        await websocket.close()
+        return
+
+    try:
+        # Wait for start_push message
+        raw = await websocket.receive_text()
+        message = json.loads(raw)
+
+        if message.get("type") != "start_push":
+            await websocket.send_json(
+                {"type": "push_error", "message": f"Expected start_push, got {message.get('type')}"}
+            )
+            await websocket.close()
+            return
+
+        raw_ids = message.get("object_ids")
+        object_ids = [UUID(oid) for oid in raw_ids] if raw_ids else None
+
+        from app.services.push_service import push_use_case_objects
+
+        # Count eligible objects first to send push_started before the push begins
+        eligible_result = (
+            supabase.table("generated_objects")
+            .select("id, status")
+            .eq("use_case_id", use_case_id)
+            .in_("status", ["approved", "push_failed"])
+            .execute()
+        )
+        eligible_objects = eligible_result.data or []
+        if object_ids:
+            str_ids = {str(oid) for oid in object_ids}
+            eligible_objects = [o for o in eligible_objects if o["id"] in str_ids]
+        total = len(eligible_objects)
+
+        await websocket.send_json({"type": "push_started", "total": total})
+
+        completed_count = 0
+        # Track already-pushed entity IDs so we don't count them toward progress.
+        # These are included by the push engine for reference resolution but aren't
+        # part of the eligible set — query them separately since eligible_objects
+        # only contains approved/push_failed rows.
+        pushed_result = (
+            supabase.table("generated_objects")
+            .select("id")
+            .eq("use_case_id", use_case_id)
+            .eq("status", "pushed")
+            .execute()
+        )
+        already_pushed_ids = {o["id"] for o in (pushed_result.data or [])}
+
+        async def on_progress(result):
+            """Async callback to stream progress via WebSocket in real-time."""
+            nonlocal completed_count
+            # Skip already-pushed objects (included only for reference resolution)
+            if result.entity_id in already_pushed_ids:
+                return
+            completed_count += 1
+            try:
+                await websocket.send_json(
+                    {
+                        "type": "push_progress",
+                        "entity_id": result.entity_id,
+                        "entity_type": result.entity_type,
+                        "success": result.success,
+                        "m3ter_id": result.m3ter_id,
+                        "error": result.error,
+                        "completed": completed_count,
+                        "total": total,
+                    }
+                )
+            except Exception:
+                logger.warning("Failed to send push progress for %s", result.entity_id)
+
+        bulk_result = await push_use_case_objects(
+            supabase, user_id, UUID(use_case_id), object_ids, on_progress
+        )
+
+        await websocket.send_json(
+            {
+                "type": "push_complete",
+                "total": bulk_result.total,
+                "succeeded": bulk_result.succeeded,
+                "failed": bulk_result.failed,
+                "skipped": bulk_result.skipped,
+            }
+        )
+
+    except WebSocketDisconnect:
+        logger.info("Push WebSocket disconnected for use case %s", use_case_id)
+    except Exception as exc:
+        logger.exception("Push WebSocket error for use case %s", use_case_id)
+        try:
+            await websocket.send_json({"type": "push_error", "message": str(exc)})
+        except Exception:
+            pass
+    finally:
+        try:
+            await websocket.close()
         except Exception:
             pass

@@ -5,8 +5,12 @@ import type {
 	CreateObjectPayload,
 	EntityType,
 	ObjectStatus,
+	PushSession,
+	PushWsMessage,
+	PushObjectProgress,
 } from '$lib/types';
 import type { GeneratedObjectService } from '$lib/services/generated-objects.js';
+import { PushWebSocketClient } from '$lib/services/push-websocket.js';
 
 // Entity type push order for tree grouping (exported for reuse in components)
 export const ENTITY_TYPE_ORDER: EntityType[] = [
@@ -31,6 +35,12 @@ export const OBJECT_STATUSES: ObjectStatus[] = [
 	'push_failed',
 ];
 
+// Statuses eligible for push (matches backend _PUSHABLE_STATUSES)
+export const PUSHABLE_STATUSES: ReadonlySet<ObjectStatus> = new Set<ObjectStatus>([
+	'approved',
+	'push_failed',
+]);
+
 export interface EntityGroup {
 	entityType: EntityType;
 	objects: GeneratedObject[];
@@ -46,6 +56,9 @@ class ObjectsStore {
 	filterEntityType = $state<EntityType | ''>('');
 	filterStatus = $state<ObjectStatus | ''>('');
 	searchQuery = $state('');
+	pushSession = $state<PushSession | null>(null);
+	pushing = $state(false);
+	private _pushWs: PushWebSocketClient | null = null;
 
 	filteredObjects = $derived.by(() => {
 		let result = this.objects;
@@ -78,6 +91,18 @@ class ObjectsStore {
 	});
 
 	selectedObject = $derived(this.objects.find((o) => o.id === this.selectedObjectId) ?? null);
+
+	pushableSelectedIds = $derived.by(() => {
+		const objById = new Map(this.objects.map((o) => [o.id, o]));
+		const pushable = new SvelteSet<string>();
+		for (const id of this.selectedIds) {
+			const obj = objById.get(id);
+			if (obj && PUSHABLE_STATUSES.has(obj.status)) {
+				pushable.add(id);
+			}
+		}
+		return pushable;
+	});
 
 	async loadObjects(service: GeneratedObjectService, useCaseId: string) {
 		this.loading = true;
@@ -175,6 +200,149 @@ class ObjectsStore {
 		this.selectedIds.clear();
 	}
 
+	async pushSingleObject(
+		service: GeneratedObjectService,
+		objectId: string,
+	): Promise<{ ok: true; m3terId: string } | { ok: false; error: string }> {
+		this.pushing = true;
+		try {
+			const result = await service.pushObject(objectId);
+			if (result.success) {
+				this.objects = this.objects.map((o) =>
+					o.id === objectId
+						? { ...o, status: 'pushed' as const, m3ter_id: result.m3ter_id ?? null }
+						: o,
+				);
+				return { ok: true, m3terId: result.m3ter_id ?? '' };
+			} else {
+				this.objects = this.objects.map((o) =>
+					o.id === objectId ? { ...o, status: 'push_failed' as const } : o,
+				);
+				return { ok: false, error: result.error ?? 'Push failed' };
+			}
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : 'Push failed';
+			return { ok: false, error: msg };
+		} finally {
+			this.pushing = false;
+		}
+	}
+
+	startBulkPush(useCaseId: string, objectIds: string[], token: string): void {
+		const items: PushObjectProgress[] = objectIds.map((id) => {
+			const obj = this.objects.find((o) => o.id === id);
+			return {
+				entityId: id,
+				entityType: obj?.entity_type ?? 'unknown',
+				status: 'pending' as const,
+			};
+		});
+
+		this.pushSession = {
+			active: true,
+			total: objectIds.length,
+			completed: 0,
+			succeeded: 0,
+			failed: 0,
+			items,
+		};
+		this.pushing = true;
+
+		this._pushWs?.disconnect();
+		this._pushWs = new PushWebSocketClient(
+			(msg) => this.handlePushMessage(msg),
+			() => {
+				// WS closed — if session is still active, leave it (server continues)
+			},
+		);
+		this._pushWs.connect(useCaseId, token, () => {
+			// Send start_push command once the WebSocket connection is open
+			this._pushWs?.send({ type: 'start_push', object_ids: objectIds });
+		});
+	}
+
+	handlePushMessage(msg: PushWsMessage): void {
+		if (!this.pushSession) return;
+
+		switch (msg.type) {
+			case 'push_started': {
+				// Mark the first pending item as 'pushing' so spinners render
+				const startItems = this.pushSession.items.map((item, i) =>
+					i === 0 && item.status === 'pending' ? { ...item, status: 'pushing' as const } : item,
+				);
+				this.pushSession = { ...this.pushSession, total: msg.total, items: startItems };
+				break;
+			}
+
+			case 'push_progress': {
+				// Update the completed item's final status, then mark the next pending item as 'pushing'
+				let markedNext = false;
+				const updatedItems = this.pushSession.items.map((item) => {
+					if (item.entityId === msg.entity_id) {
+						return {
+							...item,
+							status: (msg.success ? 'pushed' : 'push_failed') as 'pushed' | 'push_failed',
+							m3terId: msg.m3ter_id ?? undefined,
+							error: msg.error ?? undefined,
+						};
+					}
+					if (!markedNext && item.status === 'pending') {
+						markedNext = true;
+						return { ...item, status: 'pushing' as const };
+					}
+					return item;
+				});
+				this.pushSession = {
+					...this.pushSession,
+					completed: msg.completed,
+					total: msg.total,
+					succeeded: this.pushSession.succeeded + (msg.success ? 1 : 0),
+					failed: this.pushSession.failed + (msg.success ? 0 : 1),
+					items: updatedItems,
+				};
+				// Update the object in local state
+				this.objects = this.objects.map((o) =>
+					o.id === msg.entity_id
+						? {
+								...o,
+								status: msg.success ? ('pushed' as const) : ('push_failed' as const),
+								m3ter_id: msg.m3ter_id ?? o.m3ter_id,
+							}
+						: o,
+				);
+				break;
+			}
+
+			case 'push_complete':
+				this.pushSession = {
+					...this.pushSession,
+					active: false,
+					completed: msg.total,
+					succeeded: msg.succeeded,
+					failed: msg.failed,
+				};
+				this.pushing = false;
+				this._pushWs?.disconnect();
+				break;
+
+			case 'push_error':
+				this.pushSession = {
+					...this.pushSession,
+					active: false,
+				};
+				this.pushing = false;
+				this.error = msg.message;
+				this._pushWs?.disconnect();
+				break;
+		}
+	}
+
+	dismissPushSession(): void {
+		this.pushSession = null;
+		this._pushWs?.disconnect();
+		this._pushWs = null;
+	}
+
 	clear() {
 		this.objects = [];
 		this.loading = false;
@@ -185,6 +353,10 @@ class ObjectsStore {
 		this.filterEntityType = '';
 		this.filterStatus = '';
 		this.searchQuery = '';
+		this.pushSession = null;
+		this.pushing = false;
+		this._pushWs?.disconnect();
+		this._pushWs = null;
 	}
 }
 

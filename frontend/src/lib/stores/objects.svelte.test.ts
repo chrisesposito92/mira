@@ -51,6 +51,22 @@ function mockObjectService(
 		bulkUpdateStatus: vi.fn().mockResolvedValue({ message: 'ok' }),
 		createObject: vi.fn().mockResolvedValue(makeMockObject({ id: 'obj-new', name: 'New Object' })),
 		getTemplates: vi.fn().mockResolvedValue({}),
+		pushObject: vi.fn().mockResolvedValue({
+			entity_id: 'obj-1',
+			entity_type: 'product',
+			success: true,
+			m3ter_id: 'm3ter-123',
+		}),
+		pushObjects: vi
+			.fn()
+			.mockResolvedValue({ results: [], total: 0, succeeded: 0, failed: 0, skipped: 0 }),
+		getPushStatus: vi.fn().mockResolvedValue({
+			org_connected: true,
+			eligible_count: 0,
+			pushed_count: 0,
+			total_count: 0,
+			entity_breakdown: {},
+		}),
 		...overrides,
 	};
 }
