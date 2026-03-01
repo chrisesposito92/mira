@@ -16,6 +16,7 @@ class GeneratedObjectResponse(BaseModel):
     code: str | None = None
     status: ObjectStatus
     data: dict | None = None
+    validation_errors: list[dict] | None = None
     m3ter_id: str | None = None
     depends_on: list[UUID] | None = None
     created_at: datetime
@@ -36,10 +37,6 @@ class CreateGeneratedObject(BaseModel):
     name: str | None = None
     code: str | None = None
     data: dict | None = None
-
-
-class GeneratedObjectWithErrors(GeneratedObjectResponse):
-    validation_errors: list[dict] | None = None
 
 
 class BulkStatusUpdate(BaseModel):

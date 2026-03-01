@@ -9,13 +9,16 @@
 	import { snakeToTitle } from '$lib/utils.js';
 	import type { CreateObjectPayload, EntityType } from '$lib/types';
 
+	// compound_aggregation has no schema or validator — exclude from creation
+	const CREATABLE_TYPES = ENTITY_TYPE_ORDER.filter((t) => t !== 'compound_aggregation');
+
 	let {
 		open = $bindable(false),
 		oncreate,
 		templates = {},
 	}: {
 		open: boolean;
-		oncreate?: (data: CreateObjectPayload) => void | Promise<void>;
+		oncreate?: (data: CreateObjectPayload) => Promise<boolean>;
 		templates?: Record<string, Record<string, unknown>>;
 	} = $props();
 
@@ -24,44 +27,63 @@
 	let name = $state('');
 	let code = $state('');
 	let jsonContent = $state('{}');
+	let jsonError = $state('');
 	let submitting = $state(false);
 
-	// Update JSON editor only when entity type actually changes (not on late template loads)
+	// Update JSON editor when entity type changes OR when templates arrive for the current selection
 	$effect(() => {
+		const hasTemplate = entityType && templates[entityType];
 		if (entityType !== prevEntityType) {
 			prevEntityType = entityType;
-			if (entityType && templates[entityType]) {
+			if (hasTemplate) {
 				jsonContent = JSON.stringify({ ...templates[entityType] }, null, 2);
 			} else if (entityType) {
 				jsonContent = '{}';
 			}
+		} else if (hasTemplate && jsonContent === '{}') {
+			// Templates loaded after entity was selected — apply if editor is still empty
+			jsonContent = JSON.stringify({ ...templates[entityType] }, null, 2);
 		}
 	});
+
+	function parseJson(raw: string): Record<string, unknown> | null {
+		let parsed: unknown;
+		try {
+			parsed = JSON.parse(raw);
+		} catch {
+			jsonError = 'Invalid JSON syntax';
+			return null;
+		}
+		if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+			jsonError = 'Data must be a JSON object, not an array or primitive';
+			return null;
+		}
+		jsonError = '';
+		return parsed as Record<string, unknown>;
+	}
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		if (!entityType || submitting) return;
+
+		const data = parseJson(jsonContent);
+		if (!data) return;
+
+		if (name.trim()) data.name = name.trim();
+		if (code.trim()) data.code = code.trim();
+
 		submitting = true;
 		try {
-			let data: Record<string, unknown> = {};
-			try {
-				data = JSON.parse(jsonContent);
-			} catch {
-				// If JSON is invalid, use empty object
-				data = {};
-			}
-			// Merge name/code from form fields into data
-			if (name.trim()) data.name = name.trim();
-			if (code.trim()) data.code = code.trim();
-
-			await oncreate?.({
+			const success = await oncreate?.({
 				entity_type: entityType as EntityType,
 				name: name.trim() || undefined,
 				code: code.trim() || undefined,
 				data,
 			});
-			reset();
-			open = false;
+			if (success !== false) {
+				reset();
+				open = false;
+			}
 		} finally {
 			submitting = false;
 		}
@@ -73,6 +95,7 @@
 		name = '';
 		code = '';
 		jsonContent = '{}';
+		jsonError = '';
 	}
 </script>
 
@@ -95,7 +118,7 @@
 						{entityType ? snakeToTitle(entityType) : 'Select entity type...'}
 					</Select.Trigger>
 					<Select.Content>
-						{#each ENTITY_TYPE_ORDER as et}
+						{#each CREATABLE_TYPES as et}
 							<Select.Item value={et}>{snakeToTitle(et)}</Select.Item>
 						{/each}
 					</Select.Content>
@@ -116,6 +139,9 @@
 				<div class="h-64">
 					<JsonEditor value={jsonContent} onchange={(v) => (jsonContent = v)} />
 				</div>
+				{#if jsonError}
+					<p class="text-destructive text-sm">{jsonError}</p>
+				{/if}
 			</div>
 			<Dialog.Footer>
 				<Button variant="outline" type="button" onclick={() => (open = false)}>Cancel</Button>

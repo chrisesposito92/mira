@@ -114,15 +114,22 @@ def create_object(
     return result.data[0]
 
 
-@functools.cache
 def generate_template(entity_type: EntityType) -> dict:
     """Generate a default template for an entity type from its schema."""
+    import copy
+
+    return copy.deepcopy(_generate_template_cached(entity_type))
+
+
+@functools.cache
+def _generate_template_cached(entity_type: EntityType) -> dict:
+    """Cached inner function — callers must deepcopy the result."""
     try:
         schema = get_schema(entity_type)
     except ValueError:
         return {}
 
-    def _default_value(field_def: dict) -> object:
+    def _default_value(field_def: dict) -> str | int | float | bool | dict | list:
         ftype = field_def.get("type", "str")
         if ftype == "str":
             return ""

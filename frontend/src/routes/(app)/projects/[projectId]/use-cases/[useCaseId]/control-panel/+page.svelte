@@ -56,17 +56,18 @@
 		service
 			.getTemplates()
 			.then((t) => (templates = t))
-			.catch(() => {});
+			.catch(() => toast.error('Failed to load object templates'));
 	});
 
-	async function handleCreate(payload: CreateObjectPayload) {
+	async function handleCreate(payload: CreateObjectPayload): Promise<boolean> {
 		const useCaseId = page.params.useCaseId!;
 		const result = await objectsStore.createObject(service, useCaseId, payload);
 		if (result.ok) {
 			toast.success('Object created');
-		} else {
-			toast.error(result.error);
+			return true;
 		}
+		toast.error(result.error);
+		return false;
 	}
 
 	onDestroy(() => {

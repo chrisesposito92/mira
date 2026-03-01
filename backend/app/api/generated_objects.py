@@ -12,7 +12,6 @@ from app.schemas.generated_objects import (
     CreateGeneratedObject,
     GeneratedObjectResponse,
     GeneratedObjectUpdate,
-    GeneratedObjectWithErrors,
 )
 from app.services import generated_object_service as svc
 
@@ -35,7 +34,7 @@ async def list_objects(
 
 @router.post(
     "/api/use-cases/{use_case_id}/objects",
-    response_model=GeneratedObjectWithErrors,
+    response_model=GeneratedObjectResponse,
     status_code=201,
 )
 async def create_object(
@@ -47,10 +46,10 @@ async def create_object(
     return svc.create_object(supabase, user_id, use_case_id, data)
 
 
-@router.get("/api/objects/templates")
+@router.get("/api/objects/templates", response_model=dict[str, dict])
 async def get_templates(
     user_id: UUID = Depends(get_current_user),
-) -> dict:
+) -> dict[str, dict]:
     return {et.value: svc.generate_template(et) for et in EntityType}
 
 
