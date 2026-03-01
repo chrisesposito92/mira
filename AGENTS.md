@@ -69,7 +69,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 |-----------|---------|
 | `state.py` | `WorkflowState` TypedDict — full graph state definition (WF1 + WF2 fields) |
 | `llm_factory.py` | Multi-model registry + `get_llm()` via `init_chat_model()` (5 models) |
-| `utils.py` | Shared helpers: `extract_interrupt_payload()`, `build_use_case_description()` |
+| `utils.py` | Shared helpers: `extract_interrupt_payload()`, `build_use_case_description()`, `parse_entity_list()` |
 | `checkpointer.py` | `AsyncPostgresSaver` setup reusing `get_db_pool()` |
 | `nodes/analysis.py` | Analyze use case (fetch from DB + RAG + LLM) |
 | `nodes/clarification.py` | Generate clarification questions with `interrupt()` |
@@ -135,8 +135,8 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
-- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing
-- **Multi-workflow**: `workflow_type` field selects graph via `_get_graph()` helper (product_meter_aggregation or plan_pricing). WF2 requires completed WF1 for same use case. Frontend WorkflowLauncher gates WF2 on WF1 completion.
+- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing
+- **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation or plan_pricing). WF2 requires completed WF1 for same use case. Frontend WorkflowLauncher gates WF2 on WF1 completion.
 
 ### Frontend Chat Interface
 
