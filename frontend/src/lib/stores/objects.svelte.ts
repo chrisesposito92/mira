@@ -36,7 +36,7 @@ export const OBJECT_STATUSES: ObjectStatus[] = [
 ];
 
 // Statuses eligible for push (matches backend _PUSHABLE_STATUSES)
-export const PUSHABLE_STATUSES: ReadonlySet<ObjectStatus> = new Set<ObjectStatus>([
+export const PUSHABLE_STATUSES: ReadonlySet<ObjectStatus> = new SvelteSet<ObjectStatus>([
 	'approved',
 	'push_failed',
 ]);
@@ -222,6 +222,9 @@ class ObjectsStore {
 			}
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : 'Push failed';
+			this.objects = this.objects.map((o) =>
+				o.id === objectId ? { ...o, status: 'push_failed' as const } : o,
+			);
 			return { ok: false, error: msg };
 		} finally {
 			this.pushing = false;
@@ -266,8 +269,15 @@ class ObjectsStore {
 
 		switch (msg.type) {
 			case 'push_started': {
-				// Mark the first pending item as 'pushing' so spinners render
-				const startItems = this.pushSession.items.map((item, i) =>
+				// Sort items by entity type push order so the first 'pushing' spinner
+				// matches the backend's actual push sequence (not user selection order).
+				const orderMap = new Map(ENTITY_TYPE_ORDER.map((et, i) => [et, i]));
+				const sorted = [...this.pushSession.items].sort(
+					(a, b) =>
+						(orderMap.get(a.entityType as EntityType) ?? 99) -
+						(orderMap.get(b.entityType as EntityType) ?? 99),
+				);
+				const startItems = sorted.map((item, i) =>
 					i === 0 && item.status === 'pending' ? { ...item, status: 'pushing' as const } : item,
 				);
 				this.pushSession = { ...this.pushSession, total: msg.total, items: startItems };

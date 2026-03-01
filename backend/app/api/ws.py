@@ -351,7 +351,7 @@ async def push_ws(websocket: WebSocket, use_case_id: str) -> None:
             return
 
         raw_ids = message.get("object_ids")
-        object_ids = [UUID(oid) for oid in raw_ids] if raw_ids else None
+        object_ids = [UUID(oid) for oid in raw_ids] if raw_ids is not None else None
 
         from app.services.push_service import push_use_case_objects
 
@@ -364,7 +364,7 @@ async def push_ws(websocket: WebSocket, use_case_id: str) -> None:
             .execute()
         )
         eligible_objects = eligible_result.data or []
-        if object_ids:
+        if object_ids is not None:
             str_ids = {str(oid) for oid in object_ids}
             eligible_objects = [o for o in eligible_objects if o["id"] in str_ids]
         total = len(eligible_objects)
@@ -415,7 +415,7 @@ async def push_ws(websocket: WebSocket, use_case_id: str) -> None:
         await websocket.send_json(
             {
                 "type": "push_complete",
-                "total": bulk_result.total,
+                "total": total,
                 "succeeded": bulk_result.succeeded,
                 "failed": bulk_result.failed,
                 "skipped": bulk_result.skipped,

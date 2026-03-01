@@ -137,7 +137,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 ## Key Patterns
 
 - **HITL**: LangGraph `interrupt()` → WebSocket sends to frontend → user approves/edits/rejects → `Command(resume=decision)`
-- **Entity push order**: Product → Meter → Aggregation → CompoundAgg → PlanTemplate → Plan → Pricing → Account → AccountPlan (Config API). Measurements are submitted separately via the Ingest API.
+- **Entity push order**: Product → Meter → Aggregation → PlanTemplate → Plan → Pricing → Account → AccountPlan (Config API). Measurements are submitted separately via the Ingest API. (CompoundAggregation is excluded from push — no mapper or schema support.)
 - **m3ter auth**: OAuth2 client credentials per org, tokens cached 4h50m (10min buffer on 5hr m3ter token)
 - **RAG**: Two-source retrieval (m3ter docs + user docs), pgvector cosine similarity
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
@@ -168,7 +168,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Manual object creation**: `POST /api/use-cases/{id}/objects` creates objects with server-side validation via `validate_entity()`. Objects start as `draft` with any validation errors serialized.
 - **JsonEditor**: CodeMirror 6 integration (`components/control-panel/JsonEditor.svelte`) — JSON syntax highlighting, linting, dark mode via mode-watcher, line numbers, bracket matching, fold gutters.
 - **Tree structure**: Objects grouped by entity type in push order (product → meter → aggregation → ... → measurement). Collapsible groups with count badges. Supports multi-select via checkboxes.
-- **StatusBadge**: Extended with object statuses: approved (blue), rejected (muted), pushed (green), push_failed (red), pushing (blue, "Pushing...").
+- **StatusBadge**: Extended with object statuses: approved (blue), rejected (muted), pushed (green), push_failed (red). The "pushing" state is rendered via a `Loader2` spinner in `ObjectTreeNode.svelte` (not via StatusBadge).
 
 ### m3ter Push & Sync
 

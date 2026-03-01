@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Check, X, Loader2, Circle } from 'lucide-svelte';
-	import { snakeToTitle } from '$lib/utils.js';
+	import { cn, snakeToTitle } from '$lib/utils.js';
 	import type { PushSession } from '$lib/types';
 
 	let {
@@ -35,9 +35,10 @@
 			</div>
 			<div class="bg-muted h-2 overflow-hidden rounded-full">
 				<div
-					class="h-full rounded-full transition-all duration-300 {session.failed > 0
-						? 'bg-yellow-500'
-						: 'bg-green-500'}"
+					class={cn(
+						'h-full rounded-full transition-all duration-300',
+						session.failed > 0 ? 'bg-yellow-500' : 'bg-green-500',
+					)}
 					style="width: {percentage}%"
 				></div>
 			</div>

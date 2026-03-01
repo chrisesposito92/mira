@@ -137,9 +137,6 @@ async def push_object(
             if r.entity_id == str(object_id):
                 return r
 
-        if bulk_result.results:
-            return bulk_result.results[0]
-
         return PushResult(
             entity_id=str(object_id),
             entity_type=obj.get("entity_type", ""),
@@ -176,7 +173,7 @@ async def push_use_case_objects(
     all_objects = all_objects_result.data or []
 
     # Filter to eligible objects (plus already-pushed for reference resolution)
-    if object_ids:
+    if object_ids is not None:
         str_ids = {str(oid) for oid in object_ids}
         objects_to_push = [
             o
