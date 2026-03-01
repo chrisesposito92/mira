@@ -141,10 +141,217 @@ AGGREGATION_SCHEMA = {
     },
 }
 
+# PlanTemplate schema
+PLAN_TEMPLATE_SCHEMA = {
+    "name": {
+        "type": "str",
+        "required": True,
+        "description": "Human-readable plan template name",
+        "max_length": 200,
+    },
+    "code": {
+        "type": "str",
+        "required": True,
+        "description": "Unique plan template code (lowercase, alphanumeric + underscore)",
+        "pattern": "^[a-z][a-z0-9_]*$",
+    },
+    "productId": {
+        "type": "str",
+        "required": True,
+        "description": "UUID of the parent product",
+    },
+    "currency": {
+        "type": "str",
+        "required": True,
+        "description": "3-character ISO currency code (e.g., USD, EUR)",
+    },
+    "standingCharge": {
+        "type": "float",
+        "required": True,
+        "description": "Standing charge amount (>= 0)",
+    },
+    "billFrequency": {
+        "type": "str",
+        "required": True,
+        "enum": ["DAILY", "WEEKLY", "MONTHLY", "ANNUALLY", "AD_HOC", "MIXED"],
+        "description": "How frequently bills are generated",
+    },
+    "billFrequencyInterval": {
+        "type": "int",
+        "required": False,
+        "description": "Interval for bill frequency (1-365)",
+    },
+    "minimumSpend": {
+        "type": "float",
+        "required": False,
+        "description": "Minimum spend amount (>= 0)",
+    },
+    "customFields": {
+        "type": "dict",
+        "required": False,
+        "description": "Optional custom key-value pairs",
+    },
+}
+
+# Plan schema
+PLAN_SCHEMA = {
+    "name": {
+        "type": "str",
+        "required": True,
+        "description": "Human-readable plan name",
+        "max_length": 200,
+    },
+    "code": {
+        "type": "str",
+        "required": True,
+        "description": "Unique plan code (lowercase, alphanumeric + underscore)",
+        "pattern": "^[a-z][a-z0-9_]*$",
+    },
+    "planTemplateId": {
+        "type": "str",
+        "required": True,
+        "description": "UUID of the parent plan template",
+    },
+    "standingCharge": {
+        "type": "float",
+        "required": False,
+        "description": "Override standing charge from template (>= 0)",
+    },
+    "minimumSpend": {
+        "type": "float",
+        "required": False,
+        "description": "Override minimum spend from template (>= 0)",
+    },
+    "bespoke": {
+        "type": "bool",
+        "required": False,
+        "description": "Whether this is a bespoke (custom) plan",
+    },
+    "customFields": {
+        "type": "dict",
+        "required": False,
+        "description": "Optional custom key-value pairs",
+    },
+}
+
+# Pricing schema
+PRICING_SCHEMA = {
+    "planId": {
+        "type": "str",
+        "required": False,
+        "description": "UUID of the plan",
+    },
+    "planTemplateId": {
+        "type": "str",
+        "required": False,
+        "description": "UUID of the plan template",
+    },
+    "aggregationId": {
+        "type": "str",
+        "required": False,
+        "description": "UUID of the aggregation to price",
+    },
+    "type": {
+        "type": "str",
+        "required": False,
+        "enum": ["DEBIT", "PRODUCT_CREDIT", "GLOBAL_CREDIT"],
+        "description": "Pricing type",
+    },
+    "code": {
+        "type": "str",
+        "required": False,
+        "description": "Pricing code",
+    },
+    "cumulative": {
+        "type": "bool",
+        "required": False,
+        "description": "Whether pricing bands are cumulative (tiered) or non-cumulative (volume)",
+    },
+    "startDate": {
+        "type": "str",
+        "required": True,
+        "description": "Start date for pricing (ISO format)",
+    },
+    "endDate": {
+        "type": "str",
+        "required": False,
+        "description": "End date for pricing",
+    },
+    "pricingBands": {
+        "type": "list[dict]",
+        "required": True,
+        "min_items": 1,
+        "description": "Pricing tiers",
+        "item_schema": {
+            "lowerLimit": {
+                "type": "float",
+                "required": True,
+                "description": "Lower limit for this band",
+            },
+            "fixedPrice": {
+                "type": "float",
+                "required": False,
+                "description": "Fixed price for this band",
+            },
+            "unitPrice": {
+                "type": "float",
+                "required": False,
+                "description": "Per-unit price for this band",
+            },
+        },
+    },
+    "overagePricingBands": {
+        "type": "list[dict]",
+        "required": False,
+        "description": "Overage pricing tiers (same structure as pricingBands)",
+        "item_schema": {
+            "lowerLimit": {
+                "type": "float",
+                "required": True,
+                "description": "Lower limit for this overage band",
+            },
+            "fixedPrice": {
+                "type": "float",
+                "required": False,
+                "description": "Fixed price for this overage band",
+            },
+            "unitPrice": {
+                "type": "float",
+                "required": False,
+                "description": "Per-unit price for this overage band",
+            },
+        },
+    },
+    "description": {
+        "type": "str",
+        "required": False,
+        "description": "Pricing description",
+        "max_length": 200,
+    },
+    "tiersSpanPlan": {
+        "type": "bool",
+        "required": False,
+        "description": "Whether tiers span across the entire plan",
+    },
+    "minimumSpend": {
+        "type": "float",
+        "required": False,
+        "description": "Minimum spend amount (>= 0)",
+    },
+    "customFields": {
+        "type": "dict",
+        "required": False,
+        "description": "Optional custom key-value pairs",
+    },
+}
+
 _SCHEMAS = {
     EntityType.product: PRODUCT_SCHEMA,
     EntityType.meter: METER_SCHEMA,
     EntityType.aggregation: AGGREGATION_SCHEMA,
+    EntityType.plan_template: PLAN_TEMPLATE_SCHEMA,
+    EntityType.plan: PLAN_SCHEMA,
+    EntityType.pricing: PRICING_SCHEMA,
 }
 
 

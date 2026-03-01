@@ -9,12 +9,12 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langgraph.errors import GraphInterrupt
 from langgraph.types import Command
 
-from app.agents.graphs.product_meter_agg import build_product_meter_agg_graph
 from app.agents.utils import extract_interrupt_payload
 from app.auth.jwt import verify_token
 from app.db.client import get_supabase_client
-from app.schemas.common import MessageRole, WorkflowStatus
+from app.schemas.common import MessageRole, WorkflowStatus, WorkflowType
 from app.services.chat_message_service import save_message_internal
+from app.services.workflow_service import _get_graph
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +178,8 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
     config = {"configurable": {"thread_id": thread_id}}
 
     try:
-        graph = await build_product_meter_agg_graph()
+        wf_type = workflow.get("workflow_type", WorkflowType.product_meter_aggregation)
+        graph = await _get_graph(wf_type)
 
         # Send current interrupt state if any
         await _send_interrupt_if_pending(websocket, graph, config)

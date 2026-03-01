@@ -28,6 +28,7 @@ class WorkflowResponse(BaseModel):
 
 class WorkflowStart(BaseModel):
     model_id: str = Field(..., description="LLM model ID from supported list")
+    workflow_type: WorkflowType = Field(default=WorkflowType.product_meter_aggregation)
 
 
 class EntityDecision(BaseModel):

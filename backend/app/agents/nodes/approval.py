@@ -12,16 +12,50 @@ from app.schemas.common import EntityType, ObjectStatus
 
 logger = logging.getLogger(__name__)
 
-# Maps current step to entity/error/decision state keys
-_STEP_CONFIG: dict[str, tuple[EntityType, str, str, str]] = {
-    # step → (entity_type, entities_key, errors_key, decisions_key)
-    "products_validated": (EntityType.product, "products", "product_errors", "product_decisions"),
-    "meters_validated": (EntityType.meter, "meters", "meter_errors", "meter_decisions"),
+# Maps current step to entity/error/decision state keys + explicit approved step name
+_STEP_CONFIG: dict[str, tuple[EntityType, str, str, str, str]] = {
+    # step → (entity_type, entities_key, errors_key, decisions_key, approved_step)
+    "products_validated": (
+        EntityType.product,
+        "products",
+        "product_errors",
+        "product_decisions",
+        "products_approved",
+    ),
+    "meters_validated": (
+        EntityType.meter,
+        "meters",
+        "meter_errors",
+        "meter_decisions",
+        "meters_approved",
+    ),
     "aggregations_validated": (
         EntityType.aggregation,
         "aggregations",
         "aggregation_errors",
         "aggregation_decisions",
+        "aggregations_approved",
+    ),
+    "plan_templates_validated": (
+        EntityType.plan_template,
+        "plan_templates",
+        "plan_template_errors",
+        "plan_template_decisions",
+        "plan_templates_approved",
+    ),
+    "plans_validated": (
+        EntityType.plan,
+        "plans",
+        "plan_errors",
+        "plan_decisions",
+        "plans_approved",
+    ),
+    "pricing_validated": (
+        EntityType.pricing,
+        "pricing",
+        "pricing_errors",
+        "pricing_decisions",
+        "pricing_approved",
     ),
 }
 
@@ -44,7 +78,7 @@ async def approve_entities(state: WorkflowState) -> dict:
         logger.warning("approve_entities called with unexpected step: %s", current_step)
         return {}
 
-    entity_type, entities_key, errors_key, decisions_key = config
+    entity_type, entities_key, errors_key, decisions_key, approved_step = config
     entities = state.get(entities_key, [])
     errors = state.get(errors_key, [])
     use_case_id = state.get("use_case_id", "")
@@ -141,18 +175,18 @@ async def approve_entities(state: WorkflowState) -> dict:
     return {
         entities_key: approved_entities,
         decisions_key: decisions,
-        "current_step": f"{entity_type}s_approved",
+        "current_step": approved_step,
         "messages": state.get("messages", [])
         + [
             {
                 "role": "assistant",
                 "content": json.dumps(payload),
-                "step": f"approve_{entity_type}s",
+                "step": f"approve_{entity_type}",
             },
             {
                 "role": "user",
                 "content": json.dumps(decisions),
-                "step": f"decision_{entity_type}s",
+                "step": f"decision_{entity_type}",
             },
         ],
     }

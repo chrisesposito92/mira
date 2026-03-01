@@ -46,3 +46,47 @@ def validate_code(data: dict, errors: list[ValidationError]) -> None:
                 severity="error",
             )
         )
+
+
+def validate_custom_fields(data: dict, errors: list[ValidationError]) -> None:
+    """Validate the optional 'customFields' field: must be dict if present."""
+    custom_fields = data.get("customFields")
+    if custom_fields is not None and not isinstance(custom_fields, dict):
+        errors.append(
+            ValidationError(
+                field="customFields",
+                message="customFields must be a dict",
+                severity="error",
+            )
+        )
+
+
+def validate_non_negative(
+    data: dict,
+    field_name: str,
+    errors: list[ValidationError],
+    *,
+    required: bool = False,
+) -> None:
+    """Validate a numeric field is >= 0. Optionally required."""
+    value = data.get(field_name)
+    if value is None:
+        if required:
+            errors.append(
+                ValidationError(
+                    field=field_name, message=f"{field_name} is required", severity="error"
+                )
+            )
+        return
+    if not isinstance(value, (int, float)):
+        errors.append(
+            ValidationError(
+                field=field_name, message=f"{field_name} must be numeric", severity="error"
+            )
+        )
+    elif value < 0:
+        errors.append(
+            ValidationError(
+                field=field_name, message=f"{field_name} must be >= 0", severity="error"
+            )
+        )

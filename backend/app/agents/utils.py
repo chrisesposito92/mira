@@ -3,6 +3,21 @@
 from typing import Any
 
 
+def build_use_case_description(use_case: dict) -> str:
+    """Build a description from use case data for prompt context."""
+    title = use_case.get("title", "")
+    description = use_case.get("description", "")
+    industry = use_case.get("industry", "")
+    parts = []
+    if title:
+        parts.append(f"Title: {title}")
+    if description:
+        parts.append(f"Description: {description}")
+    if industry:
+        parts.append(f"Industry: {industry}")
+    return "\n".join(parts) if parts else "No use case details available."
+
+
 def extract_interrupt_payload(graph_state: Any) -> dict | None:
     """Extract the interrupt payload from a LangGraph state snapshot.
 

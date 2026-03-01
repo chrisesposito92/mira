@@ -15,12 +15,15 @@ class ValidationError:
 
 def validate_entity(entity_type: EntityType, data: dict) -> list[ValidationError]:
     """Validate an entity dict against its rules. Returns list of errors/warnings."""
-    from app.validation.rules import aggregation, meter, product
+    from app.validation.rules import aggregation, meter, plan, plan_template, pricing, product
 
     validators = {
         EntityType.product: product.validate,
         EntityType.meter: meter.validate,
         EntityType.aggregation: aggregation.validate,
+        EntityType.plan_template: plan_template.validate,
+        EntityType.plan: plan.validate,
+        EntityType.pricing: pricing.validate,
     }
     validator = validators.get(entity_type)
     if not validator:

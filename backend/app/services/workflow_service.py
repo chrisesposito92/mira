@@ -9,11 +9,27 @@ from langgraph.errors import GraphInterrupt
 from langgraph.types import Command
 from supabase import Client
 
+from app.agents.graphs.plan_pricing import build_plan_pricing_graph
 from app.agents.graphs.product_meter_agg import build_product_meter_agg_graph
 from app.agents.utils import extract_interrupt_payload
 from app.schemas.common import WorkflowStatus, WorkflowType
 
 logger = logging.getLogger(__name__)
+
+
+_SUPPORTED_WORKFLOW_TYPES = {
+    WorkflowType.product_meter_aggregation,
+    WorkflowType.plan_pricing,
+}
+
+
+async def _get_graph(workflow_type: WorkflowType) -> object:
+    """Build the correct LangGraph graph for the given workflow type."""
+    if workflow_type == WorkflowType.plan_pricing:
+        return await build_plan_pricing_graph()
+    if workflow_type == WorkflowType.product_meter_aggregation:
+        return await build_product_meter_agg_graph()
+    raise ValueError(f"Unsupported workflow type: {workflow_type}")
 
 
 def list_workflows(supabase: Client, user_id: UUID, use_case_id: UUID) -> list[dict]:
@@ -113,10 +129,39 @@ async def _invoke_and_handle(
     )
 
 
-async def start_workflow(supabase: Client, user_id: UUID, use_case_id: UUID, model_id: str) -> dict:
-    """Start a new product/meter/aggregation workflow for a use case."""
+async def start_workflow(
+    supabase: Client,
+    user_id: UUID,
+    use_case_id: UUID,
+    model_id: str,
+    workflow_type: WorkflowType = WorkflowType.product_meter_aggregation,
+) -> dict:
+    """Start a new workflow for a use case."""
+    if workflow_type not in _SUPPORTED_WORKFLOW_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported workflow type: {workflow_type}",
+        )
+
     use_case = _verify_use_case_ownership(supabase, user_id, use_case_id)
     project_id = use_case.get("project_id", "")
+
+    # For plan_pricing, verify a completed WF1 exists
+    if workflow_type == WorkflowType.plan_pricing:
+        wf1_check = (
+            supabase.table("workflows")
+            .select("id")
+            .eq("use_case_id", str(use_case_id))
+            .eq("workflow_type", WorkflowType.product_meter_aggregation)
+            .eq("status", WorkflowStatus.completed)
+            .limit(1)
+            .execute()
+        )
+        if not wf1_check.data:
+            raise HTTPException(
+                status_code=400,
+                detail="Workflow 1 (Products, Meters & Aggregations) must be completed first",
+            )
 
     workflow_id = str(uuid4())
     thread_id = str(uuid4())
@@ -126,7 +171,7 @@ async def start_workflow(supabase: Client, user_id: UUID, use_case_id: UUID, mod
         {
             "id": workflow_id,
             "use_case_id": str(use_case_id),
-            "workflow_type": WorkflowType.product_meter_aggregation,
+            "workflow_type": workflow_type,
             "status": WorkflowStatus.running,
             "thread_id": thread_id,
             "model_id": model_id,
@@ -137,7 +182,8 @@ async def start_workflow(supabase: Client, user_id: UUID, use_case_id: UUID, mod
     ).execute()
 
     try:
-        graph = await build_product_meter_agg_graph()
+        graph = await _get_graph(workflow_type)
+
         initial_state = {
             "use_case_id": str(use_case_id),
             "project_id": str(project_id),
@@ -175,7 +221,8 @@ async def resume_workflow(
 
     _update_workflow(supabase, wf_id, {"status": WorkflowStatus.running})
 
-    graph = await build_product_meter_agg_graph()
+    wf_type = workflow.get("workflow_type", WorkflowType.product_meter_aggregation)
+    graph = await _get_graph(wf_type)
     return await _invoke_and_handle(graph, config, Command(resume=decisions), supabase, wf_id)
 
 

@@ -2,6 +2,8 @@
 
 import type { EntityType, WorkflowStatus, WorkflowType } from './index.js';
 
+export type { WorkflowType } from './index.js';
+
 // --- LLM Models ---
 
 export interface LlmModel {
