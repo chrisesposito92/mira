@@ -344,25 +344,28 @@ Phase 1 (Scaffold)
 
 ## Phase 11: Control Panel
 
-**~25 files** | Depends on: Phase 5, Phase 8
+**22 files (12 new, 10 modified)** | Depends on: Phase 5, Phase 8
 
-- [ ] `stores/objects.svelte.ts` — Tree grouping, selection, sync status
-- [ ] Component: ObjectTree (tree hierarchy by entity type)
-- [ ] Component: ObjectTreeNode (expandable node with status badge)
-- [ ] Component: ObjectEditor (detail panel)
-- [ ] Component: JsonEditor (CodeMirror 6 integration)
-- [ ] Component: SyncStatusBadge (draft/approved/pushed/failed colors)
-- [ ] Component: BulkActions (approve all, push selected, etc.)
-- [ ] Component: ManualObjectForm (create object without agent)
-- [ ] Control panel page (`routes/(app)/projects/[projectId]/control-panel/`)
-- [ ] Toast notifications for sync results
+- [x] `types/api.ts` — GeneratedObject, GeneratedObjectUpdate, BulkStatusUpdate interfaces
+- [x] `services/generated-objects.ts` — API client (listObjects, getObject, updateObject, bulkUpdateStatus)
+- [x] `stores/objects.svelte.ts` — Tree grouping by entity type (push order), filtering, multi-select, CRUD
+- [x] Component: ObjectTree (collapsible tree hierarchy by entity type)
+- [x] Component: ObjectTreeNode (node with checkbox, name, status badge)
+- [x] Component: ObjectEditor (detail panel with CodeMirror JSON editor, actions)
+- [x] Component: JsonEditor (CodeMirror 6 integration with dark mode, linting)
+- [x] Component: BulkActions (filter bar + approve/reject selected)
+- [x] StatusBadge extended with object statuses (approved, rejected, pushed, push_failed)
+- [x] Control panel page (`routes/(app)/projects/[projectId]/use-cases/[useCaseId]/control-panel/`)
+- [x] Navigation link from workflow page to control panel
+- [x] Toast notifications for update/bulk results
 - **Tests**:
-  - [ ] Objects store tests (tree grouping, selection)
-  - [ ] Component tests for ObjectTree, SyncStatusBadge
-- [ ] **Verify**: Objects store (tree grouping, selection)
-- [ ] **Verify**: Tree renders correct hierarchy
-- [ ] **Verify**: JSON editor validates on edit
-- [ ] **Verify**: Status badges show correct colors
+  - [x] Generated objects service tests (6 tests)
+  - [x] Objects store tests (15 tests — tree grouping, filtering, selection, CRUD)
+- [x] **Verify**: All frontend tests pass (~21 new tests)
+- [x] **Verify**: svelte-check 0 errors
+- [x] **Verify**: ESLint + Prettier clean
+- [x] **Verify**: Build succeeds with CodeMirror
+- **Deferred**: ManualObjectForm (create objects without the agent) — see Phase 11.5
 
 ---
 
@@ -404,6 +407,19 @@ Phase 1 (Scaffold)
 - [ ] **Verify**: PDF/DOCX extraction works correctly
 - [ ] **Verify**: Upload → chunk → embed → search pipeline works end-to-end
 - [ ] **Verify**: Agent receives relevant user doc context in RAG results
+
+---
+
+## Phase 11.5: Manual Object Creation (Deferred from Phase 11)
+
+**~5 files** | Depends on: Phase 11
+
+- [ ] Component: ManualObjectForm (create object without agent — entity type selector, JSON template, name/code fields)
+- [ ] Backend: `POST /api/use-cases/{id}/objects` endpoint for manual object creation
+- [ ] Integration into Control Panel page (add button in toolbar)
+- **Tests**:
+  - [ ] ManualObjectForm component tests
+  - [ ] Backend endpoint tests
 
 ---
 

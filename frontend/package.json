@@ -47,10 +47,16 @@
 		"vitest": "^4.0.18"
 	},
 	"dependencies": {
+		"@codemirror/lang-json": "^6.0.2",
+		"@codemirror/lint": "^6.9.4",
+		"@codemirror/state": "^6.5.4",
+		"@codemirror/theme-one-dark": "^6.1.3",
+		"@codemirror/view": "^6.39.15",
 		"@supabase/ssr": "^0.8.0",
 		"@supabase/supabase-js": "^2.98.0",
 		"bits-ui": "^2.16.2",
 		"clsx": "^2.1.1",
+		"codemirror": "^6.0.2",
 		"lucide-svelte": "^0.575.0",
 		"mode-watcher": "^1.1.0",
 		"tailwind-merge": "^3.5.0",

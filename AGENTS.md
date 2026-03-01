@@ -101,7 +101,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 |-----------|---------|
 | `lib/components/ui/` | shadcn-svelte base components |
 | `lib/components/chat/` | Chat UI (ChatContainer, EntityCard, ClarificationCard, WorkflowLauncher, etc.) |
-| `lib/components/control-panel/` | Object tree, JSON editor |
+| `lib/components/control-panel/` | ObjectTree, ObjectTreeNode, ObjectEditor, JsonEditor (CodeMirror 6), BulkActions |
 | `lib/components/project/` | Project/use case cards |
 | `lib/components/layout/` | Sidebar, header, breadcrumbs |
 | `lib/stores/` | Svelte 5 runes ($state-based) |
@@ -157,6 +157,15 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Entity decisions**: Accumulated per-entity in store; auto-submitted when all entities have decisions.
 - **Workflow route**: `/projects/[projectId]/use-cases/[useCaseId]/workflow/` — loads use case, models, and restores interrupted workflows.
 - **Chat message types**: Discriminated union `ChatMessage` with 7 variants: `status`, `entities`, `clarification`, `user_decision`, `user_clarification`, `complete`, `error`.
+
+### Frontend Control Panel
+
+- **ObjectsStore**: Class-based Svelte 5 runes singleton (`stores/objects.svelte.ts`) — manages objects list, filtering (entity type, status, search), tree grouping by entity type in push order, multi-select, single-object selection, CRUD operations.
+- **GeneratedObjectService**: Factory function `createGeneratedObjectService(client)` in `services/generated-objects.ts` — REST calls for listObjects, getObject, updateObject, bulkUpdateStatus.
+- **Control panel route**: `/projects/[projectId]/use-cases/[useCaseId]/control-panel/` — 2-panel layout with ObjectTree (left) + ObjectEditor (right), BulkActions toolbar above.
+- **JsonEditor**: CodeMirror 6 integration (`components/control-panel/JsonEditor.svelte`) — JSON syntax highlighting, linting, dark mode via mode-watcher, line numbers, bracket matching, fold gutters.
+- **Tree structure**: Objects grouped by entity type in push order (product → meter → aggregation → ... → measurement). Collapsible groups with count badges. Supports multi-select via checkboxes.
+- **StatusBadge**: Extended with object statuses: approved (blue), rejected (muted), pushed (green), push_failed (red).
 
 ### Frontend Auth (Supabase SSR)
 

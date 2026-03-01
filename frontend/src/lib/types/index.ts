@@ -42,6 +42,9 @@ export type {
 	OrgConnectionCreate,
 	OrgConnectionUpdate,
 	OrgConnectionTestResult,
+	GeneratedObject,
+	GeneratedObjectUpdate,
+	BulkStatusUpdate,
 } from './api.js';
 
 export type {

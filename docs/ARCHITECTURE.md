@@ -66,7 +66,7 @@ mira/
 │   │   │   ├── components/
 │   │   │   │   ├── ui/         # shadcn-svelte components
 │   │   │   │   ├── chat/       # ChatContainer, AgentMessage, ObjectCard, etc.
-│   │   │   │   ├── control-panel/  # ObjectTree, JsonEditor, SyncStatusBadge
+│   │   │   │   ├── control-panel/  # ObjectTree, ObjectEditor, JsonEditor (CodeMirror 6), BulkActions
 │   │   │   │   ├── project/    # ProjectCard, UseCaseCard, FileUpload
 │   │   │   │   └── layout/     # AppSidebar, Header, Breadcrumbs
 │   │   │   ├── stores/         # Svelte 5 runes ($state-based)
@@ -78,9 +78,9 @@ mira/
 │   │       └── (app)/          # Authenticated routes (sidebar layout)
 │   │           ├── dashboard/
 │   │           ├── projects/[projectId]/
-│   │           │   ├── use-cases/[useCaseId]/  # Chat interface
-│   │           │   ├── control-panel/          # Object tree + editor
-│   │           │   └── settings/
+│   │           │   └── use-cases/[useCaseId]/
+│   │           │       ├── workflow/           # Chat interface
+│   │           │       └── control-panel/      # Object tree + JSON editor
 │   │           └── orgs/       # Org connection management
 │   └── tests/
 ├── shared/                     # Shared constants (entity types, status enums)

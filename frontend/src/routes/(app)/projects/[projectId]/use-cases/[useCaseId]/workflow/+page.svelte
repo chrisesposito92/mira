@@ -4,7 +4,7 @@
 	import { workflowStore } from '$lib/stores';
 	import { createApiClient, createWorkflowService } from '$lib/services';
 	import { toast } from 'svelte-sonner';
-	import { ArrowLeft } from 'lucide-svelte';
+	import { ArrowLeft, SlidersHorizontal } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import type { EntityDecision, ClarificationAnswer, WorkflowType } from '$lib/types/workflow.js';
 
@@ -97,6 +97,10 @@
 				<p class="text-muted-foreground text-xs">{data.project.name}</p>
 			{/if}
 		</div>
+		<Button variant="outline" size="sm" href="../control-panel">
+			<SlidersHorizontal class="mr-1 size-4" />
+			Control Panel
+		</Button>
 	</div>
 
 	{#if showChat}
