@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { ObjectTree, ObjectEditor, BulkActions } from '$lib/components/control-panel';
 	import { objectsStore } from '$lib/stores';
 	import { createApiClient, createGeneratedObjectService } from '$lib/services';
@@ -10,33 +10,37 @@
 	import type { GeneratedObjectUpdate, ObjectStatus } from '$lib/types';
 
 	let { data } = $props();
+	let initialized = false;
 
 	const service = $derived(createGeneratedObjectService(createApiClient(data.supabase)));
 
-	// Clear and reinitialize store whenever loaded data changes (handles use-case navigation)
+	// Initialize store with loaded data once; skip re-runs from session refresh
 	$effect(() => {
-		objectsStore.clear();
+		if (!initialized) {
+			initialized = true;
+			objectsStore.clear();
+		}
 		objectsStore.objects = data.objects;
 	});
 
 	async function handleUpdate(id: string, updateData: GeneratedObjectUpdate) {
 		const result = await objectsStore.updateObject(service, id, updateData);
-		if (result) {
+		if (result.ok) {
 			toast.success('Object updated');
 		} else {
-			toast.error(objectsStore.error ?? 'Failed to update object');
+			toast.error(result.error);
 		}
 	}
 
 	async function handleBulkAction(status: ObjectStatus) {
 		const ids = [...objectsStore.selectedIds];
 		if (ids.length === 0) return;
-		await objectsStore.bulkUpdateStatus(service, ids, status);
-		if (objectsStore.error) {
-			toast.error(objectsStore.error);
-		} else {
+		const result = await objectsStore.bulkUpdateStatus(service, ids, status);
+		if (result.ok) {
 			const label = status.charAt(0).toUpperCase() + status.slice(1);
 			toast.success(`${label} ${ids.length} object${ids.length > 1 ? 's' : ''}`);
+		} else {
+			toast.error(result.error);
 		}
 	}
 
@@ -51,7 +55,7 @@
 		<Button
 			variant="ghost"
 			size="sm"
-			href="/projects/{$page.params.projectId}/use-cases/{$page.params.useCaseId}/workflow"
+			href="/projects/{page.params.projectId}/use-cases/{page.params.useCaseId}/workflow"
 		>
 			<ArrowLeft class="mr-1 size-4" />
 			Back to Workflow

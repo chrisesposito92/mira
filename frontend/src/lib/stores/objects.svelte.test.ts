@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { SvelteSet } from 'svelte/reactivity';
 
-let store: any;
+type ObjectsStore = Awaited<typeof import('./objects.svelte.js')>['objectsStore'];
+let store: ObjectsStore;
 
 beforeEach(async () => {
 	const mod = await import('./objects.svelte.js');
@@ -8,7 +10,9 @@ beforeEach(async () => {
 	store.clear();
 });
 
-function makeMockObject(overrides = {}): any {
+function makeMockObject(
+	overrides: Partial<import('$lib/types').GeneratedObject> = {},
+): import('$lib/types').GeneratedObject {
 	return {
 		id: 'obj-1',
 		use_case_id: 'uc-1',
@@ -26,7 +30,9 @@ function makeMockObject(overrides = {}): any {
 	};
 }
 
-function mockObjectService(overrides = {}) {
+function mockObjectService(
+	overrides = {},
+): import('$lib/services/generated-objects.js').GeneratedObjectService {
 	return {
 		listObjects: vi.fn().mockResolvedValue([
 			makeMockObject({ id: 'obj-1', entity_type: 'product', name: 'Product A' }),
@@ -44,7 +50,7 @@ function mockObjectService(overrides = {}) {
 			.mockResolvedValue(makeMockObject({ id: 'obj-1', name: 'Updated Product' })),
 		bulkUpdateStatus: vi.fn().mockResolvedValue({ message: 'ok' }),
 		...overrides,
-	} as any;
+	};
 }
 
 describe('ObjectsStore', () => {
@@ -91,7 +97,7 @@ describe('ObjectsStore', () => {
 			makeMockObject({ id: 'obj-2', entity_type: 'product' }),
 			makeMockObject({ id: 'obj-3', entity_type: 'meter' }),
 		];
-		const types = store.tree.map((g: any) => g.entityType);
+		const types = store.tree.map((g) => g.entityType);
 		expect(types).toEqual(['product', 'meter', 'pricing']);
 	});
 
@@ -130,7 +136,7 @@ describe('ObjectsStore', () => {
 		];
 		store.selectedObjectId = 'obj-2';
 		expect(store.selectedObject).toBeTruthy();
-		expect(store.selectedObject.name).toBe('Second');
+		expect(store.selectedObject!.name).toBe('Second');
 	});
 
 	it('toggleSelection adds and removes from selectedIds', () => {
@@ -148,7 +154,7 @@ describe('ObjectsStore', () => {
 	});
 
 	it('clearSelection empties selectedIds', () => {
-		store.selectedIds = new Set(['obj-1', 'obj-2']);
+		store.selectedIds = new SvelteSet(['obj-1', 'obj-2']);
 		store.clearSelection();
 		expect(store.selectedIds.size).toBe(0);
 	});
@@ -157,7 +163,7 @@ describe('ObjectsStore', () => {
 		store.objects = [makeMockObject({ id: 'obj-1', name: 'Old' })];
 		const service = mockObjectService();
 		const result = await store.updateObject(service, 'obj-1', { name: 'Updated Product' });
-		expect(result).toBeTruthy();
+		expect(result.ok).toBe(true);
 		expect(store.objects[0].name).toBe('Updated Product');
 	});
 
@@ -167,7 +173,7 @@ describe('ObjectsStore', () => {
 			makeMockObject({ id: 'obj-2', status: 'draft' }),
 			makeMockObject({ id: 'obj-3', status: 'draft' }),
 		];
-		store.selectedIds = new Set(['obj-1', 'obj-2']);
+		store.selectedIds = new SvelteSet(['obj-1', 'obj-2']);
 		const service = mockObjectService();
 		await store.bulkUpdateStatus(service, ['obj-1', 'obj-2'], 'approved');
 		expect(store.objects[0].status).toBe('approved');
@@ -180,7 +186,7 @@ describe('ObjectsStore', () => {
 		const service = mockObjectService();
 		await store.loadObjects(service, 'uc-1');
 		store.selectedObjectId = 'obj-1';
-		store.selectedIds = new Set(['obj-1']);
+		store.selectedIds = new SvelteSet(['obj-1']);
 		store.filterEntityType = 'meter';
 		store.filterStatus = 'approved';
 		store.searchQuery = 'test';

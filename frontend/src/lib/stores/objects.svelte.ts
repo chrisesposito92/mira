@@ -89,22 +89,27 @@ class ObjectsStore {
 		service: GeneratedObjectService,
 		objectId: string,
 		data: GeneratedObjectUpdate,
-	) {
+	): Promise<{ ok: true; updated: GeneratedObject } | { ok: false; error: string }> {
 		this.saving = true;
 		this.error = null;
 		try {
 			const updated = await service.updateObject(objectId, data);
 			this.objects = this.objects.map((o) => (o.id === objectId ? updated : o));
-			return updated;
+			return { ok: true, updated };
 		} catch (e) {
-			this.error = e instanceof Error ? e.message : 'Failed to update object';
-			return null;
+			const msg = e instanceof Error ? e.message : 'Failed to update object';
+			this.error = msg;
+			return { ok: false, error: msg };
 		} finally {
 			this.saving = false;
 		}
 	}
 
-	async bulkUpdateStatus(service: GeneratedObjectService, ids: string[], status: ObjectStatus) {
+	async bulkUpdateStatus(
+		service: GeneratedObjectService,
+		ids: string[],
+		status: ObjectStatus,
+	): Promise<{ ok: true } | { ok: false; error: string }> {
 		this.saving = true;
 		this.error = null;
 		try {
@@ -112,8 +117,11 @@ class ObjectsStore {
 			const idSet = new Set(ids);
 			this.objects = this.objects.map((o) => (idSet.has(o.id) ? { ...o, status } : o));
 			this.selectedIds.clear();
+			return { ok: true };
 		} catch (e) {
-			this.error = e instanceof Error ? e.message : 'Failed to bulk update';
+			const msg = e instanceof Error ? e.message : 'Failed to bulk update';
+			this.error = msg;
+			return { ok: false, error: msg };
 		} finally {
 			this.saving = false;
 		}

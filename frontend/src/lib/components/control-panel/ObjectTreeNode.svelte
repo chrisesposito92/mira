@@ -1,5 +1,6 @@
 <script lang="ts">
 	import StatusBadge from '$lib/components/project/StatusBadge.svelte';
+	import { cn } from '$lib/utils.js';
 	import type { GeneratedObject } from '$lib/types';
 
 	let {
@@ -20,9 +21,10 @@
 </script>
 
 <button
-	class="hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm {isActive
-		? 'bg-accent'
-		: ''}"
+	class={cn(
+		'hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm',
+		isActive && 'bg-accent',
+	)}
 	onclick={() => onselect(object.id)}
 >
 	<input

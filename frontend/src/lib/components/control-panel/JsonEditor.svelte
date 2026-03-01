@@ -23,6 +23,7 @@
 	} from '@codemirror/language';
 	import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 	import { mode } from 'mode-watcher';
+	import { untrack } from 'svelte';
 
 	let {
 		value = '',
@@ -87,9 +88,11 @@
 		const isDark = mode.current === 'dark';
 
 		if (!view) {
+			// Read value outside reactive tracking so this effect only re-runs on mode/readonly changes
+			const initialDoc = untrack(() => value);
 			view = new EditorView({
 				state: EditorState.create({
-					doc: value,
+					doc: initialDoc,
 					extensions: buildExtensions(isDark, readonly),
 				}),
 				parent: container,

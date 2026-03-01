@@ -19,18 +19,29 @@
 	let editedJson = $state('');
 	let jsonValid = $state(true);
 	let parsedData: Record<string, unknown> | null = $state(null);
+	let lastObjectId = $state<string | null>(null);
 
-	// Reset editor when selected object changes
+	// Reset editor only when a different object is selected (not on same-object reference changes)
 	$effect(() => {
-		editedJson = object?.data ? JSON.stringify(object.data, null, 2) : '';
-		parsedData = object?.data ?? null;
-		jsonValid = true;
+		const id = object?.id ?? null;
+		if (id !== lastObjectId) {
+			lastObjectId = id;
+			editedJson = object?.data ? JSON.stringify(object.data, null, 2) : '';
+			parsedData = object?.data ?? null;
+			jsonValid = true;
+		}
 	});
 
 	function handleJsonChange(value: string) {
 		editedJson = value;
 		try {
-			parsedData = JSON.parse(value);
+			const parsed = JSON.parse(value);
+			if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+				parsedData = null;
+				jsonValid = false;
+				return;
+			}
+			parsedData = parsed;
 			jsonValid = true;
 		} catch {
 			parsedData = null;
@@ -114,7 +125,7 @@
 
 		<!-- Actions -->
 		<div class="flex items-center gap-2 p-4">
-			<Button size="sm" disabled={!jsonValid || saving} onclick={handleSave}>
+			<Button size="sm" disabled={!jsonValid || saving || !parsedData} onclick={handleSave}>
 				{saving ? 'Saving...' : 'Save'}
 			</Button>
 			{#if object.status !== 'approved'}
