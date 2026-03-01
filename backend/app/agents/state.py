@@ -55,6 +55,35 @@ class WorkflowState(TypedDict, total=False):
     plan_decisions: list[dict]
     pricing_decisions: list[dict]
 
+    # Workflow 3 — loaded from DB (approved entities from Workflow 2)
+    approved_plan_templates: list[dict]
+    approved_plans: list[dict]
+    approved_pricing: list[dict]
+
+    # Workflow 3 — Generation
+    accounts: list[dict]
+    account_plans: list[dict]
+
+    # Workflow 3 — Validation
+    account_errors: list[dict]
+    account_plan_errors: list[dict]
+
+    # Workflow 3 — Approval decisions
+    account_decisions: list[dict]
+    account_plan_decisions: list[dict]
+
+    # Workflow 4 — loaded from DB (approved entities from Workflow 3)
+    approved_accounts: list[dict]
+
+    # Workflow 4 — Generation
+    measurements: list[dict]
+
+    # Workflow 4 — Validation
+    measurement_errors: list[dict]
+
+    # Workflow 4 — Approval decisions
+    measurement_decisions: list[dict]
+
     # Tracking
     thread_id: str  # LangGraph thread_id — unique per workflow run
     messages: list[dict]  # chat-style message log

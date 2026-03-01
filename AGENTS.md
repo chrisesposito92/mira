@@ -67,7 +67,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 | Directory | Purpose |
 |-----------|---------|
-| `state.py` | `WorkflowState` TypedDict — full graph state definition (WF1 + WF2 fields) |
+| `state.py` | `WorkflowState` TypedDict — full graph state definition (WF1 + WF2 + WF3 + WF4 fields) |
 | `llm_factory.py` | Multi-model registry + `get_llm()` via `init_chat_model()` (5 models) |
 | `utils.py` | Shared helpers: `extract_interrupt_payload()`, `build_use_case_description()`, `parse_entity_list()` |
 | `checkpointer.py` | `AsyncPostgresSaver` setup reusing `get_db_pool()` |
@@ -78,14 +78,22 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `nodes/plan_template_gen.py` | PlanTemplate generation via LLM |
 | `nodes/plan_gen.py` | Plan generation via LLM |
 | `nodes/pricing_gen.py` | Pricing generation via LLM (5 strategies: tiered, volume, stairstep, per-unit, counter) |
-| `nodes/validation.py` | Run validation rules on generated entities (4-tuple step mapping) |
+| `nodes/load_approved_accounts.py` | Load approved WF1+WF2 entities from DB for WF3 |
+| `nodes/load_approved_usage.py` | Load approved WF1+WF3 entities (meters, accounts) for WF4 |
+| `nodes/account_gen.py` | Account generation via LLM |
+| `nodes/account_plan_gen.py` | AccountPlan generation via LLM |
+| `nodes/measurement_gen.py` | Measurement generation via LLM |
+| `nodes/validation.py` | Run validation rules on generated entities (4-tuple step mapping + cross-entity validation) |
 | `nodes/approval.py` | Persist entities to DB, `interrupt()` for user approval (5-tuple step config) |
 | `graphs/product_meter_agg.py` | WF1 StateGraph: analyze → [clarify?] → generate → validate → approve (×3 entity types) |
 | `graphs/plan_pricing.py` | WF2 StateGraph: load_approved → generate → validate → approve (×3: PlanTemplate, Plan, Pricing) |
+| `graphs/account_setup.py` | WF3 StateGraph: load_approved → generate → validate → approve (×2: Account, AccountPlan) |
+| `graphs/usage_submission.py` | WF4 StateGraph: load_approved → generate → validate → approve (×1: Measurement) |
 | `prompts/product_meter.py` | System prompts for WF1 (Products, Meters, Aggregations) |
 | `prompts/plan_pricing.py` | System prompts for WF2 (PlanTemplates, Plans, Pricing with 5 pricing strategies) |
+| `prompts/account_usage.py` | System prompts for WF3+WF4 (Accounts, AccountPlans, Measurements) |
 | `tools/rag_tool.py` | RAG retrieval wrapper for agent nodes |
-| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, PlanTemplate, Plan, Pricing) |
+| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, PlanTemplate, Plan, Pricing, Account, AccountPlan, Measurement) |
 
 ### Frontend Structure (`frontend/src/`)
 
@@ -135,8 +143,8 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
-- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing
-- **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation or plan_pricing). WF2 requires completed WF1 for same use case. Frontend WorkflowLauncher gates WF2 on WF1 completion.
+- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing, account, account_plan, measurement. Cross-entity referential integrity checks in `validation/cross_entity.py` (AccountPlan→Account/Plan, Measurement→Meter/Account).
+- **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation, plan_pricing, account_setup, usage_submission). Prerequisite chain: WF1 → WF2 → WF3 → WF4. Frontend WorkflowLauncher gates each workflow on predecessor completion.
 
 ### Frontend Chat Interface
 

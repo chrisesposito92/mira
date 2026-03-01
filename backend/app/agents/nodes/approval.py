@@ -57,6 +57,27 @@ _STEP_CONFIG: dict[str, tuple[EntityType, str, str, str, str]] = {
         "pricing_decisions",
         "pricing_approved",
     ),
+    "accounts_validated": (
+        EntityType.account,
+        "accounts",
+        "account_errors",
+        "account_decisions",
+        "accounts_approved",
+    ),
+    "account_plans_validated": (
+        EntityType.account_plan,
+        "account_plans",
+        "account_plan_errors",
+        "account_plan_decisions",
+        "account_plans_approved",
+    ),
+    "measurements_validated": (
+        EntityType.measurement,
+        "measurements",
+        "measurement_errors",
+        "measurement_decisions",
+        "measurements_approved",
+    ),
 }
 
 
@@ -112,6 +133,11 @@ async def approve_entities(state: WorkflowState) -> dict:
             pricing_type = entity.get("type", "pricing")
             desc = entity.get("description", "")
             entity_name = desc[:100] if desc else f"{pricing_type} pricing"
+        if not entity_name and entity_type == EntityType.account_plan:
+            account_id = entity.get("accountId", "")
+            entity_name = f"AccountPlan: {account_id[:8]}"
+        if not entity_name and entity_type == EntityType.measurement:
+            entity_name = f"Measurement: {entity.get('uid', '')}"
 
         rows_to_insert.append(
             {

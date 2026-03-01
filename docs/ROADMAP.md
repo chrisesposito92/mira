@@ -308,21 +308,37 @@ Phase 1 (Scaffold)
 
 ## Phase 10: Accounts, Usage Data & Remaining Workflows
 
-**~25 files** | Depends on: Phase 9
+**26 files (15 new, 11 modified)** | Depends on: Phase 9
 
-- [ ] `agents/graphs/account_setup.py` — Form-driven account creation
-- [ ] `agents/graphs/usage_submission.py` — Generate measurements, batch, submit to ingest API
-- [ ] `validation/rules/account.py` — Account validation
-- [ ] `validation/rules/account_plan.py` — AccountPlan validation
-- [ ] `validation/rules/measurement.py` — Measurement validation (batch ≤1000, payload ≤512KB)
-- [ ] `validation/cross_entity.py` — Full referential integrity checks across all entity types
+- [x] `agents/state.py` — Extended WorkflowState with 14 new fields for WF3 + WF4
+- [x] `agents/tools/m3ter_schema.py` — Account, AccountPlan, Measurement schemas added
+- [x] `agents/prompts/account_usage.py` — System prompts for account and measurement generation
+- [x] `agents/nodes/load_approved_accounts.py` — Load approved WF1+WF2 entities for WF3
+- [x] `agents/nodes/load_approved_usage.py` — Load approved WF1+WF3 entities for WF4
+- [x] `agents/nodes/account_gen.py` — Account generation node
+- [x] `agents/nodes/account_plan_gen.py` — AccountPlan generation node
+- [x] `agents/nodes/measurement_gen.py` — Measurement generation node
+- [x] `agents/nodes/validation.py` — Added 3 new entity entries + cross-entity validation integration
+- [x] `agents/nodes/approval.py` — Added 3 new entity entries + name fallbacks for AccountPlan/Measurement
+- [x] `agents/graphs/account_setup.py` — WF3 StateGraph: load → gen accounts → validate → approve → gen account_plans → validate → approve
+- [x] `agents/graphs/usage_submission.py` — WF4 StateGraph: load → gen measurements → validate → approve
+- [x] `validation/rules/account.py` — Account validation (name, code, email, currency, address, daysBeforeBillDue)
+- [x] `validation/rules/account_plan.py` — AccountPlan validation (accountId, planId, startDate)
+- [x] `validation/rules/measurement.py` — Measurement validation (uid, meter, account, ts, data) + batch validation
+- [x] `validation/cross_entity.py` — Cross-entity referential integrity (AccountPlan→Account/Plan, Measurement→Meter/Account)
+- [x] `validation/engine.py` — Registered 3 new validators
+- [x] `services/workflow_service.py` — Added WF3+WF4 graph selection + prerequisite chain (WF1→WF2→WF3→WF4)
+- [x] Frontend: WorkflowLauncher — Added WF3 and WF4 buttons with prerequisite gating
 - **Tests**:
-  - [ ] Account/AccountPlan/Measurement validation tests
-  - [ ] Cross-entity referential integrity tests
-  - [ ] Batch limit tests (≤1000 measurements, ≤512KB)
-- [ ] **Verify**: Account references valid plans
-- [ ] **Verify**: Usage references valid meters/accounts
-- [ ] **Verify**: Batch limits respected (≤1000 measurements, ≤512KB)
+  - [x] Account + AccountPlan validation tests (22 tests)
+  - [x] Measurement validation + batch tests (17 tests)
+  - [x] Cross-entity referential integrity tests (11 tests)
+  - [x] Account setup graph structure + node tests (16 tests)
+  - [x] Usage submission graph structure + node tests (11 tests)
+- [x] **Verify**: 342 backend tests pass (77 new + 265 existing, 0 regressions)
+- [x] **Verify**: Ruff lint clean, svelte-check 0 errors
+- [x] **Verify**: Both new graphs compile correctly
+- [x] **Verify**: Prerequisite chain enforced (WF1→WF2→WF3→WF4)
 
 ---
 

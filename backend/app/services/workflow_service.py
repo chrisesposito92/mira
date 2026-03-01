@@ -10,8 +10,10 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from supabase import Client
 
+from app.agents.graphs.account_setup import build_account_setup_graph
 from app.agents.graphs.plan_pricing import build_plan_pricing_graph
 from app.agents.graphs.product_meter_agg import build_product_meter_agg_graph
+from app.agents.graphs.usage_submission import build_usage_submission_graph
 from app.agents.utils import extract_interrupt_payload
 from app.schemas.common import WorkflowStatus, WorkflowType
 
@@ -21,15 +23,21 @@ logger = logging.getLogger(__name__)
 _SUPPORTED_WORKFLOW_TYPES = {
     WorkflowType.product_meter_aggregation,
     WorkflowType.plan_pricing,
+    WorkflowType.account_setup,
+    WorkflowType.usage_submission,
 }
 
 
 async def get_graph(workflow_type: WorkflowType) -> CompiledStateGraph:
     """Build the correct LangGraph graph for the given workflow type."""
-    if workflow_type == WorkflowType.plan_pricing:
-        return await build_plan_pricing_graph()
     if workflow_type == WorkflowType.product_meter_aggregation:
         return await build_product_meter_agg_graph()
+    if workflow_type == WorkflowType.plan_pricing:
+        return await build_plan_pricing_graph()
+    if workflow_type == WorkflowType.account_setup:
+        return await build_account_setup_graph()
+    if workflow_type == WorkflowType.usage_submission:
+        return await build_usage_submission_graph()
     raise ValueError(f"Unsupported workflow type: {workflow_type}")
 
 
@@ -147,22 +155,36 @@ async def start_workflow(
     use_case = _verify_use_case_ownership(supabase, user_id, use_case_id)
     project_id = use_case.get("project_id", "")
 
-    # For plan_pricing, verify a completed WF1 exists
-    if workflow_type == WorkflowType.plan_pricing:
-        wf1_check = (
+    # Prerequisite checks: each workflow requires its predecessor to be completed
+    prerequisites: dict[WorkflowType, tuple[WorkflowType, str]] = {
+        WorkflowType.plan_pricing: (
+            WorkflowType.product_meter_aggregation,
+            "Workflow 1 (Products, Meters & Aggregations) must be completed first",
+        ),
+        WorkflowType.account_setup: (
+            WorkflowType.plan_pricing,
+            "Workflow 2 (Plans & Pricing) must be completed first",
+        ),
+        WorkflowType.usage_submission: (
+            WorkflowType.account_setup,
+            "Workflow 3 (Account Setup) must be completed first",
+        ),
+    }
+
+    prereq = prerequisites.get(workflow_type)
+    if prereq:
+        required_type, error_msg = prereq
+        prereq_check = (
             supabase.table("workflows")
             .select("id")
             .eq("use_case_id", str(use_case_id))
-            .eq("workflow_type", WorkflowType.product_meter_aggregation)
+            .eq("workflow_type", required_type)
             .eq("status", WorkflowStatus.completed)
             .limit(1)
             .execute()
         )
-        if not wf1_check.data:
-            raise HTTPException(
-                status_code=400,
-                detail="Workflow 1 (Products, Meters & Aggregations) must be completed first",
-            )
+        if not prereq_check.data:
+            raise HTTPException(status_code=400, detail=error_msg)
 
     workflow_id = str(uuid4())
     thread_id = str(uuid4())

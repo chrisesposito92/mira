@@ -4,9 +4,14 @@ import logging
 
 from app.agents.state import WorkflowState
 from app.agents.tools.rag_tool import rag_retrieve
-from app.agents.utils import build_use_case_description
+from app.agents.utils import (
+    build_use_case_description,
+    fetch_approved_entities,
+    fetch_workflow_window,
+    inject_entity_id,
+)
 from app.db.client import get_supabase_client
-from app.schemas.common import EntityType, ObjectStatus, WorkflowStatus, WorkflowType
+from app.schemas.common import EntityType, WorkflowType
 
 logger = logging.getLogger(__name__)
 
@@ -22,46 +27,24 @@ async def load_approved_entities(state: WorkflowState) -> dict:
     supabase = get_supabase_client()
 
     # Find the latest completed WF1 to scope entity fetch
-    wf1_result = (
-        supabase.table("workflows")
-        .select("started_at, completed_at")
-        .eq("use_case_id", use_case_id)
-        .eq("workflow_type", WorkflowType.product_meter_aggregation)
-        .eq("status", WorkflowStatus.completed)
-        .order("completed_at", desc=True)
-        .limit(1)
-        .execute()
+    wf1_result = fetch_workflow_window(
+        supabase, use_case_id, WorkflowType.product_meter_aggregation
     )
 
     # Fetch approved entities scoped to the latest WF1 run's time window.
-    # Include id so downstream prompts have canonical IDs for cross-entity references.
-    query = (
-        supabase.table("generated_objects")
-        .select("id, entity_type, data")
-        .eq("use_case_id", use_case_id)
-        .eq("status", ObjectStatus.approved)
-        .in_(
-            "entity_type",
-            [EntityType.product, EntityType.meter, EntityType.aggregation],
-        )
+    result = fetch_approved_entities(
+        supabase,
+        use_case_id,
+        [EntityType.product, EntityType.meter, EntityType.aggregation],
+        wf1_result,
     )
-    if wf1_result.data:
-        wf1 = wf1_result.data[0]
-        query = query.gte("created_at", wf1["started_at"])
-        if wf1.get("completed_at"):
-            query = query.lte("created_at", wf1["completed_at"])
-
-    result = query.execute()
 
     approved_products: list[dict] = []
     approved_meters: list[dict] = []
     approved_aggregations: list[dict] = []
 
     for row in result.data:
-        entity_data = row.get("data", {})
-        # Inject the canonical generated_objects.id so LLM prompts can use it
-        # for cross-entity references (productId, aggregationId, etc.)
-        entity_data = {**entity_data, "id": row["id"]}
+        entity_data = inject_entity_id(row)
         entity_type = row.get("entity_type")
         if entity_type == EntityType.product:
             approved_products.append(entity_data)

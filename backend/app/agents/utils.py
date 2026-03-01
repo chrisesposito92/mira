@@ -4,6 +4,8 @@ import json
 import logging
 from typing import Any
 
+from app.schemas.common import ObjectStatus, WorkflowStatus
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,6 +39,50 @@ def parse_entity_list(content: str) -> list[dict]:
     except (json.JSONDecodeError, TypeError):
         logger.warning("Failed to parse LLM response as JSON: %s", content[:200])
     return []
+
+
+def fetch_workflow_window(supabase: Any, use_case_id: str, workflow_type: str) -> Any:
+    """Fetch the latest completed workflow time window for entity scoping."""
+    return (
+        supabase.table("workflows")
+        .select("started_at, completed_at")
+        .eq("use_case_id", use_case_id)
+        .eq("workflow_type", workflow_type)
+        .eq("status", WorkflowStatus.completed)
+        .order("completed_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+
+def fetch_approved_entities(
+    supabase: Any,
+    use_case_id: str,
+    entity_types: list[str],
+    wf_result: Any,
+) -> Any:
+    """Fetch approved entities scoped to a workflow's time window."""
+    query = (
+        supabase.table("generated_objects")
+        .select("id, entity_type, data")
+        .eq("use_case_id", use_case_id)
+        .eq("status", ObjectStatus.approved)
+    )
+    if len(entity_types) == 1:
+        query = query.eq("entity_type", entity_types[0])
+    else:
+        query = query.in_("entity_type", entity_types)
+    if wf_result.data:
+        wf = wf_result.data[0]
+        query = query.gte("created_at", wf["started_at"])
+        if wf.get("completed_at"):
+            query = query.lte("created_at", wf["completed_at"])
+    return query.execute()
+
+
+def inject_entity_id(row: dict) -> dict:
+    """Merge generated_objects.id into the entity data dict."""
+    return {**row.get("data", {}), "id": row["id"]}
 
 
 def extract_interrupt_payload(graph_state: Any) -> dict | None:
