@@ -30,6 +30,14 @@
 		),
 	);
 
+	const hasCompletedWf2 = $derived(
+		workflows.some((w) => w.workflow_type === 'plan_pricing' && w.status === 'completed'),
+	);
+
+	const hasCompletedWf3 = $derived(
+		workflows.some((w) => w.workflow_type === 'account_setup' && w.status === 'completed'),
+	);
+
 	async function handleStart() {
 		if (!selectedModelId || loading) return;
 		await onstart?.(selectedModelId, selectedWorkflowType);
@@ -76,6 +84,48 @@
 				{hasCompletedWf1
 					? 'Generate plan templates, plans, and pricing'
 					: 'Complete Workflow 1 first'}
+			</p>
+		</button>
+
+		<button
+			class={cn(
+				'rounded-lg border p-4 text-left transition-colors',
+				!hasCompletedWf2
+					? 'cursor-not-allowed opacity-50'
+					: selectedWorkflowType === 'account_setup'
+						? 'border-primary bg-primary/5'
+						: 'hover:border-muted-foreground/50',
+			)}
+			onclick={() => {
+				if (hasCompletedWf2) selectedWorkflowType = 'account_setup';
+			}}
+			disabled={!hasCompletedWf2}
+		>
+			<div class="font-medium">Accounts & Account Plans</div>
+			<p class="text-muted-foreground mt-1 text-xs">
+				{hasCompletedWf2
+					? 'Generate customer accounts and plan assignments'
+					: 'Complete Workflow 2 first'}
+			</p>
+		</button>
+
+		<button
+			class={cn(
+				'rounded-lg border p-4 text-left transition-colors',
+				!hasCompletedWf3
+					? 'cursor-not-allowed opacity-50'
+					: selectedWorkflowType === 'usage_submission'
+						? 'border-primary bg-primary/5'
+						: 'hover:border-muted-foreground/50',
+			)}
+			onclick={() => {
+				if (hasCompletedWf3) selectedWorkflowType = 'usage_submission';
+			}}
+			disabled={!hasCompletedWf3}
+		>
+			<div class="font-medium">Usage & Measurements</div>
+			<p class="text-muted-foreground mt-1 text-xs">
+				{hasCompletedWf3 ? 'Generate sample usage measurement data' : 'Complete Workflow 3 first'}
 			</p>
 		</button>
 	</div>

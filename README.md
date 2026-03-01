@@ -76,6 +76,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full details.
 | 7 | LangGraph agent core (Products/Meters/Aggregations) | Done |
 | 8 | Frontend chat interface (workflow UI, WebSocket, HITL) | Done |
 | 9 | Plans & pricing workflow (PlanTemplates, Plans, Pricing) | Done |
-| 10+ | Accounts, control panel, m3ter sync, ... | Not started |
+| 10 | Accounts, usage data & remaining workflows | Done |
+| 11+ | Control panel, m3ter sync, ... | Not started |
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for full phase details.

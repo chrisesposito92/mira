@@ -345,6 +345,120 @@ PRICING_SCHEMA = {
     },
 }
 
+# Account schema
+ACCOUNT_SCHEMA = {
+    "name": {
+        "type": "str",
+        "required": True,
+        "description": "Human-readable account name",
+        "max_length": 200,
+    },
+    "code": {
+        "type": "str",
+        "required": True,
+        "description": "Unique account code (lowercase, alphanumeric + underscore)",
+        "pattern": "^[a-z][a-z0-9_]*$",
+    },
+    "email": {
+        "type": "str",
+        "required": True,
+        "description": "Primary contact email for the account",
+    },
+    "currency": {
+        "type": "str",
+        "required": False,
+        "description": "3-character ISO currency code (e.g., USD, EUR)",
+    },
+    "address": {
+        "type": "dict",
+        "required": False,
+        "description": "Account address (line1, line2, city, state, postCode, country)",
+    },
+    "parentAccountId": {
+        "type": "str",
+        "required": False,
+        "description": "UUID of parent account for hierarchical billing",
+    },
+    "purchaseOrderNumber": {
+        "type": "str",
+        "required": False,
+        "description": "Purchase order number for the account",
+    },
+    "daysBeforeBillDue": {
+        "type": "int",
+        "required": False,
+        "description": "Days before bill is due (>= 0)",
+    },
+    "customFields": {
+        "type": "dict",
+        "required": False,
+        "description": "Optional custom key-value pairs",
+    },
+}
+
+# AccountPlan schema
+ACCOUNT_PLAN_SCHEMA = {
+    "accountId": {
+        "type": "str",
+        "required": True,
+        "description": "UUID of the account to attach the plan to",
+    },
+    "planId": {
+        "type": "str",
+        "required": True,
+        "description": "UUID of the plan to assign",
+    },
+    "startDate": {
+        "type": "str",
+        "required": True,
+        "description": "Start date for the account plan (ISO format)",
+    },
+    "endDate": {
+        "type": "str",
+        "required": False,
+        "description": "End date for the account plan (ISO format)",
+    },
+    "customFields": {
+        "type": "dict",
+        "required": False,
+        "description": "Optional custom key-value pairs",
+    },
+}
+
+# Measurement schema
+MEASUREMENT_SCHEMA = {
+    "uid": {
+        "type": "str",
+        "required": True,
+        "description": "Unique identifier for idempotent submission",
+    },
+    "meter": {
+        "type": "str",
+        "required": True,
+        "description": "Meter code (NOT UUID) to submit measurement against",
+    },
+    "account": {
+        "type": "str",
+        "required": True,
+        "description": "Account code (NOT UUID) to submit measurement for",
+    },
+    "ts": {
+        "type": "str",
+        "required": True,
+        "description": "Timestamp in ISO 8601 format (e.g., 2024-01-15T10:30:00Z)",
+    },
+    "end_ts": {
+        "type": "str",
+        "required": False,
+        "description": "End timestamp for duration-based measurements (ISO 8601)",
+    },
+    "data": {
+        "type": "dict",
+        "required": True,
+        "description": "Measurement data with numeric values keyed by data field codes",
+    },
+}
+
 _SCHEMAS = {
     EntityType.product: PRODUCT_SCHEMA,
     EntityType.meter: METER_SCHEMA,
@@ -352,6 +466,9 @@ _SCHEMAS = {
     EntityType.plan_template: PLAN_TEMPLATE_SCHEMA,
     EntityType.plan: PLAN_SCHEMA,
     EntityType.pricing: PRICING_SCHEMA,
+    EntityType.account: ACCOUNT_SCHEMA,
+    EntityType.account_plan: ACCOUNT_PLAN_SCHEMA,
+    EntityType.measurement: MEASUREMENT_SCHEMA,
 }
 
 

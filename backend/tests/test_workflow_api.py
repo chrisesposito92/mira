@@ -154,6 +154,44 @@ class TestStartWorkflow:
         assert resp.status_code == 400
         assert "Workflow 1" in resp.json()["detail"]
 
+    def test_start_account_setup_requires_completed_wf2(self, authed_client_with_data):
+        client, mock_supabase = authed_client_with_data
+        use_case_id = str(uuid4())
+        mock_supabase._table_data["use_cases"] = [
+            {
+                "id": use_case_id,
+                "project_id": str(uuid4()),
+                "projects": {"user_id": str(MOCK_USER_ID)},
+            }
+        ]
+        mock_supabase._table_data["workflows"] = []
+
+        resp = client.post(
+            f"/api/use-cases/{use_case_id}/workflows/start",
+            json={"model_id": "claude-sonnet-4-6", "workflow_type": "account_setup"},
+        )
+        assert resp.status_code == 400
+        assert "Workflow 2" in resp.json()["detail"]
+
+    def test_start_usage_submission_requires_completed_wf3(self, authed_client_with_data):
+        client, mock_supabase = authed_client_with_data
+        use_case_id = str(uuid4())
+        mock_supabase._table_data["use_cases"] = [
+            {
+                "id": use_case_id,
+                "project_id": str(uuid4()),
+                "projects": {"user_id": str(MOCK_USER_ID)},
+            }
+        ]
+        mock_supabase._table_data["workflows"] = []
+
+        resp = client.post(
+            f"/api/use-cases/{use_case_id}/workflows/start",
+            json={"model_id": "claude-sonnet-4-6", "workflow_type": "usage_submission"},
+        )
+        assert resp.status_code == 400
+        assert "Workflow 3" in resp.json()["detail"]
+
 
 class TestResumeWorkflow:
     @patch("app.services.workflow_service.build_product_meter_agg_graph", new_callable=AsyncMock)
