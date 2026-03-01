@@ -1,6 +1,6 @@
 /** API request/response types mirroring backend Pydantic schemas. */
 
-import type { UseCaseStatus, BillingFrequency } from './index.js';
+import type { UseCaseStatus, BillingFrequency, EntityType, ObjectStatus } from './index.js';
 
 export type ConnectionStatus = 'active' | 'inactive' | 'error';
 
@@ -123,4 +123,33 @@ export interface OrgConnectionTestResult {
 	success: boolean;
 	message: string;
 	tested_at: string;
+}
+
+// --- Generated Objects ---
+
+export interface GeneratedObject {
+	id: string;
+	use_case_id: string;
+	entity_type: EntityType;
+	name: string | null;
+	code: string | null;
+	status: ObjectStatus;
+	data: Record<string, unknown> | null;
+	validation_errors: Array<{ field: string; message: string; severity: string }> | null;
+	m3ter_id: string | null;
+	depends_on: string[] | null;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface GeneratedObjectUpdate {
+	name?: string;
+	code?: string;
+	status?: ObjectStatus;
+	data?: Record<string, unknown>;
+}
+
+export interface BulkStatusUpdate {
+	ids: string[];
+	status: ObjectStatus;
 }

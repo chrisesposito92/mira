@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge';
-	import { cn } from '$lib/utils.js';
+	import { cn, snakeToTitle } from '$lib/utils.js';
 
 	let { status, class: className }: { status: string; class?: string } = $props();
 
@@ -20,6 +20,11 @@
 		active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-transparent',
 		inactive: 'bg-muted text-muted-foreground border-transparent',
 		error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-transparent',
+		// Object statuses
+		approved: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-transparent',
+		rejected: 'bg-muted text-muted-foreground border-transparent',
+		pushed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-transparent',
+		push_failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-transparent',
 	};
 
 	const labelMap: Record<string, string> = {
@@ -27,7 +32,7 @@
 		push_failed: 'Push Failed',
 	};
 
-	const label = $derived(labelMap[status] ?? status.charAt(0).toUpperCase() + status.slice(1));
+	const label = $derived(labelMap[status] ?? snakeToTitle(status));
 	const colors = $derived(colorMap[status] ?? '');
 </script>
 
