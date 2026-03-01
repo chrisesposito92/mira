@@ -30,9 +30,7 @@ async def load_approved_for_accounts(state: WorkflowState) -> dict:
     wf1_result = fetch_workflow_window(
         supabase, use_case_id, WorkflowType.product_meter_aggregation
     )
-    wf2_result = fetch_workflow_window(
-        supabase, use_case_id, WorkflowType.plan_pricing
-    )
+    wf2_result = fetch_workflow_window(supabase, use_case_id, WorkflowType.plan_pricing)
 
     # Fetch WF1 approved entities (products, meters, aggregations)
     wf1_entities = fetch_approved_entities(

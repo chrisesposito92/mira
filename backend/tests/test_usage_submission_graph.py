@@ -243,9 +243,7 @@ class TestGenerateMeasurements:
                     "dataFields": [{"code": "requests", "category": "MEASURE"}],
                 }
             ],
-            "approved_accounts": [
-                {"name": "Acme Corp", "code": "acme_corp"}
-            ],
+            "approved_accounts": [{"name": "Acme Corp", "code": "acme_corp"}],
         }
 
         measurements = [

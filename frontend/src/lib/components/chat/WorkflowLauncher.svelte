@@ -125,9 +125,7 @@
 		>
 			<div class="font-medium">Usage & Measurements</div>
 			<p class="text-muted-foreground mt-1 text-xs">
-				{hasCompletedWf3
-					? 'Generate sample usage measurement data'
-					: 'Complete Workflow 3 first'}
+				{hasCompletedWf3 ? 'Generate sample usage measurement data' : 'Complete Workflow 3 first'}
 			</p>
 		</button>
 	</div>

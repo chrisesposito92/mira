@@ -322,12 +322,8 @@ class TestGenerateAccountPlans:
     async def test_generates_account_plan_list(self, mock_get_llm, base_state):
         state = {
             **base_state,
-            "accounts": [
-                {"name": "Acme Corp", "code": "acme_corp", "id": "acc-123"}
-            ],
-            "approved_plans": [
-                {"name": "Standard", "code": "standard", "id": "plan-456"}
-            ],
+            "accounts": [{"name": "Acme Corp", "code": "acme_corp", "id": "acc-123"}],
+            "approved_plans": [{"name": "Standard", "code": "standard", "id": "plan-456"}],
         }
 
         account_plans = [

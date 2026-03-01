@@ -27,14 +27,10 @@ async def load_approved_for_usage(state: WorkflowState) -> dict:
     wf1_result = fetch_workflow_window(
         supabase, use_case_id, WorkflowType.product_meter_aggregation
     )
-    wf3_result = fetch_workflow_window(
-        supabase, use_case_id, WorkflowType.account_setup
-    )
+    wf3_result = fetch_workflow_window(supabase, use_case_id, WorkflowType.account_setup)
 
     # Fetch approved meters from WF1
-    meters_result = fetch_approved_entities(
-        supabase, use_case_id, [EntityType.meter], wf1_result
-    )
+    meters_result = fetch_approved_entities(supabase, use_case_id, [EntityType.meter], wf1_result)
 
     # Fetch approved accounts from WF3
     accounts_result = fetch_approved_entities(
@@ -59,8 +55,7 @@ async def load_approved_for_usage(state: WorkflowState) -> dict:
         }
 
     logger.info(
-        "Loaded approved entities for usage submission (use case %s): "
-        "%d meters, %d accounts",
+        "Loaded approved entities for usage submission (use case %s): %d meters, %d accounts",
         use_case_id,
         len(approved_meters),
         len(approved_accounts),
