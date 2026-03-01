@@ -6,7 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import { ArrowLeft } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
-	import type { EntityDecision, ClarificationAnswer } from '$lib/types/workflow.js';
+	import type { EntityDecision, ClarificationAnswer, WorkflowType } from '$lib/types/workflow.js';
 
 	let { data } = $props();
 	let restored = false;
@@ -32,11 +32,22 @@
 		}
 	});
 
+	// Refresh workflows list when returning to the launcher after a workflow completes,
+	// so the WF2 gate picks up the newly-completed WF1 without a full page reload.
+	let prevShowLauncher = $state(false);
+	$effect(() => {
+		if (showLauncher && !prevShowLauncher && workflowStore.isCompleted) {
+			const service = getService();
+			workflowStore.loadWorkflows(service, data.useCase.id);
+		}
+		prevShowLauncher = showLauncher;
+	});
+
 	onDestroy(() => {
 		workflowStore.clear();
 	});
 
-	async function handleStart(modelId: string) {
+	async function handleStart(modelId: string, workflowType: WorkflowType) {
 		if (!data.session?.access_token) {
 			toast.error('Not authenticated');
 			return;
@@ -47,6 +58,7 @@
 			data.useCase.id,
 			modelId,
 			data.session.access_token,
+			workflowType,
 		);
 		if (!wf) {
 			toast.error(workflowStore.error ?? 'Failed to start workflow');
@@ -61,7 +73,10 @@
 		workflowStore.submitClarificationAnswers(answers);
 	}
 
-	const showLauncher = $derived(!workflowStore.workflow && !workflowStore.loading);
+	const showLauncher = $derived(
+		(!workflowStore.workflow && !workflowStore.loading) ||
+			(workflowStore.isCompleted && !workflowStore.loading),
+	);
 	const showChat = $derived(workflowStore.workflow !== null);
 
 	const modelName = $derived(
@@ -91,17 +106,6 @@
 			status={workflowStore.workflow?.status ?? null}
 			{modelName}
 		/>
-	{/if}
-
-	{#if showLauncher}
-		<div class="flex-1">
-			<WorkflowLauncher
-				models={workflowStore.models}
-				loading={workflowStore.loading}
-				onstart={handleStart}
-			/>
-		</div>
-	{:else if showChat}
 		<ChatContainer
 			messages={workflowStore.messages}
 			thinking={workflowStore.thinking}
@@ -110,6 +114,17 @@
 			ondecision={handleDecision}
 			onclarify={handleClarification}
 		/>
+	{/if}
+
+	{#if showLauncher}
+		<div class="flex-1">
+			<WorkflowLauncher
+				models={workflowStore.models}
+				workflows={workflowStore.workflows}
+				loading={workflowStore.loading}
+				onstart={handleStart}
+			/>
+		</div>
 	{/if}
 
 	{#if workflowStore.error}

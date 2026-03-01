@@ -1,10 +1,16 @@
 import type { ApiClient } from './api.js';
-import type { Workflow, LlmModel, ChatMessageCreate, ChatMessageResponse } from '$lib/types';
+import type {
+	Workflow,
+	LlmModel,
+	ChatMessageCreate,
+	ChatMessageResponse,
+	WorkflowType,
+} from '$lib/types';
 
 export interface WorkflowService {
 	list(useCaseId: string): Promise<Workflow[]>;
 	get(workflowId: string): Promise<Workflow>;
-	start(useCaseId: string, modelId: string): Promise<Workflow>;
+	start(useCaseId: string, modelId: string, workflowType?: WorkflowType): Promise<Workflow>;
 	listModels(): Promise<LlmModel[]>;
 	listMessages(workflowId: string): Promise<ChatMessageResponse[]>;
 	saveMessage(workflowId: string, data: ChatMessageCreate): Promise<ChatMessageResponse>;
@@ -14,9 +20,10 @@ export function createWorkflowService(client: ApiClient): WorkflowService {
 	return {
 		list: (useCaseId) => client.get<Workflow[]>(`/api/use-cases/${useCaseId}/workflows`),
 		get: (workflowId) => client.get<Workflow>(`/api/workflows/${workflowId}`),
-		start: (useCaseId, modelId) =>
+		start: (useCaseId, modelId, workflowType) =>
 			client.post<Workflow>(`/api/use-cases/${useCaseId}/workflows/start`, {
 				model_id: modelId,
+				workflow_type: workflowType || 'product_meter_aggregation',
 			}),
 		listModels: () => client.get<LlmModel[]>('/api/models'),
 		listMessages: (workflowId) =>

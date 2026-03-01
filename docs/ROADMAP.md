@@ -273,22 +273,36 @@ Phase 1 (Scaffold)
 
 ## Phase 9: Plans & Pricing Workflow
 
-**~15 files** | Depends on: Phase 7
+**~20 files (11 new, 9 modified)** | Depends on: Phase 7
 
-- [ ] `agents/graphs/plan_pricing.py` — StateGraph loading approved entities from Workflow 1
-- [ ] `agents/nodes/plan_template_gen.py` — PlanTemplate generation
-- [ ] `agents/nodes/plan_gen.py` — Plan generation
-- [ ] `agents/nodes/pricing_gen.py` — Pricing generation (tiered, volume, stairstep, per-unit, counter)
-- [ ] `agents/prompts/plan_pricing.py` — Pricing model knowledge, examples
-- [ ] `validation/rules/plan_template.py` — PlanTemplate validation
-- [ ] `validation/rules/plan.py` — Plan validation
-- [ ] `validation/rules/pricing.py` — Pricing validation (type-specific)
+- [x] `agents/state.py` — Extended WorkflowState with 12 new fields for Workflow 2
+- [x] `agents/tools/m3ter_schema.py` — PlanTemplate, Plan, Pricing schemas added
+- [x] `agents/prompts/plan_pricing.py` — System prompts with pricing model knowledge (5 strategies)
+- [x] `agents/nodes/load_approved.py` — Load approved WF1 entities from DB + RAG context
+- [x] `agents/nodes/plan_template_gen.py` — PlanTemplate generation node
+- [x] `agents/nodes/plan_gen.py` — Plan generation node
+- [x] `agents/nodes/pricing_gen.py` — Pricing generation (tiered, volume, stairstep, per-unit, counter)
+- [x] `agents/nodes/validation.py` — Fixed step naming bug (rstrip), added 3 new entity entries
+- [x] `agents/nodes/approval.py` — Fixed step naming bug, added 3 new entity entries
+- [x] `agents/graphs/plan_pricing.py` — Full StateGraph: load → gen → validate → approve (×3 entities)
+- [x] `validation/rules/plan_template.py` — PlanTemplate validation (currency, billFrequency, etc.)
+- [x] `validation/rules/plan.py` — Plan validation (planTemplateId, overrides)
+- [x] `validation/rules/pricing.py` — Pricing validation (pricingBands, type, cumulative, bands ordering)
+- [x] `validation/engine.py` — Registered 3 new validators
+- [x] `schemas/workflows.py` — Added workflow_type to WorkflowStart
+- [x] `services/workflow_service.py` — Parameterized graph selection + WF1 prerequisite check
+- [x] `api/ws.py` — Select graph by workflow_type
+- [x] `api/workflows.py` — Pass workflow_type to service layer
+- [x] Frontend: WorkflowLauncher — Workflow type selector with WF1 prerequisite gating
+- [x] Frontend: workflow.svelte.ts, workflow.ts, +page.svelte — Thread workflowType through store/service/route
 - **Tests**:
-  - [ ] Validation rules for plan_template, plan, pricing (all 5 pricing types)
-  - [ ] Graph traversal test (state transitions)
-- [ ] **Verify**: Each node works independently
-- [ ] **Verify**: All pricing types handled (tiered/volume/stairstep/per-unit/counter)
-- [ ] **Verify**: Cross-entity references valid (pricing → plan → template)
+  - [x] Validation rules for plan_template (14 tests), plan (8 tests), pricing (21 tests)
+  - [x] Graph structure + node unit tests (22 tests)
+  - [x] Workflow service test for workflow_type parameter (1 test)
+- [x] **Verify**: 263 backend tests pass (65 new + 198 existing, 0 regressions)
+- [x] **Verify**: 70 frontend tests pass (1 new + 69 existing, 0 regressions)
+- [x] **Verify**: All pricing types handled (tiered/volume/stairstep/per-unit/counter)
+- [x] **Verify**: Ruff lint + format clean, ESLint + Prettier clean
 
 ---
 

@@ -10,8 +10,9 @@ import type {
 	ClarificationQuestion,
 	ClarificationAnswer,
 	ChatMessageResponse,
+	WorkflowType,
+	EntityType,
 } from '$lib/types';
-import type { EntityType } from '$lib/types';
 
 class WorkflowStore {
 	messages = $state<ChatMessage[]>([]);
@@ -63,7 +64,13 @@ class WorkflowStore {
 		}
 	}
 
-	async startWorkflow(service: WorkflowService, useCaseId: string, modelId: string, token: string) {
+	async startWorkflow(
+		service: WorkflowService,
+		useCaseId: string,
+		modelId: string,
+		token: string,
+		workflowType?: WorkflowType,
+	) {
 		this.loading = true;
 		this.error = null;
 		this.messages = [];
@@ -71,7 +78,7 @@ class WorkflowStore {
 		this.pendingClarification = null;
 		this.pendingDecisions = [];
 		try {
-			this.workflow = await service.start(useCaseId, modelId);
+			this.workflow = await service.start(useCaseId, modelId, workflowType);
 			this.connectWebSocket(this.workflow.id, token);
 			return this.workflow;
 		} catch (e) {

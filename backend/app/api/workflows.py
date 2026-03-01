@@ -49,8 +49,10 @@ async def start_workflow(
     user_id: UUID = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ) -> dict:
-    """Start a new product/meter/aggregation workflow for a use case."""
-    return await svc.start_workflow(supabase, user_id, use_case_id, body.model_id)
+    """Start a new workflow for a use case."""
+    return await svc.start_workflow(
+        supabase, user_id, use_case_id, body.model_id, body.workflow_type
+    )
 
 
 @router.post(

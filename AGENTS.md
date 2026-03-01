@@ -67,18 +67,25 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 | Directory | Purpose |
 |-----------|---------|
-| `state.py` | `WorkflowState` TypedDict — full graph state definition |
+| `state.py` | `WorkflowState` TypedDict — full graph state definition (WF1 + WF2 fields) |
 | `llm_factory.py` | Multi-model registry + `get_llm()` via `init_chat_model()` (5 models) |
+| `utils.py` | Shared helpers: `extract_interrupt_payload()`, `build_use_case_description()`, `parse_entity_list()` |
 | `checkpointer.py` | `AsyncPostgresSaver` setup reusing `get_db_pool()` |
 | `nodes/analysis.py` | Analyze use case (fetch from DB + RAG + LLM) |
 | `nodes/clarification.py` | Generate clarification questions with `interrupt()` |
 | `nodes/generation.py` | Generate Products, Meters, Aggregations (separate functions) |
-| `nodes/validation.py` | Run validation rules on generated entities |
-| `nodes/approval.py` | Persist entities to DB, `interrupt()` for user approval |
-| `graphs/product_meter_agg.py` | Full StateGraph: analyze → [clarify?] → generate → validate → approve (×3 entity types) |
-| `prompts/product_meter.py` | System prompts with m3ter domain knowledge + hardcoded schemas |
+| `nodes/load_approved.py` | Load approved WF1 entities from DB for WF2 |
+| `nodes/plan_template_gen.py` | PlanTemplate generation via LLM |
+| `nodes/plan_gen.py` | Plan generation via LLM |
+| `nodes/pricing_gen.py` | Pricing generation via LLM (5 strategies: tiered, volume, stairstep, per-unit, counter) |
+| `nodes/validation.py` | Run validation rules on generated entities (4-tuple step mapping) |
+| `nodes/approval.py` | Persist entities to DB, `interrupt()` for user approval (5-tuple step config) |
+| `graphs/product_meter_agg.py` | WF1 StateGraph: analyze → [clarify?] → generate → validate → approve (×3 entity types) |
+| `graphs/plan_pricing.py` | WF2 StateGraph: load_approved → generate → validate → approve (×3: PlanTemplate, Plan, Pricing) |
+| `prompts/product_meter.py` | System prompts for WF1 (Products, Meters, Aggregations) |
+| `prompts/plan_pricing.py` | System prompts for WF2 (PlanTemplates, Plans, Pricing with 5 pricing strategies) |
 | `tools/rag_tool.py` | RAG retrieval wrapper for agent nodes |
-| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation) |
+| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, PlanTemplate, Plan, Pricing) |
 
 ### Frontend Structure (`frontend/src/`)
 
@@ -128,7 +135,8 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
-- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity
+- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing
+- **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation or plan_pricing). WF2 requires completed WF1 for same use case. Frontend WorkflowLauncher gates WF2 on WF1 completion.
 
 ### Frontend Chat Interface
 

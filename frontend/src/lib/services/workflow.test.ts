@@ -33,6 +33,17 @@ describe('WorkflowService', () => {
 		await service.start('uc-1', 'claude-sonnet-4-6');
 		expect(client.post).toHaveBeenCalledWith('/api/use-cases/uc-1/workflows/start', {
 			model_id: 'claude-sonnet-4-6',
+			workflow_type: 'product_meter_aggregation',
+		});
+	});
+
+	it('start passes workflow_type when specified', async () => {
+		const client = mockClient();
+		const service = createWorkflowService(client);
+		await service.start('uc-1', 'claude-sonnet-4-6', 'plan_pricing');
+		expect(client.post).toHaveBeenCalledWith('/api/use-cases/uc-1/workflows/start', {
+			model_id: 'claude-sonnet-4-6',
+			workflow_type: 'plan_pricing',
 		});
 	});
 

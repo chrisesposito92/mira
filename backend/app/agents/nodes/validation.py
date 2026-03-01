@@ -9,11 +9,44 @@ from app.validation.engine import validate_entity
 
 logger = logging.getLogger(__name__)
 
-# Maps current_step values to the entity state keys
-_STEP_TO_ENTITY: dict[str, tuple[EntityType, str, str]] = {
-    "products_generated": (EntityType.product, "products", "product_errors"),
-    "meters_generated": (EntityType.meter, "meters", "meter_errors"),
-    "aggregations_generated": (EntityType.aggregation, "aggregations", "aggregation_errors"),
+# Maps current_step → (entity_type, entities_key, errors_key, validated_step)
+_STEP_TO_ENTITY: dict[str, tuple[EntityType, str, str, str]] = {
+    "products_generated": (
+        EntityType.product,
+        "products",
+        "product_errors",
+        "products_validated",
+    ),
+    "meters_generated": (
+        EntityType.meter,
+        "meters",
+        "meter_errors",
+        "meters_validated",
+    ),
+    "aggregations_generated": (
+        EntityType.aggregation,
+        "aggregations",
+        "aggregation_errors",
+        "aggregations_validated",
+    ),
+    "plan_templates_generated": (
+        EntityType.plan_template,
+        "plan_templates",
+        "plan_template_errors",
+        "plan_templates_validated",
+    ),
+    "plans_generated": (
+        EntityType.plan,
+        "plans",
+        "plan_errors",
+        "plans_validated",
+    ),
+    "pricing_generated": (
+        EntityType.pricing,
+        "pricing",
+        "pricing_errors",
+        "pricing_validated",
+    ),
 }
 
 
@@ -31,7 +64,7 @@ async def validate_entities(state: WorkflowState) -> dict:
         logger.warning("validate_entities called with unexpected step: %s", current_step)
         return {}
 
-    entity_type, entities_key, errors_key = mapping
+    entity_type, entities_key, errors_key, validated_step = mapping
     entities = state.get(entities_key, [])
 
     all_errors: list[dict] = []
@@ -46,15 +79,14 @@ async def validate_entities(state: WorkflowState) -> dict:
                 }
             )
 
-    step_name = entities_key.rstrip("s")  # "products" → "product"
     logger.info(
         "Validated %d %s entities: %d with errors",
         len(entities),
-        step_name,
+        entity_type,
         len(all_errors),
     )
 
     return {
         errors_key: all_errors,
-        "current_step": f"{step_name}s_validated",
+        "current_step": validated_step,
     }

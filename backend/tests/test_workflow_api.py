@@ -117,6 +117,43 @@ class TestStartWorkflow:
         )
         assert resp.status_code == 404
 
+    def test_start_workflow_unsupported_type(self, authed_client_with_data):
+        client, mock_supabase = authed_client_with_data
+        use_case_id = str(uuid4())
+        mock_supabase._table_data["use_cases"] = [
+            {
+                "id": use_case_id,
+                "project_id": str(uuid4()),
+                "projects": {"user_id": str(MOCK_USER_ID)},
+            }
+        ]
+
+        resp = client.post(
+            f"/api/use-cases/{use_case_id}/workflows/start",
+            json={"model_id": "claude-sonnet-4-6", "workflow_type": "invalid_type"},
+        )
+        assert resp.status_code == 422
+
+    def test_start_plan_pricing_requires_completed_wf1(self, authed_client_with_data):
+        client, mock_supabase = authed_client_with_data
+        use_case_id = str(uuid4())
+        mock_supabase._table_data["use_cases"] = [
+            {
+                "id": use_case_id,
+                "project_id": str(uuid4()),
+                "projects": {"user_id": str(MOCK_USER_ID)},
+            }
+        ]
+        # No completed WF1 workflows exist
+        mock_supabase._table_data["workflows"] = []
+
+        resp = client.post(
+            f"/api/use-cases/{use_case_id}/workflows/start",
+            json={"model_id": "claude-sonnet-4-6", "workflow_type": "plan_pricing"},
+        )
+        assert resp.status_code == 400
+        assert "Workflow 1" in resp.json()["detail"]
+
 
 class TestResumeWorkflow:
     @patch("app.services.workflow_service.build_product_meter_agg_graph", new_callable=AsyncMock)
