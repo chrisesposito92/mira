@@ -24,19 +24,20 @@ async def load_approved_entities(state: WorkflowState) -> dict:
     # Find the latest completed WF1 to scope entity fetch
     wf1_result = (
         supabase.table("workflows")
-        .select("started_at")
+        .select("started_at, completed_at")
         .eq("use_case_id", use_case_id)
         .eq("workflow_type", WorkflowType.product_meter_aggregation)
         .eq("status", WorkflowStatus.completed)
-        .order("started_at", desc=True)
+        .order("completed_at", desc=True)
         .limit(1)
         .execute()
     )
 
-    # Fetch approved entities scoped to the latest WF1 run
+    # Fetch approved entities scoped to the latest WF1 run's time window.
+    # Include id so downstream prompts have canonical IDs for cross-entity references.
     query = (
         supabase.table("generated_objects")
-        .select("entity_type, data")
+        .select("id, entity_type, data")
         .eq("use_case_id", use_case_id)
         .eq("status", ObjectStatus.approved)
         .in_(
@@ -45,8 +46,10 @@ async def load_approved_entities(state: WorkflowState) -> dict:
         )
     )
     if wf1_result.data:
-        wf1_started_at = wf1_result.data[0]["started_at"]
-        query = query.gte("created_at", wf1_started_at)
+        wf1 = wf1_result.data[0]
+        query = query.gte("created_at", wf1["started_at"])
+        if wf1.get("completed_at"):
+            query = query.lte("created_at", wf1["completed_at"])
 
     result = query.execute()
 
@@ -56,6 +59,9 @@ async def load_approved_entities(state: WorkflowState) -> dict:
 
     for row in result.data:
         entity_data = row.get("data", {})
+        # Inject the canonical generated_objects.id so LLM prompts can use it
+        # for cross-entity references (productId, aggregationId, etc.)
+        entity_data = {**entity_data, "id": row["id"]}
         entity_type = row.get("entity_type")
         if entity_type == EntityType.product:
             approved_products.append(entity_data)

@@ -89,18 +89,21 @@ class TestLoadApprovedEntities:
     async def test_loads_approved_entities_from_db(self, mock_supabase, mock_rag, base_state):
         mock_client = MagicMock()
 
-        # Mock generated_objects query
+        # Mock generated_objects query (includes id for cross-entity references)
         mock_objects_result = MagicMock()
         mock_objects_result.data = [
             {
+                "id": "prod-aaa",
                 "entity_type": "product",
                 "data": {"name": "API Gateway", "code": "api_gateway"},
             },
             {
+                "id": "meter-bbb",
                 "entity_type": "meter",
                 "data": {"name": "Request Meter", "code": "request_meter"},
             },
             {
+                "id": "agg-ccc",
                 "entity_type": "aggregation",
                 "data": {"name": "Daily Count", "code": "daily_count"},
             },
@@ -116,9 +119,14 @@ class TestLoadApprovedEntities:
             }
         ]
 
-        # Mock workflows query (latest completed WF1)
+        # Mock workflows query (latest completed WF1 with time window)
         mock_wf_result = MagicMock()
-        mock_wf_result.data = [{"started_at": "2025-01-01T00:00:00Z"}]
+        mock_wf_result.data = [
+            {
+                "started_at": "2025-01-01T00:00:00Z",
+                "completed_at": "2025-01-01T01:00:00Z",
+            }
+        ]
 
         def table_side_effect(name):
             builder = MagicMock()
@@ -126,6 +134,7 @@ class TestLoadApprovedEntities:
             builder.eq.return_value = builder
             builder.in_.return_value = builder
             builder.gte.return_value = builder
+            builder.lte.return_value = builder
             builder.order.return_value = builder
             builder.limit.return_value = builder
             if name == "generated_objects":
@@ -146,6 +155,12 @@ class TestLoadApprovedEntities:
         assert len(result["approved_products"]) == 1
         assert len(result["approved_meters"]) == 1
         assert len(result["approved_aggregations"]) == 1
+        # Verify canonical IDs are injected into entity data
+        assert result["approved_products"][0]["id"] == "prod-aaa"
+        assert result["approved_meters"][0]["id"] == "meter-bbb"
+        assert result["approved_aggregations"][0]["id"] == "agg-ccc"
+        # Verify original data is preserved
+        assert result["approved_products"][0]["name"] == "API Gateway"
         assert result["current_step"] == "approved_entities_loaded"
         assert result["use_case"]["title"] == "API Billing"
         assert result["rag_context"] == "Relevant plan/pricing documentation..."
@@ -162,6 +177,7 @@ class TestLoadApprovedEntities:
             builder.eq.return_value = builder
             builder.in_.return_value = builder
             builder.gte.return_value = builder
+            builder.lte.return_value = builder
             builder.order.return_value = builder
             builder.limit.return_value = builder
             mock_result = MagicMock()
