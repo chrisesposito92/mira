@@ -2,6 +2,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Button } from '$lib/components/ui/button';
 	import { Play } from 'lucide-svelte';
+	import { cn } from '$lib/utils.js';
 	import type { LlmModel, Workflow, WorkflowType } from '$lib/types/workflow.js';
 
 	let {
@@ -44,10 +45,12 @@
 	<!-- Workflow Type Selection -->
 	<div class="flex w-full max-w-md flex-col gap-2">
 		<button
-			class="rounded-lg border p-4 text-left transition-colors {selectedWorkflowType ===
-			'product_meter_aggregation'
-				? 'border-primary bg-primary/5'
-				: 'hover:border-muted-foreground/50'}"
+			class={cn(
+				'rounded-lg border p-4 text-left transition-colors',
+				selectedWorkflowType === 'product_meter_aggregation'
+					? 'border-primary bg-primary/5'
+					: 'hover:border-muted-foreground/50',
+			)}
 			onclick={() => (selectedWorkflowType = 'product_meter_aggregation')}
 		>
 			<div class="font-medium">Products, Meters & Aggregations</div>
@@ -55,11 +58,14 @@
 		</button>
 
 		<button
-			class="rounded-lg border p-4 text-left transition-colors {!hasCompletedWf1
-				? 'cursor-not-allowed opacity-50'
-				: selectedWorkflowType === 'plan_pricing'
-					? 'border-primary bg-primary/5'
-					: 'hover:border-muted-foreground/50'}"
+			class={cn(
+				'rounded-lg border p-4 text-left transition-colors',
+				!hasCompletedWf1
+					? 'cursor-not-allowed opacity-50'
+					: selectedWorkflowType === 'plan_pricing'
+						? 'border-primary bg-primary/5'
+						: 'hover:border-muted-foreground/50',
+			)}
 			onclick={() => {
 				if (hasCompletedWf1) selectedWorkflowType = 'plan_pricing';
 			}}

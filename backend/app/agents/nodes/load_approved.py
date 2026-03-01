@@ -70,6 +70,12 @@ async def load_approved_entities(state: WorkflowState) -> dict:
         elif entity_type == EntityType.aggregation:
             approved_aggregations.append(entity_data)
 
+    if not approved_products and not approved_meters and not approved_aggregations:
+        return {
+            "error": "No approved entities found from Workflow 1. Cannot generate plans/pricing.",
+            "current_step": "error",
+        }
+
     # Fetch use case data
     uc_result = (
         supabase.table("use_cases")

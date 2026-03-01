@@ -12,6 +12,7 @@ from app.agents.prompts.product_meter import (
     PRODUCT_GENERATION_PROMPT,
 )
 from app.agents.state import WorkflowState
+from app.agents.utils import parse_entity_list
 
 logger = logging.getLogger(__name__)
 
@@ -43,23 +44,6 @@ def _format_clarification_answers(state: WorkflowState) -> str:
     return "\n\n".join(parts) if parts else "No clarification was needed."
 
 
-def _parse_entity_list(content: str) -> list[dict]:
-    """Parse LLM response into a list of entity dicts."""
-    try:
-        parsed = json.loads(content)
-        if isinstance(parsed, list):
-            return parsed
-        if isinstance(parsed, dict):
-            # LLM might wrap in an object like {"products": [...]}
-            for value in parsed.values():
-                if isinstance(value, list):
-                    return value
-            return [parsed]
-    except (json.JSONDecodeError, TypeError):
-        logger.warning("Failed to parse LLM response as JSON: %s", content[:200])
-    return []
-
-
 async def generate_products(state: WorkflowState) -> dict:
     """Generate Product entity configurations using LLM."""
     model_id = state["model_id"]
@@ -82,7 +66,7 @@ async def generate_products(state: WorkflowState) -> dict:
     )
 
     content = response.content if isinstance(response.content, str) else str(response.content)
-    products = _parse_entity_list(content)
+    products = parse_entity_list(content)
 
     return {
         "products": products,
@@ -119,7 +103,7 @@ async def generate_meters(state: WorkflowState) -> dict:
     )
 
     content = response.content if isinstance(response.content, str) else str(response.content)
-    meters = _parse_entity_list(content)
+    meters = parse_entity_list(content)
 
     return {
         "meters": meters,
@@ -158,7 +142,7 @@ async def generate_aggregations(state: WorkflowState) -> dict:
     )
 
     content = response.content if isinstance(response.content, str) else str(response.content)
-    aggregations = _parse_entity_list(content)
+    aggregations = parse_entity_list(content)
 
     return {
         "aggregations": aggregations,

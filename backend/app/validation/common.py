@@ -48,6 +48,27 @@ def validate_code(data: dict, errors: list[ValidationError]) -> None:
         )
 
 
+def validate_code_format(data: dict, errors: list[ValidationError]) -> None:
+    """Validate code format only (not required). Use for optional code fields."""
+    code = data.get("code")
+    if code is None:
+        return
+    if not isinstance(code, str):
+        errors.append(
+            ValidationError(field="code", message="code must be a string", severity="error")
+        )
+    elif code and not CODE_PATTERN.match(code):
+        errors.append(
+            ValidationError(
+                field="code",
+                message=(
+                    "code must be lowercase alphanumeric with underscores, starting with a letter"
+                ),
+                severity="error",
+            )
+        )
+
+
 def validate_custom_fields(data: dict, errors: list[ValidationError]) -> None:
     """Validate the optional 'customFields' field: must be dict if present."""
     custom_fields = data.get("customFields")

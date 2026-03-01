@@ -107,12 +107,18 @@ async def approve_entities(state: WorkflowState) -> dict:
     for i, entity in enumerate(entities):
         obj_id = str(uuid5(NAMESPACE_DNS, f"{thread_id}:{entity_type}:{i}"))
         entity_ids.append(obj_id)
+        entity_name = entity.get("name", "")
+        if not entity_name and entity_type == EntityType.pricing:
+            pricing_type = entity.get("type", "pricing")
+            desc = entity.get("description", "")
+            entity_name = desc[:100] if desc else f"{pricing_type} pricing"
+
         rows_to_insert.append(
             {
                 "id": obj_id,
                 "use_case_id": use_case_id,
                 "entity_type": entity_type,
-                "name": entity.get("name", ""),
+                "name": entity_name,
                 "code": entity.get("code", ""),
                 "status": ObjectStatus.draft,
                 "data": entity,
@@ -163,14 +169,27 @@ async def approve_entities(state: WorkflowState) -> dict:
     # Promote undecided entities to approved in DB so state and DB stay consistent
     # (entities without explicit decisions flow through in state, so their DB rows
     # must not remain as draft)
+    undecided_count = len(entity_ids) - len(decided_indices)
+    if undecided_count > 0:
+        logger.warning(
+            "Auto-promoting %d undecided %s entities to approved (no explicit decision received)",
+            undecided_count,
+            entity_type,
+        )
     for idx, obj_id in enumerate(entity_ids):
         if idx not in decided_indices:
             supabase.table("generated_objects").update({"status": ObjectStatus.approved}).eq(
                 "id", obj_id
             ).execute()
 
-    # Filter out rejected entities (None entries)
-    approved_entities = [e for e in approved_entities if e is not None]
+    # Build mapping of entity to DB ID, filtering out rejected (None) entries
+    entity_id_map = []
+    for i, entity in enumerate(approved_entities):
+        if entity is not None:
+            entity_id_map.append((entity, entity_ids[i]))
+    approved_entities = [e for e, _ in entity_id_map]
+    for entity, db_id in entity_id_map:
+        entity["id"] = db_id
 
     return {
         entities_key: approved_entities,

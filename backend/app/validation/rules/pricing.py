@@ -1,13 +1,17 @@
 """Validation rules for m3ter Pricing entities."""
 
-from app.validation.common import validate_code, validate_custom_fields, validate_non_negative
+from app.validation.common import (
+    validate_code_format,
+    validate_custom_fields,
+    validate_non_negative,
+)
 from app.validation.engine import ValidationError
 
 VALID_PRICING_TYPES = {"DEBIT", "PRODUCT_CREDIT", "GLOBAL_CREDIT"}
 
 
 def _validate_pricing_bands(
-    bands: list,
+    bands: list[dict],
     field_name: str,
     errors: list[ValidationError],
 ) -> None:
@@ -52,12 +56,12 @@ def _validate_pricing_bands(
                         severity="error",
                     )
                 )
-            # Check ascending order
-            if prev_lower_limit is not None and lower_limit < prev_lower_limit:
+            # Check strictly ascending order
+            if prev_lower_limit is not None and lower_limit <= prev_lower_limit:
                 errors.append(
                     ValidationError(
                         field=f"{prefix}.lowerLimit",
-                        message="pricing bands should be sorted by ascending lowerLimit",
+                        message=("pricing bands must have strictly ascending lowerLimit values"),
                         severity="warning",
                     )
                 )
@@ -202,9 +206,7 @@ def validate(data: dict) -> list[ValidationError]:
             )
         )
 
-    # code: optional, validate with validate_code if present (but not required)
-    code = data.get("code")
-    if code is not None:
-        validate_code(data, errors)
+    # code: optional, validate format if present (but not required)
+    validate_code_format(data, errors)
 
     return errors

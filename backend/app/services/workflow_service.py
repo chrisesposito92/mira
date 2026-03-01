@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from fastapi import HTTPException
 from langgraph.errors import GraphInterrupt
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from supabase import Client
 
@@ -23,7 +24,7 @@ _SUPPORTED_WORKFLOW_TYPES = {
 }
 
 
-async def _get_graph(workflow_type: WorkflowType) -> object:
+async def get_graph(workflow_type: WorkflowType) -> CompiledStateGraph:
     """Build the correct LangGraph graph for the given workflow type."""
     if workflow_type == WorkflowType.plan_pricing:
         return await build_plan_pricing_graph()
@@ -84,7 +85,7 @@ def _update_workflow(supabase: Client, workflow_id: str, fields: dict) -> dict:
 
 
 async def _invoke_and_handle(
-    graph: object,
+    graph: CompiledStateGraph,
     config: dict,
     invoke_arg: object,
     supabase: Client,
@@ -182,7 +183,7 @@ async def start_workflow(
     ).execute()
 
     try:
-        graph = await _get_graph(workflow_type)
+        graph = await get_graph(workflow_type)
 
         initial_state = {
             "use_case_id": str(use_case_id),
@@ -222,7 +223,7 @@ async def resume_workflow(
     _update_workflow(supabase, wf_id, {"status": WorkflowStatus.running})
 
     wf_type = workflow.get("workflow_type", WorkflowType.product_meter_aggregation)
-    graph = await _get_graph(wf_type)
+    graph = await get_graph(wf_type)
     return await _invoke_and_handle(graph, config, Command(resume=decisions), supabase, wf_id)
 
 

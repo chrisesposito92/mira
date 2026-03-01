@@ -14,7 +14,7 @@ from app.auth.jwt import verify_token
 from app.db.client import get_supabase_client
 from app.schemas.common import MessageRole, WorkflowStatus, WorkflowType
 from app.services.chat_message_service import save_message_internal
-from app.services.workflow_service import _get_graph
+from app.services.workflow_service import get_graph
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
 
     try:
         wf_type = workflow.get("workflow_type", WorkflowType.product_meter_aggregation)
-        graph = await _get_graph(wf_type)
+        graph = await get_graph(wf_type)
 
         # Send current interrupt state if any
         await _send_interrupt_if_pending(websocket, graph, config)

@@ -34,7 +34,7 @@
 
 	// Refresh workflows list when returning to the launcher after a workflow completes,
 	// so the WF2 gate picks up the newly-completed WF1 without a full page reload.
-	let prevShowLauncher = false;
+	let prevShowLauncher = $state(false);
 	$effect(() => {
 		if (showLauncher && !prevShowLauncher && workflowStore.isCompleted) {
 			const service = getService();
@@ -77,7 +77,7 @@
 		(!workflowStore.workflow && !workflowStore.loading) ||
 			(workflowStore.isCompleted && !workflowStore.loading),
 	);
-	const showChat = $derived(workflowStore.workflow !== null && !showLauncher);
+	const showChat = $derived(workflowStore.workflow !== null);
 
 	const modelName = $derived(
 		workflowStore.models.find((m) => m.id === workflowStore.workflow?.model_id)?.display_name ?? '',
@@ -106,6 +106,14 @@
 			status={workflowStore.workflow?.status ?? null}
 			{modelName}
 		/>
+		<ChatContainer
+			messages={workflowStore.messages}
+			thinking={workflowStore.thinking}
+			currentStep={workflowStore.currentStep}
+			pendingDecisions={workflowStore.pendingDecisions}
+			ondecision={handleDecision}
+			onclarify={handleClarification}
+		/>
 	{/if}
 
 	{#if showLauncher}
@@ -117,15 +125,6 @@
 				onstart={handleStart}
 			/>
 		</div>
-	{:else if showChat}
-		<ChatContainer
-			messages={workflowStore.messages}
-			thinking={workflowStore.thinking}
-			currentStep={workflowStore.currentStep}
-			pendingDecisions={workflowStore.pendingDecisions}
-			ondecision={handleDecision}
-			onclarify={handleClarification}
-		/>
 	{/if}
 
 	{#if workflowStore.error}
