@@ -106,7 +106,10 @@ async def test_org_connection(supabase: Client, user_id: UUID, connection_id: UU
         client_id=client_id,
         client_secret=client_secret,
     )
-    test_result = await m3ter.test_connection()
+    try:
+        test_result = await m3ter.test_connection()
+    finally:
+        await m3ter.close()
 
     now = datetime.now(UTC).isoformat()
     new_status = "active" if test_result["success"] else "error"

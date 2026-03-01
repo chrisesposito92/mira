@@ -4,3 +4,5 @@ export { default as ObjectTreeNode } from './ObjectTreeNode.svelte';
 export { default as ObjectEditor } from './ObjectEditor.svelte';
 export { default as BulkActions } from './BulkActions.svelte';
 export { default as CreateObjectDialog } from './CreateObjectDialog.svelte';
+export { default as PushProgressPanel } from './PushProgressPanel.svelte';
+export { default as PushConfirmDialog } from './PushConfirmDialog.svelte';
