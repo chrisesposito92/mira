@@ -1,16 +1,24 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { ObjectTree, ObjectEditor, BulkActions } from '$lib/components/control-panel';
+	import {
+		ObjectTree,
+		ObjectEditor,
+		BulkActions,
+		CreateObjectDialog,
+	} from '$lib/components/control-panel';
 	import { objectsStore } from '$lib/stores';
 	import { createApiClient, createGeneratedObjectService } from '$lib/services';
 	import { toast } from 'svelte-sonner';
-	import { ArrowLeft } from 'lucide-svelte';
+	import { ArrowLeft, Plus } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
-	import type { GeneratedObjectUpdate, ObjectStatus } from '$lib/types';
+	import { snakeToTitle } from '$lib/utils.js';
+	import type { GeneratedObjectUpdate, ObjectStatus, CreateObjectPayload } from '$lib/types';
 
 	let { data } = $props();
 	let initialized = false;
+	let showCreateDialog = $state(false);
+	let templates = $state<Record<string, Record<string, unknown>>>({});
 
 	const service = $derived(createGeneratedObjectService(createApiClient(data.supabase)));
 
@@ -37,11 +45,29 @@
 		if (ids.length === 0) return;
 		const result = await objectsStore.bulkUpdateStatus(service, ids, status);
 		if (result.ok) {
-			const label = status.charAt(0).toUpperCase() + status.slice(1);
+			const label = snakeToTitle(status);
 			toast.success(`${label} ${ids.length} object${ids.length > 1 ? 's' : ''}`);
 		} else {
 			toast.error(result.error);
 		}
+	}
+
+	onMount(() => {
+		service
+			.getTemplates()
+			.then((t) => (templates = t))
+			.catch(() => toast.error('Failed to load object templates'));
+	});
+
+	async function handleCreate(payload: CreateObjectPayload): Promise<boolean> {
+		const useCaseId = page.params.useCaseId!;
+		const result = await objectsStore.createObject(service, useCaseId, payload);
+		if (result.ok) {
+			toast.success('Object created');
+			return true;
+		}
+		toast.error(result.error);
+		return false;
 	}
 
 	onDestroy(() => {
@@ -64,6 +90,10 @@
 			<h1 class="text-sm font-semibold">Control Panel</h1>
 			<p class="text-muted-foreground text-xs">{data.useCase.title}</p>
 		</div>
+		<Button size="sm" onclick={() => (showCreateDialog = true)}>
+			<Plus class="mr-1 size-4" />
+			New Object
+		</Button>
 	</div>
 
 	<!-- Bulk actions / filters -->
@@ -114,4 +144,6 @@
 			{objectsStore.error}
 		</div>
 	{/if}
+
+	<CreateObjectDialog bind:open={showCreateDialog} {templates} oncreate={handleCreate} />
 </div>

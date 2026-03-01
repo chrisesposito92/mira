@@ -153,3 +153,10 @@ export interface BulkStatusUpdate {
 	ids: string[];
 	status: ObjectStatus;
 }
+
+export interface CreateObjectPayload {
+	entity_type: EntityType;
+	name?: string;
+	code?: string;
+	data?: Record<string, unknown>;
+}

@@ -6,9 +6,10 @@ from fastapi import APIRouter, Depends, Query
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
-from app.schemas.common import MessageResponse
+from app.schemas.common import EntityType, MessageResponse
 from app.schemas.generated_objects import (
     BulkStatusUpdate,
+    CreateGeneratedObject,
     GeneratedObjectResponse,
     GeneratedObjectUpdate,
 )
@@ -29,6 +30,27 @@ async def list_objects(
     supabase: Client = Depends(get_supabase),
 ) -> list[dict]:
     return svc.list_objects(supabase, user_id, use_case_id, entity_type, status_filter)
+
+
+@router.post(
+    "/api/use-cases/{use_case_id}/objects",
+    response_model=GeneratedObjectResponse,
+    status_code=201,
+)
+async def create_object(
+    use_case_id: UUID,
+    data: CreateGeneratedObject,
+    user_id: UUID = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+) -> dict:
+    return svc.create_object(supabase, user_id, use_case_id, data)
+
+
+@router.get("/api/objects/templates", response_model=dict[str, dict])
+async def get_templates(
+    user_id: UUID = Depends(get_current_user),
+) -> dict[str, dict]:
+    return {et.value: svc.generate_template(et) for et in EntityType}
 
 
 @router.get("/api/objects/{object_id}", response_model=GeneratedObjectResponse)

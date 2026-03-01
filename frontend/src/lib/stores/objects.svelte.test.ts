@@ -49,6 +49,8 @@ function mockObjectService(
 			.fn()
 			.mockResolvedValue(makeMockObject({ id: 'obj-1', name: 'Updated Product' })),
 		bulkUpdateStatus: vi.fn().mockResolvedValue({ message: 'ok' }),
+		createObject: vi.fn().mockResolvedValue(makeMockObject({ id: 'obj-new', name: 'New Object' })),
+		getTemplates: vi.fn().mockResolvedValue({}),
 		...overrides,
 	};
 }
@@ -180,6 +182,36 @@ describe('ObjectsStore', () => {
 		expect(store.objects[1].status).toBe('approved');
 		expect(store.objects[2].status).toBe('draft');
 		expect(store.selectedIds.size).toBe(0);
+	});
+
+	it('createObject adds to store and selects it', async () => {
+		store.objects = [makeMockObject({ id: 'obj-1' })];
+		const service = mockObjectService();
+		const result = await store.createObject(service, 'uc-1', {
+			entity_type: 'product',
+			name: 'New Object',
+		});
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.created.id).toBe('obj-new');
+		}
+		expect(store.objects).toHaveLength(2);
+		expect(store.objects[0].id).toBe('obj-new'); // prepended
+		expect(store.selectedObjectId).toBe('obj-new'); // auto-selected
+	});
+
+	it('createObject sets error on failure', async () => {
+		const service = mockObjectService({
+			createObject: vi.fn().mockRejectedValue(new Error('Create failed')),
+		});
+		const result = await store.createObject(service, 'uc-1', {
+			entity_type: 'product',
+		});
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error).toBe('Create failed');
+		}
+		expect(store.error).toBe('Create failed');
 	});
 
 	it('clear resets all state', async () => {

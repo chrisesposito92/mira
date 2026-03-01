@@ -27,6 +27,7 @@ def _object_row(**overrides):
         "data": {"key": "value"},
         "m3ter_id": None,
         "depends_on": None,
+        "validation_errors": None,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat(),
     }
@@ -100,3 +101,86 @@ class TestBulkUpdate:
         )
         assert resp.status_code == 200
         assert "2 objects" in resp.json()["message"]
+
+
+class TestCreateObject:
+    def test_create_success(self, authed_client, mock_supabase):
+        ucid = str(uuid4())
+        mock_supabase._table_data["use_cases"] = [_use_case_row(id=ucid)]
+        mock_supabase._table_data["generated_objects"] = [
+            _object_row(use_case_id=ucid, status="draft", validation_errors=[]),
+        ]
+        resp = authed_client.post(
+            f"/api/use-cases/{ucid}/objects",
+            json={
+                "entity_type": "product",
+                "name": "My Product",
+                "code": "my_product",
+                "data": {
+                    "name": "My Product",
+                    "code": "my_product",
+                    "customFields": {},
+                },
+            },
+        )
+        assert resp.status_code == 201
+        body = resp.json()
+        assert body["status"] == "draft"
+        assert body["entity_type"] == "product"
+
+    def test_create_with_validation_errors(self, authed_client, mock_supabase):
+        ucid = str(uuid4())
+        mock_supabase._table_data["use_cases"] = [_use_case_row(id=ucid)]
+        mock_supabase._table_data["generated_objects"] = [
+            _object_row(
+                use_case_id=ucid,
+                status="draft",
+                validation_errors=[
+                    {
+                        "field": "name",
+                        "message": "Name is required",
+                        "severity": "error",
+                    }
+                ],
+            ),
+        ]
+        resp = authed_client.post(
+            f"/api/use-cases/{ucid}/objects",
+            json={"entity_type": "product", "data": {}},
+        )
+        assert resp.status_code == 201
+        body = resp.json()
+        assert body["validation_errors"] is not None
+
+    def test_create_requires_ownership(self, authed_client, mock_supabase):
+        ucid = str(uuid4())
+        mock_supabase._table_data["use_cases"] = []  # No matching use case
+        resp = authed_client.post(
+            f"/api/use-cases/{ucid}/objects",
+            json={"entity_type": "product", "name": "Test"},
+        )
+        assert resp.status_code == 404
+
+
+class TestGetTemplates:
+    def test_templates_returns_all_entity_types(self, authed_client, mock_supabase):
+        resp = authed_client.get("/api/objects/templates")
+        assert resp.status_code == 200
+        body = resp.json()
+        # Should have templates for all entity types that have schemas
+        assert "product" in body
+        assert "meter" in body
+        assert "aggregation" in body
+        assert "plan_template" in body
+        assert "plan" in body
+        assert "pricing" in body
+        assert "account" in body
+        assert "account_plan" in body
+        assert "measurement" in body
+
+    def test_product_template_has_required_fields(self, authed_client, mock_supabase):
+        resp = authed_client.get("/api/objects/templates")
+        body = resp.json()
+        product = body["product"]
+        assert "name" in product
+        assert "code" in product
