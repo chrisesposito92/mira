@@ -31,6 +31,17 @@ class GeneratedObjectUpdate(BaseModel):
     data: dict | None = None
 
 
+class CreateGeneratedObject(BaseModel):
+    entity_type: EntityType
+    name: str | None = None
+    code: str | None = None
+    data: dict | None = None
+
+
+class GeneratedObjectWithErrors(GeneratedObjectResponse):
+    validation_errors: list[dict] | None = None
+
+
 class BulkStatusUpdate(BaseModel):
     ids: list[UUID]
     status: ObjectStatus

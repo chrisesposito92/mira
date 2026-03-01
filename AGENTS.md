@@ -160,9 +160,12 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 ### Frontend Control Panel
 
-- **ObjectsStore**: Class-based Svelte 5 runes singleton (`stores/objects.svelte.ts`) — manages objects list, filtering (entity type, status, search), tree grouping by entity type in push order, multi-select, single-object selection, CRUD operations.
-- **GeneratedObjectService**: Factory function `createGeneratedObjectService(client)` in `services/generated-objects.ts` — REST calls for listObjects, getObject, updateObject, bulkUpdateStatus.
-- **Control panel route**: `/projects/[projectId]/use-cases/[useCaseId]/control-panel/` — 2-panel layout with ObjectTree (left) + ObjectEditor (right), BulkActions toolbar above.
+- **ObjectsStore**: Class-based Svelte 5 runes singleton (`stores/objects.svelte.ts`) — manages objects list, filtering (entity type, status, search), tree grouping by entity type in push order, multi-select, single-object selection, CRUD operations (including `createObject`).
+- **GeneratedObjectService**: Factory function `createGeneratedObjectService(client)` in `services/generated-objects.ts` — REST calls for listObjects, getObject, updateObject, bulkUpdateStatus, createObject, getTemplates.
+- **Control panel route**: `/projects/[projectId]/use-cases/[useCaseId]/control-panel/` — 2-panel layout with ObjectTree (left) + ObjectEditor (right), BulkActions toolbar above, "+ New Object" button for manual creation.
+- **CreateObjectDialog**: Modal dialog (`components/control-panel/CreateObjectDialog.svelte`) — entity type selector (all 10 types), name/code fields, JsonEditor with per-entity-type templates. Creates objects in `draft` status with validation errors attached.
+- **Object templates**: `GET /api/objects/templates` returns JSON templates per entity type, generated from `m3ter_schema.py` schemas with sensible defaults.
+- **Manual object creation**: `POST /api/use-cases/{id}/objects` creates objects with server-side validation via `validate_entity()`. Objects start as `draft` with any validation errors serialized.
 - **JsonEditor**: CodeMirror 6 integration (`components/control-panel/JsonEditor.svelte`) — JSON syntax highlighting, linting, dark mode via mode-watcher, line numbers, bracket matching, fold gutters.
 - **Tree structure**: Objects grouped by entity type in push order (product → meter → aggregation → ... → measurement). Collapsible groups with count badges. Supports multi-select via checkboxes.
 - **StatusBadge**: Extended with object statuses: approved (blue), rejected (muted), pushed (green), push_failed (red).

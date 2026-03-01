@@ -59,4 +59,21 @@ describe('GeneratedObjectService', () => {
 			status: 'approved',
 		});
 	});
+
+	it('createObject calls POST /api/use-cases/:id/objects', async () => {
+		const client = mockClient();
+		const service = createGeneratedObjectService(client);
+		await service.createObject('uc-1', { entity_type: 'product', name: 'Test' });
+		expect(client.post).toHaveBeenCalledWith('/api/use-cases/uc-1/objects', {
+			entity_type: 'product',
+			name: 'Test',
+		});
+	});
+
+	it('getTemplates calls GET /api/objects/templates', async () => {
+		const client = mockClient();
+		const service = createGeneratedObjectService(client);
+		await service.getTemplates();
+		expect(client.get).toHaveBeenCalledWith('/api/objects/templates');
+	});
 });

@@ -1,5 +1,11 @@
 import { SvelteSet } from 'svelte/reactivity';
-import type { GeneratedObject, GeneratedObjectUpdate, EntityType, ObjectStatus } from '$lib/types';
+import type {
+	GeneratedObject,
+	GeneratedObjectUpdate,
+	CreateObjectPayload,
+	EntityType,
+	ObjectStatus,
+} from '$lib/types';
 import type { GeneratedObjectService } from '$lib/services/generated-objects.js';
 
 // Entity type push order for tree grouping (exported for reuse in components)
@@ -120,6 +126,27 @@ class ObjectsStore {
 			return { ok: true };
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : 'Failed to bulk update';
+			this.error = msg;
+			return { ok: false, error: msg };
+		} finally {
+			this.saving = false;
+		}
+	}
+
+	async createObject(
+		service: GeneratedObjectService,
+		useCaseId: string,
+		payload: CreateObjectPayload,
+	): Promise<{ ok: true; created: GeneratedObject } | { ok: false; error: string }> {
+		this.saving = true;
+		this.error = null;
+		try {
+			const created = await service.createObject(useCaseId, payload);
+			this.objects = [created, ...this.objects];
+			this.selectedObjectId = created.id;
+			return { ok: true, created };
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : 'Failed to create object';
 			this.error = msg;
 			return { ok: false, error: msg };
 		} finally {

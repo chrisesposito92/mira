@@ -3,3 +3,4 @@ export { default as ObjectTree } from './ObjectTree.svelte';
 export { default as ObjectTreeNode } from './ObjectTreeNode.svelte';
 export { default as ObjectEditor } from './ObjectEditor.svelte';
 export { default as BulkActions } from './BulkActions.svelte';
+export { default as CreateObjectDialog } from './CreateObjectDialog.svelte';

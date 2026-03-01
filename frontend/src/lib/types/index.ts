@@ -45,6 +45,7 @@ export type {
 	GeneratedObject,
 	GeneratedObjectUpdate,
 	BulkStatusUpdate,
+	CreateObjectPayload,
 } from './api.js';
 
 export type {

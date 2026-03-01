@@ -1,11 +1,18 @@
 import type { ApiClient } from './api.js';
-import type { GeneratedObject, GeneratedObjectUpdate, BulkStatusUpdate } from '$lib/types';
+import type {
+	GeneratedObject,
+	GeneratedObjectUpdate,
+	BulkStatusUpdate,
+	CreateObjectPayload,
+} from '$lib/types';
 
 export interface GeneratedObjectService {
 	listObjects(useCaseId: string, entityType?: string, status?: string): Promise<GeneratedObject[]>;
 	getObject(objectId: string): Promise<GeneratedObject>;
 	updateObject(objectId: string, data: GeneratedObjectUpdate): Promise<GeneratedObject>;
 	bulkUpdateStatus(data: BulkStatusUpdate): Promise<{ message: string }>;
+	createObject(useCaseId: string, data: CreateObjectPayload): Promise<GeneratedObject>;
+	getTemplates(): Promise<Record<string, Record<string, unknown>>>;
 }
 
 export function createGeneratedObjectService(client: ApiClient): GeneratedObjectService {
@@ -23,5 +30,9 @@ export function createGeneratedObjectService(client: ApiClient): GeneratedObject
 		updateObject: (objectId, data) =>
 			client.patch<GeneratedObject>(`/api/objects/${objectId}`, data),
 		bulkUpdateStatus: (data) => client.post<{ message: string }>('/api/objects/bulk-status', data),
+		createObject: (useCaseId, data) =>
+			client.post<GeneratedObject>(`/api/use-cases/${useCaseId}/objects`, data),
+		getTemplates: () =>
+			client.get<Record<string, Record<string, unknown>>>('/api/objects/templates'),
 	};
 }

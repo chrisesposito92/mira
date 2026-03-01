@@ -1,11 +1,16 @@
 """Service layer for generated_objects CRUD."""
 
+import functools
+from dataclasses import asdict
 from uuid import UUID
 
 from fastapi import HTTPException
 from supabase import Client
 
-from app.schemas.generated_objects import GeneratedObjectUpdate
+from app.agents.tools.m3ter_schema import get_schema
+from app.schemas.common import EntityType
+from app.schemas.generated_objects import CreateGeneratedObject, GeneratedObjectUpdate
+from app.validation.engine import validate_entity
 
 
 def list_objects(
@@ -79,6 +84,73 @@ def bulk_update_status(supabase: Client, user_id: UUID, ids: list[UUID], status:
         .execute()
     )
     return result.data
+
+
+def create_object(
+    supabase: Client,
+    user_id: UUID,
+    use_case_id: UUID,
+    data: CreateGeneratedObject,
+) -> dict:
+    """Create a new generated object with validation."""
+    _verify_use_case_ownership(supabase, user_id, use_case_id)
+
+    errors = validate_entity(data.entity_type, data.data or {})
+    validation_errors = [asdict(e) for e in errors]
+
+    obj_data = data.data or {}
+    obj_name = data.name or obj_data.get("name") or data.entity_type.replace("_", " ").title()
+
+    row = {
+        "use_case_id": str(use_case_id),
+        "entity_type": data.entity_type,
+        "name": obj_name,
+        "code": data.code,
+        "status": "draft",
+        "data": obj_data,
+        "validation_errors": validation_errors or None,
+    }
+    result = supabase.table("generated_objects").insert(row).execute()
+    return result.data[0]
+
+
+@functools.cache
+def generate_template(entity_type: EntityType) -> dict:
+    """Generate a default template for an entity type from its schema."""
+    try:
+        schema = get_schema(entity_type)
+    except ValueError:
+        return {}
+
+    def _default_value(field_def: dict) -> object:
+        ftype = field_def.get("type", "str")
+        if ftype == "str":
+            return ""
+        if ftype == "int":
+            return 0
+        if ftype == "float":
+            return 0.0
+        if ftype == "bool":
+            return False
+        if ftype == "dict":
+            return {}
+        if ftype == "list[str]":
+            return []
+        if ftype == "list[dict]":
+            item_schema = field_def.get("item_schema", {})
+            if item_schema:
+                return [{k: _default_value(v) for k, v in item_schema.items()}]
+            return [{}]
+        return ""
+
+    template: dict = {}
+    for field_name, field_def in schema.items():
+        is_required = field_def.get("required", False)
+        is_name_or_code = field_name in ("name", "code")
+        if is_required or is_name_or_code:
+            template[field_name] = _default_value(field_def)
+
+    return template
 
 
 def _verify_use_case_ownership(supabase: Client, user_id: UUID, use_case_id: UUID) -> None:

@@ -412,14 +412,22 @@ Phase 1 (Scaffold)
 
 ## Phase 11.5: Manual Object Creation (Deferred from Phase 11)
 
-**~5 files** | Depends on: Phase 11
+**13 files (3 new, 10 modified)** | Depends on: Phase 11
 
-- [ ] Component: ManualObjectForm (create object without agent — entity type selector, JSON template, name/code fields)
-- [ ] Backend: `POST /api/use-cases/{id}/objects` endpoint for manual object creation
-- [ ] Integration into Control Panel page (add button in toolbar)
+- [x] `schemas/generated_objects.py` — `CreateGeneratedObject` + `GeneratedObjectWithErrors` Pydantic models
+- [x] `services/generated_object_service.py` — `create_object()` (validate + insert) + `generate_template()` (schema-driven defaults)
+- [x] `api/generated_objects.py` — `POST /api/use-cases/{id}/objects` + `GET /api/objects/templates`
+- [x] `types/api.ts` — `CreateObjectPayload` interface
+- [x] `services/generated-objects.ts` — `createObject()` + `getTemplates()` methods
+- [x] `stores/objects.svelte.ts` — `createObject()` store method (prepend + auto-select)
+- [x] Component: CreateObjectDialog (entity type selector, name/code fields, JSON editor with templates)
+- [x] Control Panel page — "+ New Object" button, template loading, dialog wiring
 - **Tests**:
-  - [ ] ManualObjectForm component tests
-  - [ ] Backend endpoint tests
+  - [x] Backend: create endpoint (3 tests), templates endpoint (2 tests)
+  - [x] Frontend: service tests (2 tests), store tests (2 tests)
+- [x] **Verify**: All backend tests pass (11/11)
+- [x] **Verify**: All frontend tests pass (95/95)
+- [x] **Verify**: svelte-check 0 errors, ESLint + Prettier clean, Ruff clean
 
 ---
 
