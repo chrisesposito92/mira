@@ -191,10 +191,8 @@ class TestLoadApprovedEntities:
 
         result = await load_approved_entities(base_state)
 
-        assert result["approved_products"] == []
-        assert result["approved_meters"] == []
-        assert result["approved_aggregations"] == []
-        assert result["current_step"] == "approved_entities_loaded"
+        assert "error" in result
+        assert result["current_step"] == "error"
 
 
 # ---------------------------------------------------------------------------
