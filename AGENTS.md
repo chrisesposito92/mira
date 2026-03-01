@@ -137,7 +137,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 ## Key Patterns
 
 - **HITL**: LangGraph `interrupt()` → WebSocket sends to frontend → user approves/edits/rejects → `Command(resume=decision)`
-- **Entity push order**: Product → Meter → Aggregation → CompoundAgg → PlanTemplate → Plan → Pricing → Account → AccountPlan
+- **Entity push order**: Product → Meter → Aggregation → CompoundAgg → PlanTemplate → Plan → Pricing → Account → AccountPlan (Config API). Measurements are submitted separately via the Ingest API.
 - **m3ter auth**: OAuth2 client credentials per org, tokens cached 5hrs
 - **RAG**: Two-source retrieval (m3ter docs + user docs), pgvector cosine similarity
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id

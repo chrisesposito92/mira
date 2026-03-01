@@ -1,4 +1,4 @@
-"""LangGraph workflow state definition for product/meter/aggregation agent."""
+"""LangGraph workflow state definition for all agent workflows (WF1–WF4)."""
 
 from typing import TypedDict
 
@@ -55,7 +55,7 @@ class WorkflowState(TypedDict, total=False):
     plan_decisions: list[dict]
     pricing_decisions: list[dict]
 
-    # Workflow 3 — loaded from DB (approved entities from Workflow 2)
+    # Workflow 3 — loaded from DB (approved entities from Workflow 1 + Workflow 2)
     approved_plan_templates: list[dict]
     approved_plans: list[dict]
     approved_pricing: list[dict]
@@ -72,7 +72,7 @@ class WorkflowState(TypedDict, total=False):
     account_decisions: list[dict]
     account_plan_decisions: list[dict]
 
-    # Workflow 4 — loaded from DB (approved entities from Workflow 3)
+    # Workflow 4 — loaded from DB (approved meters from WF1, approved accounts from WF3)
     approved_accounts: list[dict]
 
     # Workflow 4 — Generation

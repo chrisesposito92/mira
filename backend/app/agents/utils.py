@@ -4,7 +4,7 @@ import json
 import logging
 from typing import Any
 
-from app.schemas.common import ObjectStatus, WorkflowStatus
+from app.schemas.common import ObjectStatus, WorkflowStatus, WorkflowType
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def parse_entity_list(content: str) -> list[dict]:
     return []
 
 
-def fetch_workflow_window(supabase: Any, use_case_id: str, workflow_type: str) -> Any:
+def fetch_workflow_window(supabase: Any, use_case_id: str, workflow_type: WorkflowType) -> Any:
     """Fetch the latest completed workflow time window for entity scoping."""
     return (
         supabase.table("workflows")

@@ -188,8 +188,11 @@ async def approve_entities(state: WorkflowState) -> dict:
             update_fields: dict = {"status": ObjectStatus.approved}
             if edited_data:
                 update_fields["data"] = edited_data
-                update_fields["name"] = edited_data.get("name", "")
-                update_fields["code"] = edited_data.get("code", "")
+                # Only set name/code for entity types that have those fields;
+                # AccountPlan and Measurement have neither.
+                if entity_type not in (EntityType.account_plan, EntityType.measurement):
+                    update_fields["name"] = edited_data.get("name", "")
+                    update_fields["code"] = edited_data.get("code", "")
             supabase.table("generated_objects").update(update_fields).eq("id", obj_id).execute()
 
     # Promote undecided entities to approved in DB so state and DB stay consistent

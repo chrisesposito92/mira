@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.agents.graphs.usage_submission import _build_graph
+from app.agents.graphs.usage_submission import _build_graph, route_after_load
 from app.agents.nodes.load_approved_usage import load_approved_for_usage
 from app.agents.nodes.measurement_gen import generate_measurements
 from app.agents.nodes.validation import _STEP_TO_ENTITY, validate_entities
@@ -59,6 +59,14 @@ class TestUsageSubmissionGraphStructure:
         graph = _build_graph()
         non_internal_nodes = {name for name in graph.nodes if not name.startswith("__")}
         assert len(non_internal_nodes) == 4
+
+    def test_route_after_load_returns_end_on_error(self):
+        """Load node should route to END when current_step is 'error'."""
+        from langgraph.graph import END
+
+        assert route_after_load({"current_step": "error"}) == END
+        loaded = "approved_entities_loaded_for_usage"
+        assert route_after_load({"current_step": loaded}) == "generate_measurements"
 
 
 # ---------------------------------------------------------------------------

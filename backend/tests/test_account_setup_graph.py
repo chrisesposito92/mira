@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.agents.graphs.account_setup import _build_graph
+from app.agents.graphs.account_setup import (
+    _build_graph,
+    route_after_approve_accounts,
+    route_after_load,
+)
 from app.agents.nodes.account_gen import generate_accounts
 from app.agents.nodes.account_plan_gen import generate_account_plans
 from app.agents.nodes.load_approved_accounts import load_approved_for_accounts
@@ -64,12 +68,22 @@ class TestAccountSetupGraphStructure:
         non_internal_nodes = {name for name in graph.nodes if not name.startswith("__")}
         assert len(non_internal_nodes) == 7
 
-    def test_graph_has_conditional_edge_from_load(self):
-        """Load node should use conditional routing to short-circuit on error."""
-        graph = _build_graph()
-        compiled = graph.compile()
-        # The compiled graph should have a conditional branch from the load node
-        assert compiled is not None
+    def test_route_after_load_returns_end_on_error(self):
+        """Load node should route to END when current_step is 'error'."""
+        from langgraph.graph import END
+
+        assert route_after_load({"current_step": "error"}) == END
+        loaded = "approved_entities_loaded_for_accounts"
+        assert route_after_load({"current_step": loaded}) == "generate_accounts"
+
+    def test_route_after_approve_accounts_returns_end_when_empty(self):
+        """Approve node should route to END when all accounts were rejected."""
+        from langgraph.graph import END
+
+        assert route_after_approve_accounts({"accounts": []}) == END
+        assert route_after_approve_accounts({}) == END
+        state = {"accounts": [{"name": "Acme"}]}
+        assert route_after_approve_accounts(state) == "generate_account_plans"
 
 
 # ---------------------------------------------------------------------------

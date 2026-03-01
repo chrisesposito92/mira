@@ -127,6 +127,22 @@ async def _invoke_and_handle(
             },
         )
 
+    # Check if the graph ended in an error state (e.g., load node returned error
+    # and the graph routed to END). This must be marked as failed, not completed,
+    # to prevent downstream workflows from incorrectly satisfying prerequisite checks.
+    graph_state = await graph.aget_state(config)
+    final_values = graph_state.values if graph_state else {}
+    if final_values.get("current_step") == "error":
+        error_msg = final_values.get("error", "Workflow ended in error state")
+        return _update_workflow(
+            supabase,
+            workflow_id,
+            {
+                "status": WorkflowStatus.failed,
+                "error_message": error_msg,
+            },
+        )
+
     return _update_workflow(
         supabase,
         workflow_id,

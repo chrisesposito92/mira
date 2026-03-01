@@ -19,6 +19,11 @@ from app.agents.nodes.validation import validate_entities
 from app.agents.state import WorkflowState
 
 
+def route_after_load(state: WorkflowState) -> str:
+    """Route to END if load failed, otherwise proceed to generation."""
+    return END if state.get("current_step") == "error" else "generate_measurements"
+
+
 def _build_graph() -> StateGraph:
     """Build the usage submission StateGraph (uncompiled)."""
     graph = StateGraph(WorkflowState)
@@ -33,9 +38,6 @@ def _build_graph() -> StateGraph:
     graph.set_entry_point("load_approved_for_usage")
 
     # Short-circuit to END if load fails (no approved entities)
-    def route_after_load(state: WorkflowState) -> str:
-        return END if state.get("current_step") == "error" else "generate_measurements"
-
     graph.add_conditional_edges("load_approved_for_usage", route_after_load)
     graph.add_edge("generate_measurements", "validate_measurements")
     graph.add_edge("validate_measurements", "approve_measurements")

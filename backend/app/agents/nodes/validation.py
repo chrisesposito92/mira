@@ -82,6 +82,23 @@ _STEP_TO_CROSS_CONTEXT: dict[str, tuple[EntityType, tuple[str, ...]]] = {
 }
 
 
+def _entity_display_name(entity: dict, entity_type: EntityType, index: int) -> str:
+    """Build a human-readable display name for an entity in validation errors."""
+    name = entity.get("name", "")
+    if name:
+        return name
+    if entity_type == EntityType.pricing:
+        pricing_type = entity.get("type", "pricing")
+        desc = entity.get("description", "")
+        return desc[:100] if desc else f"{pricing_type} pricing"
+    if entity_type == EntityType.account_plan:
+        account_id = entity.get("accountId", "")
+        return f"AccountPlan: {account_id[:8]}" if account_id else f"AccountPlan {index}"
+    if entity_type == EntityType.measurement:
+        return entity.get("uid", f"Measurement {index}")
+    return f"Entity {index}"
+
+
 async def validate_entities(state: WorkflowState) -> dict:
     """Validate the current batch of entities based on current_step.
 
@@ -106,7 +123,7 @@ async def validate_entities(state: WorkflowState) -> dict:
             all_errors.append(
                 {
                     "entity_index": i,
-                    "entity_name": entity.get("name", f"Entity {i}"),
+                    "entity_name": _entity_display_name(entity, entity_type, i),
                     "errors": [asdict(e) for e in errors],
                 }
             )
