@@ -73,11 +73,9 @@
 		workflowStore.submitClarificationAnswers(answers);
 	}
 
-	const showChat = $derived(workflowStore.workflow !== null);
+	const showChat = $derived(workflowStore.workflow !== null && !workflowStore.isCompleted);
 	const showLauncher = $derived(
-		!showChat &&
-			((!workflowStore.workflow && !workflowStore.loading) ||
-				(workflowStore.isCompleted && !workflowStore.loading)),
+		!showChat && !workflowStore.loading,
 	);
 	const showLoading = $derived(workflowStore.loading && !workflowStore.workflow);
 
