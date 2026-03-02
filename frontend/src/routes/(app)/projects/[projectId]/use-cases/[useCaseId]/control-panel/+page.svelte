@@ -8,14 +8,21 @@
 		CreateObjectDialog,
 		PushProgressPanel,
 		PushConfirmDialog,
+		WorkflowLauncherDropdown,
+		WorkflowDrawer,
 	} from '$lib/components/control-panel';
-	import { objectsStore } from '$lib/stores';
-	import { createApiClient, createGeneratedObjectService } from '$lib/services';
+	import { objectsStore, workflowStore } from '$lib/stores';
+	import {
+		createApiClient,
+		createGeneratedObjectService,
+		createWorkflowService,
+	} from '$lib/services';
 	import { toast } from 'svelte-sonner';
 	import { ArrowLeft, Plus } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { snakeToTitle } from '$lib/utils.js';
 	import type { GeneratedObjectUpdate, ObjectStatus, CreateObjectPayload } from '$lib/types';
+	import type { EntityDecision, ClarificationAnswer, WorkflowType } from '$lib/types/workflow.js';
 
 	let { data } = $props();
 	let initialized = false;
@@ -23,8 +30,15 @@
 	let templates = $state<Record<string, Record<string, unknown>>>({});
 	let showPushConfirm = $state(false);
 	let pushTargetIds = $state<string[]>([]);
+	let drawerOpen = $state(false);
+	let workflowInitialized = false;
 
 	const service = $derived(createGeneratedObjectService(createApiClient(data.supabase)));
+	const workflowService = $derived(createWorkflowService(createApiClient(data.supabase)));
+
+	const modelName = $derived(
+		workflowStore.models.find((m) => m.id === workflowStore.workflow?.model_id)?.display_name ?? '',
+	);
 
 	// Initialize store with loaded data once; skip re-runs from session refresh
 	$effect(() => {
@@ -33,6 +47,54 @@
 			objectsStore.clear();
 		}
 		objectsStore.objects = data.objects;
+	});
+
+	// Initialize workflow store with page data
+	$effect(() => {
+		workflowStore.models = data.models;
+		workflowStore.workflows = data.workflows;
+
+		// Restore interrupted workflow once
+		if (!workflowInitialized && data.interruptedWorkflow && data.session?.access_token) {
+			workflowInitialized = true;
+			workflowStore.restoreFromInterrupt(
+				data.interruptedWorkflow,
+				data.session.access_token,
+				data.interruptedMessages,
+			);
+			drawerOpen = true;
+		}
+	});
+
+	// Auto-close drawer and refetch objects when workflow completes
+	$effect(() => {
+		if (workflowStore.isCompleted && drawerOpen) {
+			const timer = setTimeout(() => {
+				drawerOpen = false;
+				// Refetch objects to show newly generated entities
+				service.listObjects(page.params.useCaseId!).then((objs) => {
+					objectsStore.objects = objs;
+				});
+				// Refresh workflows list for prerequisite gating
+				workflowStore.loadWorkflows(workflowService, data.useCase.id);
+			}, 3000);
+			return () => clearTimeout(timer);
+		}
+	});
+
+	// Refetch objects when workflow moves to a new step (entities were just approved/saved)
+	let prevMessageCount = 0;
+	$effect(() => {
+		const count = workflowStore.messages.length;
+		if (count > prevMessageCount && prevMessageCount > 0) {
+			const lastMsg = workflowStore.messages[count - 1];
+			if (lastMsg?.type === 'status') {
+				service.listObjects(page.params.useCaseId!).then((objs) => {
+					objectsStore.objects = objs;
+				});
+			}
+		}
+		prevMessageCount = count;
 	});
 
 	// Derive which object IDs are currently being pushed (for tree spinner display)
@@ -120,26 +182,61 @@
 		return false;
 	}
 
+	async function handleStartWorkflow(modelId: string, workflowType: WorkflowType) {
+		// Guard: if a workflow is already active, reopen the drawer instead of orphaning it
+		if (workflowStore.isRunning || workflowStore.isInterrupted) {
+			drawerOpen = true;
+			return;
+		}
+		if (!data.session?.access_token) {
+			toast.error('Not authenticated');
+			return;
+		}
+		const wf = await workflowStore.startWorkflow(
+			workflowService,
+			data.useCase.id,
+			modelId,
+			data.session.access_token,
+			workflowType,
+		);
+		if (wf) {
+			drawerOpen = true;
+		} else {
+			toast.error(workflowStore.error ?? 'Failed to start workflow');
+		}
+	}
+
+	function handleDecision(decision: EntityDecision) {
+		workflowStore.submitDecision(decision);
+	}
+
+	function handleClarification(answers: ClarificationAnswer[]) {
+		workflowStore.submitClarificationAnswers(answers);
+	}
+
 	onDestroy(() => {
 		objectsStore.clear();
+		workflowStore.clear();
 	});
 </script>
 
 <div class="flex h-full flex-col">
 	<!-- Top bar -->
 	<div class="flex items-center gap-3 border-b px-4 py-3">
-		<Button
-			variant="ghost"
-			size="sm"
-			href="/projects/{page.params.projectId}/use-cases/{page.params.useCaseId}/workflow"
-		>
+		<Button variant="ghost" size="sm" href="/projects/{page.params.projectId}">
 			<ArrowLeft class="mr-1 size-4" />
-			Back to Workflow
+			Back
 		</Button>
 		<div class="flex-1">
 			<h1 class="text-sm font-semibold">Control Panel</h1>
 			<p class="text-muted-foreground text-xs">{data.useCase.title}</p>
 		</div>
+		<WorkflowLauncherDropdown
+			models={workflowStore.models}
+			workflows={workflowStore.workflows}
+			loading={workflowStore.loading}
+			onstart={handleStartWorkflow}
+		/>
 		<Button size="sm" onclick={() => (showCreateDialog = true)}>
 			<Plus class="mr-1 size-4" />
 			New Object
@@ -208,6 +305,19 @@
 			{objectsStore.error}
 		</div>
 	{/if}
+
+	<WorkflowDrawer
+		bind:open={drawerOpen}
+		messages={workflowStore.messages}
+		thinking={workflowStore.thinking}
+		currentStep={workflowStore.currentStep}
+		connectionState={workflowStore.connectionState}
+		status={workflowStore.workflow?.status ?? null}
+		{modelName}
+		pendingDecisions={workflowStore.pendingDecisions}
+		ondecision={handleDecision}
+		onclarify={handleClarification}
+	/>
 
 	<CreateObjectDialog bind:open={showCreateDialog} {templates} oncreate={handleCreate} />
 

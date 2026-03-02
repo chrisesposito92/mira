@@ -17,15 +17,12 @@
 		useCase.billing_frequency ? capitalize(useCase.billing_frequency) : null,
 	);
 
-	const workflowHref = $derived(
-		projectId ? `/projects/${projectId}/use-cases/${useCase.id}/workflow` : undefined,
+	const href = $derived(
+		projectId ? `/projects/${projectId}/use-cases/${useCase.id}/control-panel` : undefined,
 	);
 </script>
 
-<a
-	href={workflowHref}
-	class={cn('block transition-shadow hover:shadow-md', workflowHref && 'cursor-pointer')}
->
+<a {href} class={cn('block transition-shadow hover:shadow-md', href && 'cursor-pointer')}>
 	<Card.Root>
 		<Card.Header>
 			<div class="flex items-start justify-between gap-2">
@@ -47,9 +44,9 @@
 				{#if useCase.target_billing_model}
 					<span>{useCase.target_billing_model}</span>
 				{/if}
-				{#if workflowHref}
+				{#if href}
 					<span class="flex items-center gap-1 text-xs">
-						Open Workflow
+						Open
 						<ArrowRight class="size-3" />
 					</span>
 				{/if}

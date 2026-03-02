@@ -158,17 +158,17 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **WebSocketClient**: Class in `services/websocket.ts` — NOT a singleton, owned by WorkflowStore. Auto-reconnect with exponential backoff (1s→30s, max 5 attempts).
 - **WorkflowService**: Factory function `createWorkflowService(client)` in `services/workflow.ts` — REST calls for start, get, list, models, messages.
 - **Chat messages**: Persisted to `chat_messages` DB table via `save_message_internal()` at 7 WS flow points. `GET/POST /api/workflows/{id}/messages` endpoints with ownership checks.
-- **Component tree**: `ChatContainer` → `ChatMessage` (dispatcher) → `EntityCard` | `ClarificationCard` | status/complete/error renders.
+- **Component tree**: Control panel page → `WorkflowDrawer` (Sheet) → `WorkflowHeader` + `ChatContainer` → `ChatMessage` (dispatcher) → `EntityCard` | `ClarificationCard` | status/complete/error renders.
 - **Interactive vs historical**: Only the last `entities`/`clarification` message shows action buttons. Prior ones display as read-only summaries.
 - **Entity decisions**: Accumulated per-entity in store; auto-submitted when all entities have decisions.
-- **Workflow route**: `/projects/[projectId]/use-cases/[useCaseId]/workflow/` — loads use case, models, and restores interrupted workflows.
+- **Workflow UI**: No standalone route — workflows launch in a Sheet (right-side drawer) from the control panel. `WorkflowDrawer` wraps `WorkflowHeader` + `ChatContainer`. `WorkflowLauncherDropdown` in the control panel toolbar provides workflow type + model selection.
 - **Chat message types**: Discriminated union `ChatMessage` with 7 variants: `status`, `entities`, `clarification`, `user_decision`, `user_clarification`, `complete`, `error`.
 
 ### Frontend Control Panel
 
 - **ObjectsStore**: Class-based Svelte 5 runes singleton (`stores/objects.svelte.ts`) — manages objects list, filtering (entity type, status, search), tree grouping by entity type in push order, multi-select, single-object selection, CRUD operations (including `createObject`).
 - **GeneratedObjectService**: Factory function `createGeneratedObjectService(client)` in `services/generated-objects.ts` — REST calls for listObjects, getObject, updateObject, bulkUpdateStatus, createObject, getTemplates, pushObject, pushObjects, getPushStatus.
-- **Control panel route**: `/projects/[projectId]/use-cases/[useCaseId]/control-panel/` — 2-panel layout with ObjectTree (left) + ObjectEditor (right), BulkActions toolbar above, "+ New Object" button for manual creation.
+- **Control panel route**: `/projects/[projectId]/use-cases/[useCaseId]/control-panel/` — primary use case view. 2-panel layout with ObjectTree (left) + ObjectEditor (right), BulkActions toolbar above, "Run Workflow" button + "New Object" button. Workflow chat opens in a Sheet drawer from the right. Auto-refetches objects when workflow produces new entities.
 - **CreateObjectDialog**: Modal dialog (`components/control-panel/CreateObjectDialog.svelte`) — entity type selector (9 types, excludes `compound_aggregation` which has no schema/validator), name/code fields, JsonEditor with per-entity-type templates. JSON shape validated before submission. Dialog stays open on failure to preserve user input. Returns `boolean` from `oncreate` callback to signal success/failure.
 - **Object templates**: `GET /api/objects/templates` returns JSON templates per entity type, generated from `m3ter_schema.py` schemas with sensible defaults.
 - **Manual object creation**: `POST /api/use-cases/{id}/objects` creates objects with server-side validation via `validate_entity()`. Objects start as `draft` with any validation errors serialized.

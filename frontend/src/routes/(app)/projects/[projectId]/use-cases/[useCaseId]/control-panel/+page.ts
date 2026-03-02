@@ -4,6 +4,8 @@ import {
 	createUseCaseService,
 	createProjectService,
 	createGeneratedObjectService,
+	createWorkflowService,
+	ApiError,
 } from '$lib/services';
 import type { PageLoad } from './$types';
 
@@ -13,21 +15,50 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const useCaseService = createUseCaseService(client);
 	const projectService = createProjectService(client);
 	const objectService = createGeneratedObjectService(client);
+	const workflowService = createWorkflowService(client);
 
-	// Fetch all three in parallel — use case is required, others are graceful
-	const [useCaseResult, project, objects] = await Promise.allSettled([
-		useCaseService.get(params.useCaseId),
+	// Use case is required
+	let useCase;
+	try {
+		useCase = await useCaseService.get(params.useCaseId);
+	} catch (e) {
+		const status = e instanceof ApiError ? e.status : 500;
+		error(
+			status === 404 ? 404 : 500,
+			status === 404 ? 'Use case not found' : 'Failed to load use case',
+		);
+	}
+
+	// Secondary data can fail gracefully
+	const [project, objects, workflows, models] = await Promise.allSettled([
 		projectService.get(params.projectId),
 		objectService.listObjects(params.useCaseId),
+		workflowService.list(params.useCaseId),
+		workflowService.listModels(),
 	]);
 
-	if (useCaseResult.status === 'rejected') {
-		error(404, 'Use case not found');
+	// Find any interrupted workflow
+	const workflowList = workflows.status === 'fulfilled' ? workflows.value : [];
+	const interruptedWorkflow = workflowList.find((w) => w.status === 'interrupted');
+
+	// Load messages for interrupted workflow
+	let interruptedMessages: Awaited<ReturnType<typeof workflowService.listMessages>> = [];
+	if (interruptedWorkflow) {
+		try {
+			interruptedMessages = await workflowService.listMessages(interruptedWorkflow.id);
+		} catch {
+			// Graceful failure
+		}
 	}
 
 	return {
-		useCase: useCaseResult.value,
+		useCase: useCase!,
 		project: project.status === 'fulfilled' ? project.value : null,
 		objects: objects.status === 'fulfilled' ? objects.value : [],
+		workflows: workflowList,
+		models: models.status === 'fulfilled' ? models.value : [],
+		interruptedWorkflow: interruptedWorkflow ?? null,
+		interruptedMessages,
+		session,
 	};
 };
