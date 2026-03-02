@@ -1,6 +1,7 @@
 """m3ter API client with token caching, retry logic, and per-entity CRUD."""
 
 import asyncio
+import base64
 import logging
 import time
 from datetime import UTC, datetime
@@ -74,17 +75,19 @@ class M3terClient:
                 self._token = token
                 return token
 
-        # Fetch new token
+        # Fetch new token — m3ter requires HTTP Basic auth for client credentials
         auth_url = f"{self.api_url}/oauth/token"
+        credentials = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode()
         client = self._get_client()
         resp = await client.post(
             auth_url,
-            data={
-                "grant_type": "client_credentials",
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
+            data={"grant_type": "client_credentials"},
+            headers={
+                "Authorization": f"Basic {credentials}",
+                "Content-Type": "application/x-www-form-urlencoded",
             },
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         resp.raise_for_status()
         token = resp.json()["access_token"]
