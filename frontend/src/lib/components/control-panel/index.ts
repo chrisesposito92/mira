@@ -7,3 +7,4 @@ export { default as CreateObjectDialog } from './CreateObjectDialog.svelte';
 export { default as PushProgressPanel } from './PushProgressPanel.svelte';
 export { default as PushConfirmDialog } from './PushConfirmDialog.svelte';
 export { default as WorkflowDrawer } from './WorkflowDrawer.svelte';
+export { default as WorkflowLauncherDropdown } from './WorkflowLauncherDropdown.svelte';
