@@ -158,9 +158,10 @@
 	}
 
 	function handleWsClose() {
-		// Only show error if we're still in progress and haven't received results
-		if (step === 'progress' && !errorMessage) {
+		// Show error if WS drops during progress or clarification (not after results)
+		if ((step === 'progress' || step === 'clarification') && !errorMessage) {
 			errorMessage = 'Connection lost. Please try again.';
+			step = 'progress';
 		}
 	}
 

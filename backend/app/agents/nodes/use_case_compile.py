@@ -34,7 +34,21 @@ async def compile_use_cases(state: UseCaseGenState) -> dict:
         for i, answer in enumerate(clarification_answers):
             q = questions[i]["question"] if i < len(questions) else f"Question {i + 1}"
             if isinstance(answer, dict):
-                a = answer.get("selected", answer.get("label", str(answer)))
+                # Frontend sends {selected_option: <index>, free_text?: <str>}
+                # Resolve the index to the option label from the question
+                selected_idx = answer.get("selected_option")
+                free_text = answer.get("free_text", "")
+                if selected_idx is not None and i < len(questions):
+                    opts = questions[i].get("options", [])
+                    if 0 <= selected_idx < len(opts):
+                        a = opts[selected_idx].get("label", str(selected_idx))
+                    else:
+                        a = str(selected_idx)
+                elif free_text:
+                    a = free_text
+                else:
+                    # Fallback for unexpected dict shapes
+                    a = answer.get("selected", answer.get("label", str(answer)))
             else:
                 a = str(answer)
             parts.append(f"Q: {q}\nA: {a}")

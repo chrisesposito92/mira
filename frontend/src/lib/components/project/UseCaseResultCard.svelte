@@ -22,7 +22,18 @@
 	);
 </script>
 
-<button type="button" class="w-full text-left" onclick={onToggle}>
+<div
+	class="w-full cursor-pointer text-left"
+	role="button"
+	tabindex="0"
+	onclick={onToggle}
+	onkeydown={(e) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			onToggle();
+		}
+	}}
+>
 	<Card.Root class={cn('transition-all', selected ? 'ring-primary ring-2' : 'hover:shadow-md')}>
 		<Card.Header>
 			<div class="flex items-start justify-between gap-2">
@@ -78,4 +89,4 @@
 			</div>
 		</Card.Content>
 	</Card.Root>
-</button>
+</div>
