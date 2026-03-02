@@ -33,7 +33,7 @@ def unregister_listener(project_id: str, ws: WebSocket) -> None:
 
 async def notify_listeners(project_id: str, message: dict) -> None:
     """Send a JSON message to all WebSocket listeners for a project."""
-    listeners = _listeners.get(project_id, [])
+    listeners = list(_listeners.get(project_id, []))
     stale: list[WebSocket] = []
     for ws in listeners:
         try:

@@ -29,11 +29,15 @@
 	let selectedConnectionId = $state('');
 	let updatingConnection = $state(false);
 	let deleteOpen = $state(false);
+	let initialized = false;
 
 	$effect(() => {
 		projectStore.currentProject = data.project;
 		projectStore.useCases = data.useCases;
-		projectStore.documents = data.documents;
+		if (!initialized) {
+			initialized = true;
+			projectStore.documents = data.documents;
+		}
 		if (!updatingConnection) {
 			selectedConnectionId = data.project.org_connection_id ?? '';
 		}

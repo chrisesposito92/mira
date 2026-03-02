@@ -35,6 +35,7 @@ export const load: PageLoad = async ({ parent, params, depends }) => {
 
 	return {
 		project,
+		session,
 		useCases: useCases.status === 'fulfilled' ? useCases.value : [],
 		documents: documents.status === 'fulfilled' ? documents.value : [],
 		connections: connections.status === 'fulfilled' ? connections.value : [],

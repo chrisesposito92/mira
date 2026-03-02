@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+import asyncpg
 from supabase import Client
 
 from app.rag.ingestion import ingest_document
@@ -43,7 +44,7 @@ EXTRACTORS = {
 
 
 async def process_document(
-    pool,
+    pool: asyncpg.Pool,
     supabase: Client,
     document_id: UUID,
     file_path: Path,
@@ -58,7 +59,7 @@ async def process_document(
 
     When ``on_progress`` is provided, it is called at each stage with
     ``(stage, detail)`` so callers can stream real-time updates.
-    The stages are: "extracting", "chunking", "embedding", "storing".
+    The stages are: "chunking", "embedding", "storing".
     """
     # Update status to processing
     supabase.table("documents").update({"processing_status": "processing"}).eq(
