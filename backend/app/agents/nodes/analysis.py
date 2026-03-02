@@ -9,6 +9,7 @@ from app.agents.llm_factory import get_llm
 from app.agents.prompts.product_meter import ANALYSIS_PROMPT
 from app.agents.state import WorkflowState
 from app.agents.tools.rag_tool import rag_retrieve
+from app.agents.utils import extract_llm_text
 from app.db.client import get_supabase_client
 
 logger = logging.getLogger(__name__)
@@ -68,12 +69,13 @@ async def analyze_use_case(state: WorkflowState) -> dict:
     )
 
     # Parse LLM response
+    content = extract_llm_text(response.content)
     try:
-        parsed = json.loads(response.content)
-        analysis = parsed.get("analysis", response.content)
+        parsed = json.loads(content)
+        analysis = parsed.get("analysis", content)
         needs_clarification = parsed.get("needs_clarification", False)
     except (json.JSONDecodeError, TypeError):
-        analysis = response.content if isinstance(response.content, str) else str(response.content)
+        analysis = content
         needs_clarification = False
 
     return {

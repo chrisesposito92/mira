@@ -1,0 +1,2 @@
+ALTER TABLE projects ALTER COLUMN description DROP NOT NULL;
+ALTER TABLE projects ALTER COLUMN description DROP DEFAULT;

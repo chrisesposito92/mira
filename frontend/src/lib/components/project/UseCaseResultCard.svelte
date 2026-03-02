@@ -53,7 +53,7 @@
 			</div>
 			{#if useCase.description}
 				<Card.Description
-					class={cn(!expanded && 'line-clamp-3', 'cursor-text')}
+					class={cn(!expanded && 'line-clamp-3', 'cursor-text break-words')}
 					onclick={(e: MouseEvent) => {
 						e.stopPropagation();
 						expanded = !expanded;

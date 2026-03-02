@@ -9,6 +9,7 @@ from langgraph.types import interrupt
 from app.agents.llm_factory import get_llm
 from app.agents.prompts.use_case_gen import CLARIFICATION_PROMPT
 from app.agents.state import UseCaseGenState
+from app.agents.utils import extract_llm_text
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,7 @@ async def ask_clarification(state: UseCaseGenState) -> dict:
         )
 
         try:
-            content = (
-                response.content if isinstance(response.content, str) else str(response.content)
-            )
+            content = extract_llm_text(response.content)
             questions = json.loads(content)
             if not isinstance(questions, list):
                 questions = [questions]
