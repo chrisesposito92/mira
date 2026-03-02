@@ -3,8 +3,8 @@
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import jwt
 import pytest
-from jose import jwt
 
 from app.auth.jwt import AuthError, verify_token
 
@@ -66,6 +66,37 @@ class TestVerifyToken:
     def test_garbage_token(self):
         with pytest.raises(AuthError, match="Invalid token"):
             verify_token("not.a.jwt")
+
+    def test_es256_token(self, monkeypatch):
+        """Test ES256 token verification via JWKS."""
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        # Generate an EC key pair for testing
+        private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
+        public_key = private_key.public_key()
+
+        user_id = str(uuid4())
+        payload = {
+            "sub": user_id,
+            "aud": "authenticated",
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+        }
+        token = jwt.encode(payload, private_key, algorithm="ES256")
+
+        # Mock the JWKS client to return our test public key
+        class MockSigningKey:
+            def __init__(self, key):
+                self.key = key
+
+        class MockJWKSClient:
+            def get_signing_key_from_jwt(self, token):
+                return MockSigningKey(public_key)
+
+        monkeypatch.setattr("app.auth.jwt._get_jwks_client", lambda: MockJWKSClient())
+
+        result = verify_token(token)
+        assert result["sub"] == user_id
 
 
 class TestAuthEndpoint:

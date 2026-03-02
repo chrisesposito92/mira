@@ -28,18 +28,26 @@
 		return createOrgConnectionService(client);
 	}
 
-	async function handleCreate(formData: OrgConnectionCreate) {
+	async function handleCreate(formData: OrgConnectionCreate): Promise<boolean> {
 		const service = getService();
 		const conn = await orgConnectionStore.createConnection(service, formData);
-		if (conn) toast.success('Connection added');
-		else toast.error(orgConnectionStore.error ?? 'Failed to add connection');
+		if (conn) {
+			toast.success('Connection added');
+			return true;
+		}
+		toast.error(orgConnectionStore.error ?? 'Failed to add connection');
+		return false;
 	}
 
-	async function handleUpdate(id: string, formData: OrgConnectionUpdate) {
+	async function handleUpdate(id: string, formData: OrgConnectionUpdate): Promise<boolean> {
 		const service = getService();
 		const conn = await orgConnectionStore.updateConnection(service, id, formData);
-		if (conn) toast.success('Connection updated');
-		else toast.error(orgConnectionStore.error ?? 'Failed to update');
+		if (conn) {
+			toast.success('Connection updated');
+			return true;
+		}
+		toast.error(orgConnectionStore.error ?? 'Failed to update');
+		return false;
 	}
 
 	async function handleDelete(id: string) {

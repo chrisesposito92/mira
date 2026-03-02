@@ -143,7 +143,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 - **HITL**: LangGraph `interrupt()` → WebSocket sends to frontend → user approves/edits/rejects → `Command(resume=decision)`
 - **Entity push order**: Product → Meter → Aggregation → PlanTemplate → Plan → Pricing → Account → AccountPlan (Config API). Measurements are submitted separately via the Ingest API. (CompoundAggregation is excluded from push — no mapper or schema support.)
-- **m3ter auth**: OAuth2 client credentials per org, tokens cached 4h50m (10min buffer on 5hr m3ter token)
+- **m3ter auth**: OAuth2 client credentials per org (HTTP Basic auth), tokens cached 4h50m (10min buffer on 5hr m3ter token)
 - **RAG**: Two-source retrieval (m3ter docs + user docs), pgvector cosine similarity
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
@@ -177,7 +177,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 ### m3ter Push & Sync
 
-- **M3terClient**: Enhanced OAuth2 client (`m3ter/client.py`) — class-level token cache with 4h50m TTL, lazy-init persistent httpx client, retry logic (3 attempts, backoff [1, 2, 5]s, retryable: 429/500/502/503/504), per-entity create methods for all 9 entity types, Config API + Ingest API support.
+- **M3terClient**: Enhanced OAuth2 client (`m3ter/client.py`) — HTTP Basic auth for token endpoint, class-level token cache with 4h50m TTL, lazy-init persistent httpx client, retry logic (3 attempts, backoff [1, 2, 5]s, retryable: 429/500/502/503/504), per-entity create methods for all 9 entity types, Config API + Ingest API support.
 - **Payload mapper**: Allowlist-based (`m3ter/mapper.py`) — per-entity-type field sets derived from `m3ter_schema.py`, strips internal fields (`id`, `index`), removes None values.
 - **Reference resolver**: `ReferenceResolver` class (`m3ter/entities.py`) — maps MIRA UUIDs to m3ter UUIDs incrementally as entities push, pre-loads from already-pushed objects, raises `ReferenceResolutionError` on missing references.
 - **Push engine**: `push_entities_ordered()` (`m3ter/entities.py`) — sorts by canonical PUSH_ORDER (product → meter → aggregation → plan_template → plan → pricing → account → account_plan), resolves references, maps payloads, pushes to m3ter, updates DB, stops chain on first failure. Supports async `on_progress` callback for real-time WebSocket streaming.
