@@ -55,6 +55,8 @@ def verify_token(token: str) -> dict:
         raise AuthError(f"Invalid token: {e}") from e
     except pyjwt.InvalidTokenError as e:
         raise AuthError(f"Invalid token: {e}") from e
+    except pyjwt.PyJWKClientError as e:
+        raise AuthError(f"Invalid token: {e}") from e
 
     if "sub" not in payload:
         raise AuthError("Token missing 'sub' claim")

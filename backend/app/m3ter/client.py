@@ -77,9 +77,7 @@ class M3terClient:
 
         # Fetch new token — m3ter requires HTTP Basic auth for client credentials
         auth_url = f"{self.api_url}/oauth/token"
-        credentials = base64.b64encode(
-            f"{self.client_id}:{self.client_secret}".encode()
-        ).decode()
+        credentials = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
         client = self._get_client()
         resp = await client.post(
             auth_url,
