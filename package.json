@@ -12,6 +12,18 @@
     "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && ruff check .",
     "format:backend": "cd backend && ruff format .",
-    "migrate": "cd backend && bash scripts/run_migrations.sh"
+    "migrate": "cd backend && bash scripts/run_migrations.sh",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "frontend/**/*.{js,ts,svelte,css,html,json,md}": "prettier --write --config frontend/.prettierrc",
+    "backend/**/*.py": "ruff format"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.1",
+    "prettier": "^3.8.1",
+    "prettier-plugin-svelte": "^3.5.0",
+    "prettier-plugin-tailwindcss": "^0.7.2"
   }
 }
