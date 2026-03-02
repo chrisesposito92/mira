@@ -183,6 +183,11 @@
 	}
 
 	async function handleStartWorkflow(modelId: string, workflowType: WorkflowType) {
+		// Guard: if a workflow is already active, reopen the drawer instead of orphaning it
+		if (workflowStore.isRunning || workflowStore.isInterrupted) {
+			drawerOpen = true;
+			return;
+		}
 		if (!data.session?.access_token) {
 			toast.error('Not authenticated');
 			return;
