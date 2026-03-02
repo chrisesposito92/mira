@@ -57,6 +57,10 @@ export type {
 	PushStatusResponse,
 } from './push.js';
 
+export type { DocProcessingStage, DocWsMessage, DocumentUploadProgress } from './document.js';
+
+export { DOC_PROCESSING_STAGES } from './document.js';
+
 export type {
 	LlmModel,
 	Workflow,

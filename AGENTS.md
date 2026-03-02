@@ -102,7 +102,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `lib/components/ui/` | shadcn-svelte base components |
 | `lib/components/chat/` | Chat UI (ChatContainer, EntityCard, ClarificationCard, WorkflowLauncher, etc.) |
 | `lib/components/control-panel/` | ObjectTree, ObjectTreeNode, ObjectEditor, JsonEditor (CodeMirror 6), BulkActions, PushProgressPanel, PushConfirmDialog |
-| `lib/components/project/` | Project/use case cards |
+| `lib/components/project/` | Project/use case cards, FileUpload (drag-drop + progress), UploadProgressBar |
 | `lib/components/layout/` | Sidebar, header, breadcrumbs |
 | `lib/stores/` | Svelte 5 runes ($state-based) |
 | `lib/services/` | API client layer |
@@ -181,6 +181,15 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Push WebSocket**: `ws://host/ws/push/{use_case_id}?token={token}` — real-time per-entity progress streaming. Client sends `start_push`, server streams `push_started` → `push_progress` (per entity) → `push_complete`.
 - **Frontend push flow**: ObjectEditor "Push to m3ter" button (single push via REST) → BulkActions "Push Selected" button → PushConfirmDialog (AlertDialog with entity breakdown + dependency warning) → PushWebSocketClient (lightweight, no reconnect) → PushProgressPanel (progress bar, per-entity status icons, dismiss on complete).
 - **ObjectsStore push state**: `pushSession` (active session tracking), `pushing` flag, `pushableSelectedIds` derived, `handlePushMessage()` updates both session and objects array from WS messages.
+
+### Document Processing WebSocket
+
+- **Async processing**: `upload_document()` returns immediately with "pending" status, fires `asyncio.create_task()` for background extraction/chunking/embedding.
+- **Processing registry**: Module-level `document_processing_registry.py` bridges REST uploads to WebSocket observers. `_listeners` (project_id → [WebSocket]).
+- **Document WebSocket**: `ws://host/ws/documents/{project_id}?token={token}` — passive observer, no client-to-server messages. Server streams `doc_processing_started` → `doc_processing_progress` (per stage) → `doc_processing_complete`.
+- **Processing stages**: `extracting` → `chunking` → `embedding` (with chunk count detail) → `storing`. Progress callback (`on_progress`) in `process_document()` is forwarded to `ingest_document()` which calls it at each stage.
+- **Frontend upload flow**: FileUpload drop zone → XHR upload with progress (`uploadWithProgress()`) → DocWebSocketClient (passive, lightweight) → UploadProgressBar (two-phase: upload % → stage indicators). ProjectStore manages `uploadProgress` state and WS message handling.
+- **XHR for upload progress**: `DocumentService.uploadWithProgress()` uses XMLHttpRequest (not Fetch) for `upload.onprogress` events. `ApiClient.baseUrl` and `getAuthHeaders()` exposed as public.
 
 ### Frontend Auth (Supabase SSR)
 

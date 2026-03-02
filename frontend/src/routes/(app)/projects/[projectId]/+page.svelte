@@ -29,11 +29,15 @@
 	let selectedConnectionId = $state('');
 	let updatingConnection = $state(false);
 	let deleteOpen = $state(false);
+	let initialized = false;
 
 	$effect(() => {
 		projectStore.currentProject = data.project;
 		projectStore.useCases = data.useCases;
-		projectStore.documents = data.documents;
+		if (!initialized) {
+			initialized = true;
+			projectStore.documents = data.documents;
+		}
 		if (!updatingConnection) {
 			selectedConnectionId = data.project.org_connection_id ?? '';
 		}
@@ -42,6 +46,7 @@
 			projectStore.currentProject = null;
 			projectStore.useCases = [];
 			projectStore.documents = [];
+			projectStore.disconnectDocProcessing();
 		};
 	});
 
@@ -68,11 +73,17 @@
 		uploading = true;
 		try {
 			const { documentService } = getServices();
-			const doc = await projectStore.uploadDocument(documentService, data.project.id, file);
+			const token = data.session!.access_token;
+			const doc = await projectStore.uploadDocumentWithProgress(
+				documentService,
+				data.project.id,
+				file,
+				token,
+			);
 			if (doc) {
 				toast.success(`Uploaded ${file.name}`);
-			} else {
-				toast.error(projectStore.error ?? 'Failed to upload');
+			} else if (projectStore.error) {
+				toast.error(projectStore.error);
 			}
 		} finally {
 			uploading = false;
@@ -182,6 +193,7 @@
 			<FileUpload
 				documents={projectStore.documents}
 				{uploading}
+				uploadProgress={projectStore.uploadProgress}
 				onupload={handleUpload}
 				ondelete={handleDeleteDocument}
 			/>

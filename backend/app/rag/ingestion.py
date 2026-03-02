@@ -2,6 +2,8 @@
 
 import json
 import logging
+from collections.abc import Callable
+from typing import Any
 from uuid import UUID
 
 import asyncpg
@@ -21,11 +23,19 @@ async def ingest_document(
     source_id: UUID | None = None,
     chunk_size: int = 4000,
     chunk_overlap: int = 200,
+    on_progress: Callable[[str, str | None], Any] | None = None,
 ) -> int:
     """Chunk text, generate embeddings, and store in pgvector.
 
     Returns the number of chunks stored. Runs as an atomic transaction.
+
+    When ``on_progress`` is provided, it is called at each stage with
+    ``(stage, detail)`` for real-time progress reporting.
+    Stages: "chunking", "embedding", "storing".
     """
+    if on_progress:
+        await on_progress("chunking", None)
+
     chunks = chunk_text(
         content, metadata=metadata, chunk_size=chunk_size, chunk_overlap=chunk_overlap
     )
@@ -33,7 +43,14 @@ async def ingest_document(
         return 0
 
     texts = [c.content for c in chunks]
+
+    if on_progress:
+        await on_progress("embedding", f"{len(chunks)} chunks")
+
     embeddings = await embed_texts(texts)
+
+    if on_progress:
+        await on_progress("storing", None)
 
     async with pool.acquire() as conn:
         async with conn.transaction():

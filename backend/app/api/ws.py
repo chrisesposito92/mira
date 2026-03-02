@@ -1,5 +1,6 @@
-"""WebSocket endpoints for real-time workflow streaming and push progress."""
+"""WebSocket endpoints for real-time workflow streaming, push progress, and document processing."""
 
+import asyncio
 import json
 import logging
 from datetime import UTC, datetime
@@ -14,6 +15,7 @@ from app.auth.jwt import verify_token
 from app.db.client import get_supabase_client
 from app.schemas.common import MessageRole, WorkflowStatus, WorkflowType
 from app.services.chat_message_service import save_message_internal
+from app.services.document_processing_registry import register_listener, unregister_listener
 from app.services.workflow_service import get_graph
 
 logger = logging.getLogger(__name__)
@@ -431,6 +433,69 @@ async def push_ws(websocket: WebSocket, use_case_id: str) -> None:
         except Exception:
             pass
     finally:
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+
+
+@router.websocket("/ws/documents/{project_id}")
+async def document_ws(websocket: WebSocket, project_id: str) -> None:
+    """WebSocket endpoint for real-time document processing progress.
+
+    Passive observer — no client-to-server messages expected.
+
+    Server → Client:
+        {type: "doc_processing_started",  document_id, filename, stage}
+        {type: "doc_processing_progress", document_id, stage, detail?}
+        {type: "doc_processing_complete", document_id, chunk_count}
+        {type: "doc_processing_error",    document_id, error}
+    """
+    user_id = await _authenticate_ws(websocket)
+    if not user_id:
+        await websocket.accept()
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
+
+    await websocket.accept()
+
+    # Verify project ownership
+    supabase = get_supabase_client()
+    project_result = supabase.table("projects").select("id, user_id").eq("id", project_id).execute()
+    if not project_result.data:
+        await websocket.send_json({"type": "error", "message": "Project not found"})
+        await websocket.close()
+        return
+
+    project_owner = project_result.data[0].get("user_id")
+    if project_owner != str(user_id):
+        await websocket.send_json({"type": "error", "message": "Project not found"})
+        await websocket.close()
+        return
+
+    register_listener(project_id, websocket)
+
+    try:
+        while True:
+            try:
+                # Keep alive — wait for client messages or detect disconnect.
+                # We use wait_for with a timeout to periodically send pings,
+                # which detects stale connections.
+                await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+            except TimeoutError:
+                # Send a ping to keep the connection alive and detect staleness
+                try:
+                    await websocket.send_json({"type": "ping"})
+                except Exception:
+                    break
+            except WebSocketDisconnect:
+                break
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        logger.exception("Document WebSocket error for project %s", project_id)
+    finally:
+        unregister_listener(project_id, websocket)
         try:
             await websocket.close()
         except Exception:

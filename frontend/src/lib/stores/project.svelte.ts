@@ -6,10 +6,13 @@ import type {
 	UseCaseCreate,
 	UseCaseUpdate,
 	Document,
+	DocumentUploadProgress,
+	DocWsMessage,
 } from '$lib/types';
 import type { ProjectService } from '$lib/services/projects.js';
 import type { UseCaseService } from '$lib/services/use-cases.js';
 import type { DocumentService } from '$lib/services/documents.js';
+import { DocWebSocketClient } from '$lib/services/doc-websocket.js';
 
 class ProjectStore {
 	projects = $state<Project[]>([]);
@@ -18,6 +21,10 @@ class ProjectStore {
 	documents = $state<Document[]>([]);
 	loading = $state(false);
 	error = $state<string | null>(null);
+	uploadProgress = $state<DocumentUploadProgress | null>(null);
+
+	private _docWs: DocWebSocketClient | null = null;
+	private _progressClearTimer: ReturnType<typeof setTimeout> | null = null;
 
 	sortedProjects = $derived(
 		[...this.projects].sort(
@@ -181,7 +188,157 @@ class ProjectStore {
 		}
 	}
 
+	async uploadDocumentWithProgress(
+		service: DocumentService,
+		projectId: string,
+		file: File,
+		token: string,
+	) {
+		this.error = null;
+		this.uploadProgress = {
+			documentId: null,
+			filename: file.name,
+			phase: 'uploading',
+			uploadPercent: 0,
+			processingStage: null,
+			chunkCount: null,
+			error: null,
+		};
+
+		// Connect WS lazily on first upload
+		if (!this._docWs) {
+			this._docWs = new DocWebSocketClient(
+				(msg) => this.handleDocWsMessage(msg),
+				() => {
+					this._docWs = null;
+					if (this.uploadProgress?.phase === 'processing') {
+						this.uploadProgress = {
+							...this.uploadProgress,
+							phase: 'error',
+							error: 'Lost connection during processing',
+						};
+					}
+				},
+			);
+			this._docWs.connect(projectId, token);
+		}
+
+		try {
+			const doc = await service.uploadWithProgress(projectId, file, (percent) => {
+				if (this.uploadProgress) {
+					this.uploadProgress = { ...this.uploadProgress, uploadPercent: percent };
+				}
+			});
+
+			// Add doc to list and transition to processing phase
+			this.documents = [...this.documents, doc];
+			if (this.uploadProgress) {
+				this.uploadProgress = {
+					...this.uploadProgress,
+					documentId: doc.id,
+					phase: 'processing',
+					uploadPercent: 100,
+					processingStage: 'extracting',
+				};
+			}
+
+			return doc;
+		} catch (e) {
+			if (this.uploadProgress) {
+				this.uploadProgress = {
+					...this.uploadProgress,
+					phase: 'error',
+					error: e instanceof Error ? e.message : 'Upload failed',
+				};
+			}
+			this.error = e instanceof Error ? e.message : 'Failed to upload document';
+			return null;
+		}
+	}
+
+	handleDocWsMessage(msg: DocWsMessage) {
+		switch (msg.type) {
+			case 'doc_processing_started':
+				if (this.uploadProgress?.documentId === msg.document_id) {
+					this.uploadProgress = {
+						...this.uploadProgress,
+						phase: 'processing',
+						processingStage: msg.stage,
+					};
+				}
+				break;
+
+			case 'doc_processing_progress':
+				if (this.uploadProgress?.documentId === msg.document_id) {
+					this.uploadProgress = {
+						...this.uploadProgress,
+						processingStage: msg.stage,
+					};
+				}
+				// Update document status in list
+				this.documents = this.documents.map((d) =>
+					d.id === msg.document_id ? { ...d, processing_status: 'processing' as const } : d,
+				);
+				break;
+
+			case 'doc_processing_complete':
+				if (this.uploadProgress?.documentId === msg.document_id) {
+					this.uploadProgress = {
+						...this.uploadProgress,
+						phase: 'complete',
+						chunkCount: msg.chunk_count,
+					};
+					// Auto-clear progress after a delay
+					this._clearProgressTimer();
+					this._progressClearTimer = setTimeout(() => {
+						this.uploadProgress = null;
+						this._progressClearTimer = null;
+					}, 3000);
+				}
+				// Update document in list
+				this.documents = this.documents.map((d) =>
+					d.id === msg.document_id
+						? { ...d, processing_status: 'ready' as const, chunk_count: msg.chunk_count }
+						: d,
+				);
+				break;
+
+			case 'doc_processing_error':
+				if (this.uploadProgress?.documentId === msg.document_id) {
+					this.uploadProgress = {
+						...this.uploadProgress,
+						phase: 'error',
+						error: msg.error,
+					};
+				}
+				// Update document in list
+				this.documents = this.documents.map((d) =>
+					d.id === msg.document_id
+						? { ...d, processing_status: 'failed' as const, error_message: msg.error }
+						: d,
+				);
+				break;
+		}
+	}
+
+	private _clearProgressTimer() {
+		if (this._progressClearTimer) {
+			clearTimeout(this._progressClearTimer);
+			this._progressClearTimer = null;
+		}
+	}
+
+	disconnectDocProcessing() {
+		this._clearProgressTimer();
+		if (this._docWs) {
+			this._docWs.disconnect();
+			this._docWs = null;
+		}
+		this.uploadProgress = null;
+	}
+
 	clear() {
+		this.disconnectDocProcessing();
 		this.projects = [];
 		this.currentProject = null;
 		this.useCases = [];
