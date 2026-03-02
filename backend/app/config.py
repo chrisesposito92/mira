@@ -1,3 +1,5 @@
+import os as _os
+
 from pydantic_settings import BaseSettings
 
 
@@ -26,6 +28,12 @@ class Settings(BaseSettings):
     # Tavily (web search for use case generator)
     tavily_api_key: str = ""
 
+    # LangSmith (optional — tracing enabled when LANGSMITH_TRACING=true)
+    langsmith_tracing: str = ""
+    langsmith_endpoint: str = "https://api.smith.langchain.com"
+    langsmith_api_key: str = ""
+    langsmith_project: str = "mira"
+
     # Encryption key for m3ter credentials
     encryption_key: str = ""
 
@@ -48,3 +56,14 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Export LangSmith env vars so the SDK picks them up
+# (pydantic-settings env_file loading does NOT set os.environ)
+if settings.langsmith_tracing:
+    _os.environ.setdefault("LANGSMITH_TRACING", settings.langsmith_tracing)
+if settings.langsmith_endpoint:
+    _os.environ.setdefault("LANGSMITH_ENDPOINT", settings.langsmith_endpoint)
+if settings.langsmith_api_key:
+    _os.environ.setdefault("LANGSMITH_API_KEY", settings.langsmith_api_key)
+if settings.langsmith_project:
+    _os.environ.setdefault("LANGSMITH_PROJECT", settings.langsmith_project)

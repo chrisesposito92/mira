@@ -230,7 +230,18 @@ async def start_workflow(
             "user_id": str(user_id),
             "thread_id": thread_id,
         }
-        config = {"configurable": {"thread_id": thread_id}}
+        config = {
+            "configurable": {"thread_id": thread_id},
+            "run_name": f"mira-{workflow_type}",
+            "metadata": {
+                "workflow_id": workflow_id,
+                "workflow_type": workflow_type,
+                "use_case_id": str(use_case_id),
+                "model_id": model_id,
+                "source": "rest",
+            },
+            "tags": ["mira", workflow_type, "start"],
+        }
 
         return await _invoke_and_handle(graph, config, initial_state, supabase, workflow_id)
     except Exception as exc:
@@ -255,12 +266,23 @@ async def resume_workflow(
         raise HTTPException(status_code=400, detail="Workflow is not in interrupted state")
 
     thread_id = workflow["thread_id"]
-    config = {"configurable": {"thread_id": thread_id}}
     wf_id = str(workflow_id)
+    wf_type = workflow.get("workflow_type", WorkflowType.product_meter_aggregation)
+
+    config = {
+        "configurable": {"thread_id": thread_id},
+        "run_name": f"mira-{wf_type}",
+        "metadata": {
+            "workflow_id": wf_id,
+            "workflow_type": wf_type,
+            "use_case_id": workflow.get("use_case_id", ""),
+            "source": "rest",
+        },
+        "tags": ["mira", wf_type, "resume"],
+    }
 
     _update_workflow(supabase, wf_id, {"status": WorkflowStatus.running})
 
-    wf_type = workflow.get("workflow_type", WorkflowType.product_meter_aggregation)
     graph = await get_graph(wf_type)
     return await _invoke_and_handle(graph, config, Command(resume=decisions), supabase, wf_id)
 

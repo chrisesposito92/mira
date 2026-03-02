@@ -29,6 +29,7 @@ dependencies = [
     "pypdf>=5.0.0",
     "websockets>=14.0",
     "langchain-tavily>=0.1.0",
+    "langsmith>=0.3.0",
 ]
 
 [project.optional-dependencies]

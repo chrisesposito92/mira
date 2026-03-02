@@ -150,6 +150,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
 - **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing, account, account_plan, measurement. Cross-entity referential integrity checks in `validation/cross_entity.py` (AccountPlan→Account/Plan, Measurement→Meter/Account).
 - **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation, plan_pricing, account_setup, usage_submission). Prerequisite chain: WF1 → WF2 → WF3 → WF4. Frontend WorkflowLauncher gates each workflow on predecessor completion.
+- **LangSmith tracing**: Set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` to enable automatic tracing of all LangGraph/LangChain calls. Graph invocation configs include `run_name`, `metadata` (workflow_id, workflow_type, source), and `tags` for filtering in the LangSmith dashboard. No code changes needed to toggle — purely env-var driven.
 
 ### Frontend Chat Interface
 
@@ -226,7 +227,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 ## Environment Variables
 
 ### Backend (`backend/.env`)
-`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `ENCRYPTION_KEY`, `TAVILY_API_KEY`
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `ENCRYPTION_KEY`, `TAVILY_API_KEY`, `LANGSMITH_TRACING` (optional), `LANGSMITH_API_KEY` (optional), `LANGSMITH_PROJECT` (optional, defaults to `mira`)
 
 ### Frontend (`frontend/.env`)
 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, `PUBLIC_API_URL`, `PUBLIC_WS_URL`
