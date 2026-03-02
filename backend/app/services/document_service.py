@@ -1,5 +1,6 @@
 """Service layer for documents CRUD."""
 
+import asyncio
 import logging
 from pathlib import Path, PurePosixPath
 from uuid import UUID
@@ -10,6 +11,7 @@ from supabase import Client
 from app.config import settings
 from app.db.client import get_db_pool
 from app.rag.ingestion import delete_by_source_id
+from app.services.document_processing_registry import notify_listeners
 from app.services.document_processor import process_document
 from app.services.project_service import get_project
 
@@ -68,27 +70,75 @@ async def upload_document(
     # Update storage_path now that file is written
     supabase.table("documents").update({"storage_path": str(file_path)}).eq("id", doc_id).execute()
 
-    # Process document (extract text, chunk, embed)
-    try:
-        pool = await get_db_pool()
-        await process_document(
-            pool=pool,
-            supabase=supabase,
-            document_id=UUID(doc_id),
-            file_path=file_path,
-            file_type=ext,
-            project_id=project_id,
-        )
-    except Exception:
-        logger.exception("Document processing failed for %s", doc_id)
-        # Ensure status reflects the failure
-        supabase.table("documents").update(
-            {"processing_status": "failed", "error_message": "Processing setup failed"}
-        ).eq("id", doc_id).execute()
+    # Fire-and-forget: process document in background, stream progress via WebSocket
+    pid = str(project_id)
+    did = doc_id
 
-    # Re-fetch to get updated status
-    refreshed = supabase.table("documents").select("*").eq("id", doc_id).execute()
-    return refreshed.data[0] if refreshed.data else doc
+    async def _process_and_notify() -> None:
+        try:
+            await notify_listeners(
+                pid,
+                {
+                    "type": "doc_processing_started",
+                    "document_id": did,
+                    "filename": safe_filename,
+                    "stage": "extracting",
+                },
+            )
+
+            async def _on_progress(stage: str, detail: str | None) -> None:
+                msg: dict = {
+                    "type": "doc_processing_progress",
+                    "document_id": did,
+                    "stage": stage,
+                }
+                if detail is not None:
+                    msg["detail"] = detail
+                await notify_listeners(pid, msg)
+
+            pool = await get_db_pool()
+            chunk_count = await process_document(
+                pool=pool,
+                supabase=supabase,
+                document_id=UUID(did),
+                file_path=file_path,
+                file_type=ext,
+                project_id=project_id,
+                on_progress=_on_progress,
+            )
+
+            await notify_listeners(
+                pid,
+                {
+                    "type": "doc_processing_complete",
+                    "document_id": did,
+                    "chunk_count": chunk_count,
+                },
+            )
+        except Exception as exc:
+            logger.exception("Document processing failed for %s", did)
+            # Ensure status reflects the failure (process_document already sets it,
+            # but guard against errors before that point)
+            try:
+                supabase.table("documents").update(
+                    {"processing_status": "failed", "error_message": str(exc)}
+                ).eq("id", did).execute()
+            except Exception:
+                logger.exception("Failed to update error status for document %s", did)
+
+            await notify_listeners(
+                pid,
+                {
+                    "type": "doc_processing_error",
+                    "document_id": did,
+                    "error": str(exc),
+                },
+            )
+
+    asyncio.create_task(_process_and_notify())
+
+    # Return immediately with pending status
+    return doc
 
 
 def list_documents(supabase: Client, user_id: UUID, project_id: UUID) -> list[dict]:

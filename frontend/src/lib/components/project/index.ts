@@ -7,3 +7,4 @@ export { default as FileUpload } from './FileUpload.svelte';
 export { default as CreateProjectDialog } from './CreateProjectDialog.svelte';
 export { default as CreateUseCaseDialog } from './CreateUseCaseDialog.svelte';
 export { default as CreateOrgConnectionDialog } from './CreateOrgConnectionDialog.svelte';
+export { default as UploadProgressBar } from './UploadProgressBar.svelte';

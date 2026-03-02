@@ -12,12 +12,12 @@ export class ApiError extends Error {
 
 export class ApiClient {
 	constructor(
-		private baseUrl: string,
+		public readonly baseUrl: string,
 		private supabase: SupabaseClient,
 		private accessToken?: string,
 	) {}
 
-	private async headers(): Promise<Record<string, string>> {
+	async getAuthHeaders(): Promise<Record<string, string>> {
 		const headers: Record<string, string> = {};
 		let token = this.accessToken;
 		if (!token) {
@@ -36,7 +36,7 @@ export class ApiClient {
 	}
 
 	private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-		const authHeaders = await this.headers();
+		const authHeaders = await this.getAuthHeaders();
 		const res = await fetch(`${this.baseUrl}${path}`, {
 			...init,
 			headers: {
@@ -84,7 +84,7 @@ export class ApiClient {
 	}
 
 	async upload<T>(path: string, formData: FormData): Promise<T> {
-		const authHeaders = await this.headers();
+		const authHeaders = await this.getAuthHeaders();
 		const res = await fetch(`${this.baseUrl}${path}`, {
 			method: 'POST',
 			headers: authHeaders,

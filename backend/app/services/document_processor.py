@@ -1,10 +1,11 @@
 """Document text extraction and embedding pipeline."""
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
-import asyncpg
 from supabase import Client
 
 from app.rag.ingestion import ingest_document
@@ -42,17 +43,22 @@ EXTRACTORS = {
 
 
 async def process_document(
-    pool: asyncpg.Pool,
+    pool,
     supabase: Client,
     document_id: UUID,
     file_path: Path,
     file_type: str,
     project_id: UUID,
+    on_progress: Callable[[str, str | None], Any] | None = None,
 ) -> int:
     """Extract text, chunk, embed, and store in pgvector.
 
     Updates document status in Supabase throughout the process.
     Returns the number of chunks created.
+
+    When ``on_progress`` is provided, it is called at each stage with
+    ``(stage, detail)`` so callers can stream real-time updates.
+    The stages are: "extracting", "chunking", "embedding", "storing".
     """
     # Update status to processing
     supabase.table("documents").update({"processing_status": "processing"}).eq(
@@ -69,6 +75,7 @@ async def process_document(
             raise ValueError("No text content extracted from document")
 
         metadata = {"filename": file_path.name, "file_type": file_type}
+
         chunk_count = await ingest_document(
             pool,
             content=text,
@@ -76,6 +83,7 @@ async def process_document(
             metadata=metadata,
             project_id=project_id,
             source_id=document_id,
+            on_progress=on_progress,
         )
 
         # Update status to ready with chunk count
