@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import * as Select from '$lib/components/ui/select';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
@@ -8,6 +8,7 @@
 	import {
 		UseCaseCard,
 		CreateUseCaseDialog,
+		GenerateUseCasesDialog,
 		FileUpload,
 		EmptyState,
 	} from '$lib/components/project';
@@ -18,13 +19,14 @@
 		createUseCaseService,
 		createDocumentService,
 	} from '$lib/services';
-	import { Plus, FileText, Briefcase, Settings, Trash2 } from 'lucide-svelte';
+	import { Plus, FileText, Briefcase, Settings, Trash2, Wand2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import type { UseCaseCreate, OrgConnection } from '$lib/types';
 
 	let { data } = $props();
 
 	let createUcOpen = $state(false);
+	let generateOpen = $state(false);
 	let uploading = $state(false);
 	let selectedConnectionId = $state('');
 	let updatingConnection = $state(false);
@@ -165,10 +167,24 @@
 		<Tabs.Content value="use-cases" class="mt-4">
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-lg font-semibold">Use Cases</h2>
-				<Button size="sm" onclick={() => (createUcOpen = true)}>
-					<Plus class="mr-1 size-4" />
-					New Use Case
-				</Button>
+				<div class="flex gap-2">
+					<Button
+						size="sm"
+						variant="outline"
+						disabled={!data.project.customer_name}
+						title={!data.project.customer_name
+							? 'Set a customer name in project settings first'
+							: ''}
+						onclick={() => (generateOpen = true)}
+					>
+						<Wand2 class="mr-1 size-4" />
+						Generate
+					</Button>
+					<Button size="sm" onclick={() => (createUcOpen = true)}>
+						<Plus class="mr-1 size-4" />
+						New Use Case
+					</Button>
+				</div>
 			</div>
 			{#if projectStore.sortedUseCases.length === 0}
 				<EmptyState
@@ -237,6 +253,18 @@
 </div>
 
 <CreateUseCaseDialog bind:open={createUcOpen} oncreate={handleCreateUseCase} />
+
+{#if data.project.customer_name && data.session}
+	<GenerateUseCasesDialog
+		bind:open={generateOpen}
+		customerName={data.project.customer_name}
+		projectId={data.project.id}
+		token={data.session.access_token}
+		models={data.models}
+		supabase={data.supabase}
+		onSaved={() => invalidate('app:project')}
+	/>
+{/if}
 
 <AlertDialog.Root bind:open={deleteOpen}>
 	<AlertDialog.Content>

@@ -374,6 +374,22 @@ Real-time via WebSocket (one per workflow session). Event protocol includes: sta
 
 ---
 
+### Phase 13.5: Use Case Generator
+**What**: AI-powered use case generation from customer research — a hybrid LangGraph graph with Tavily web search, clarification questions, and a dedicated WebSocket endpoint
+**Depends on**: Phase 5, Phase 7
+**Deliverables**:
+- LangGraph graph (`graphs/use_case_gen.py`) with `UseCaseGenState` (separate from `WorkflowState`), using `MemorySaver` (not `AsyncPostgresSaver`)
+- Three nodes: `research_customer` (Tavily web search), `ask_clarification` (interrupt/resume), `compile_use_cases` (generate `UseCaseCreate`-compatible dicts)
+- Prompts: `prompts/use_case_gen.py` — research and compilation system prompts
+- Dedicated WebSocket endpoint: `ws://host/ws/generate/{project_id}` with protocol messages: `gen_status`, `gen_clarification`, `gen_use_cases`, `gen_error`
+- REST endpoint: `POST /api/projects/{project_id}/generate-use-cases/extract-text` for in-memory file text extraction (PDF/DOCX/TXT)
+- Frontend: `GenerateUseCasesDialog.svelte` — multi-step dialog (input → progress → clarification → results), `UseCaseResultCard.svelte` for result display
+- Frontend: `services/generator-websocket.ts` (WebSocket client), `types/generator.ts` (TypeScript types)
+**Tests**: Graph structure, node unit tests, WebSocket endpoint auth, file extraction
+**~9 files (6 new, 3 modified)**
+
+---
+
 ### Phase 14: Polish & Error Handling
 **What**: Loading states, empty states, error boundaries, keyboard shortcuts, accessibility
 **Depends on**: Phases 1-13

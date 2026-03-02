@@ -8,6 +8,7 @@ from app.api.generated_objects import router as generated_objects_router
 from app.api.m3ter_sync import router as m3ter_sync_router
 from app.api.org_connections import router as org_connections_router
 from app.api.projects import router as projects_router
+from app.api.use_case_generator import router as use_case_generator_router
 from app.api.use_cases import router as use_cases_router
 from app.api.workflows import router as workflows_router
 from app.api.ws import router as ws_router
@@ -21,4 +22,5 @@ api_router.include_router(generated_objects_router)
 api_router.include_router(m3ter_sync_router)
 api_router.include_router(workflows_router)
 api_router.include_router(chat_messages_router)
+api_router.include_router(use_case_generator_router)
 api_router.include_router(ws_router)

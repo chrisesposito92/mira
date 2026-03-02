@@ -5,6 +5,7 @@ import {
 	createUseCaseService,
 	createDocumentService,
 	createOrgConnectionService,
+	createWorkflowService,
 } from '$lib/services';
 import type { PageLoad } from './$types';
 
@@ -17,6 +18,7 @@ export const load: PageLoad = async ({ parent, params, depends }) => {
 	const useCaseService = createUseCaseService(client);
 	const documentService = createDocumentService(client);
 	const orgConnectionService = createOrgConnectionService(client);
+	const workflowService = createWorkflowService(client);
 
 	// Project is required — fail the page if it can't load
 	let project;
@@ -27,10 +29,11 @@ export const load: PageLoad = async ({ parent, params, depends }) => {
 	}
 
 	// Secondary data can fail gracefully
-	const [useCases, documents, connections] = await Promise.allSettled([
+	const [useCases, documents, connections, models] = await Promise.allSettled([
 		useCaseService.list(params.projectId),
 		documentService.list(params.projectId),
 		orgConnectionService.list(),
+		workflowService.listModels(),
 	]);
 
 	return {
@@ -39,5 +42,6 @@ export const load: PageLoad = async ({ parent, params, depends }) => {
 		useCases: useCases.status === 'fulfilled' ? useCases.value : [],
 		documents: documents.status === 'fulfilled' ? documents.value : [],
 		connections: connections.status === 'fulfilled' ? connections.value : [],
+		models: models.status === 'fulfilled' ? models.value : [],
 	};
 };

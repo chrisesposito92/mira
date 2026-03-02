@@ -150,6 +150,35 @@ START → analyze_meters → configure_usage (interrupt)
 → approve_submission (interrupt: preview) → submit_batches → report → END
 ```
 
+### Use Case Generator (Phase 13.5)
+
+A standalone LangGraph graph that researches a customer and generates use case suggestions. Unlike the main workflows (WF1-WF4) which use `AsyncPostgresSaver` for persistent checkpointing, the Use Case Generator uses `MemorySaver` (in-memory only) since sessions are short-lived and do not need to survive server restarts.
+
+**State**: `UseCaseGenState` TypedDict (separate from `WorkflowState`) — holds customer name, industry, file contents, research results, clarification Q&A, and compiled use cases.
+
+**Graph flow**:
+```
+START → research_customer (Tavily web search)
+→ should_clarify? (conditional edge)
+  → YES: ask_clarification (interrupt) → compile_use_cases → END
+  → NO: compile_use_cases → END
+```
+
+**Nodes**:
+- `research_customer` (`nodes/use_case_research.py`) — Uses Tavily web search API to find customer pricing/billing information, then summarizes findings via LLM
+- `ask_clarification` (`nodes/use_case_clarify.py`) — Generates 2-4 clarification questions with `interrupt()`, resumes with user answers via `Command(resume=answers)`
+- `compile_use_cases` (`nodes/use_case_compile.py`) — Compiles research + clarification answers into `UseCaseCreate`-compatible dicts (title, description, billing_frequency, currency, target_billing_model)
+
+**WebSocket protocol** (`ws://host/ws/generate/{project_id}`):
+- Client sends: `start_generation` (with customer_name, industry, model_id, file contents), `clarification_response` (answers)
+- Server sends: `gen_status` (step progress), `gen_clarification` (questions), `gen_use_cases` (results), `gen_error` (failures)
+
+**File text extraction**: `POST /api/projects/{project_id}/generate-use-cases/extract-text` accepts file uploads (PDF/DOCX/TXT), extracts text in-memory (no DB storage), returns plain text for inclusion in the generation context.
+
+**Frontend**: `GenerateUseCasesDialog.svelte` — multi-step dialog (input form → progress indicators → clarification cards → use case result cards with select + save).
+
+**Environment variable**: `TAVILY_API_KEY` required for web search functionality.
+
 ---
 
 ## m3ter Integration
@@ -166,4 +195,4 @@ START → analyze_meters → configure_usage (interrupt)
 
 See individual phase documents for detailed implementation plans.
 
-Phases 0-16 covering: scaffolding → DB schema → auth → API → dashboard → scraper/RAG → agent core → chat UI → plans/pricing → accounts/usage → control panel → m3ter sync → doc upload → polish → E2E tests → deployment.
+Phases 0-16 covering: scaffolding → DB schema → auth → API → dashboard → scraper/RAG → agent core → chat UI → plans/pricing → accounts/usage → control panel → m3ter sync → doc upload → use case generator → polish → E2E tests → deployment.

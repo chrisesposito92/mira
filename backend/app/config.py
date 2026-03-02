@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     google_api_key: str = ""
 
+    # Tavily (web search for use case generator)
+    tavily_api_key: str = ""
+
     # Encryption key for m3ter credentials
     encryption_key: str = ""
 

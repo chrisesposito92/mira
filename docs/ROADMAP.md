@@ -18,7 +18,8 @@ Phase 1 (Scaffold)
   │     │     │     └── Phase 12 (m3ter Sync) ← also needs Phase 11
   │     │     └── Phase 6 (Scraper + RAG)
   │     └── Phase 6 (needs pgvector)
-  Phases 1-13 → Phase 14 (Polish) → Phase 15 (E2E Tests) → Phase 16 (Deploy)
+  │     │                 └── Phase 13.5 (Use Case Generator) ← also needs Phase 7
+  Phases 1-13.5 → Phase 14 (Polish) → Phase 15 (E2E Tests) → Phase 16 (Deploy)
 ```
 
 **Parallelization**: Phases 3+4 can run in parallel. Phase 6 can start once Phase 2 is done. Phases 4+6 have no dependency on Phase 3.
@@ -450,6 +451,22 @@ Phase 1 (Scaffold)
 - [x] **Verify**: All backend tests pass (11/11)
 - [x] **Verify**: All frontend tests pass (95/95)
 - [x] **Verify**: svelte-check 0 errors, ESLint + Prettier clean, Ruff clean
+
+---
+
+## Phase 13.5 — Use Case Generator
+
+**9 files (6 new, 3 modified)** | Depends on: Phase 5, Phase 7
+
+- [x] LangGraph graph with research → clarify → compile flow
+- [x] Tavily web search integration for customer research
+- [x] Clarification node with interrupt/resume pattern
+- [x] Compilation node generating UseCaseCreate-compatible dicts
+- [x] Dedicated WebSocket endpoint (`ws://host/ws/generate/{project_id}`)
+- [x] REST endpoint for file text extraction
+- [x] Multi-step dialog UI (input → progress → clarification → results)
+- [x] File upload with in-memory text extraction (PDF/DOCX/TXT)
+- [x] Use case result cards with selection and save
 
 ---
 

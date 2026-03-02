@@ -2,7 +2,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { StatusBadge } from '$lib/components/project';
 	import { DollarSign, ArrowRight } from 'lucide-svelte';
-	import { cn } from '$lib/utils.js';
+	import { cn, capitalize } from '$lib/utils.js';
 	import type { UseCase } from '$lib/types';
 
 	let {
@@ -14,9 +14,7 @@
 	} = $props();
 
 	const billingLabel = $derived(
-		useCase.billing_frequency
-			? useCase.billing_frequency.charAt(0).toUpperCase() + useCase.billing_frequency.slice(1)
-			: null,
+		useCase.billing_frequency ? capitalize(useCase.billing_frequency) : null,
 	);
 
 	const workflowHref = $derived(

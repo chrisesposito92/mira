@@ -92,6 +92,11 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `prompts/product_meter.py` | System prompts for WF1 (Products, Meters, Aggregations) |
 | `prompts/plan_pricing.py` | System prompts for WF2 (PlanTemplates, Plans, Pricing with 5 pricing strategies) |
 | `prompts/account_usage.py` | System prompts for WF3+WF4 (Accounts, AccountPlans, Measurements) |
+| `nodes/use_case_research.py` | Use case generator: Tavily web search + LLM summary |
+| `nodes/use_case_clarify.py` | Use case generator: clarification questions with `interrupt()` |
+| `nodes/use_case_compile.py` | Use case generator: compile research into UseCaseCreate dicts |
+| `graphs/use_case_gen.py` | Use case generator StateGraph: research → [clarify?] → compile → END |
+| `prompts/use_case_gen.py` | System prompts for use case generator (research + compilation) |
 | `tools/rag_tool.py` | RAG retrieval wrapper for agent nodes |
 | `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, PlanTemplate, Plan, Pricing, Account, AccountPlan, Measurement) |
 
@@ -182,6 +187,21 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Frontend push flow**: ObjectEditor "Push to m3ter" button (single push via REST) → BulkActions "Push Selected" button → PushConfirmDialog (AlertDialog with entity breakdown + dependency warning) → PushWebSocketClient (lightweight, no reconnect) → PushProgressPanel (progress bar, per-entity status icons, dismiss on complete).
 - **ObjectsStore push state**: `pushSession` (active session tracking), `pushing` flag, `pushableSelectedIds` derived, `handlePushMessage()` updates both session and objects array from WS messages.
 
+### Use Case Generator
+
+- **Graph architecture**: Standalone LangGraph graph (`graphs/use_case_gen.py`) with `UseCaseGenState` TypedDict (separate from `WorkflowState`). Uses `MemorySaver` (not `AsyncPostgresSaver`) — sessions are ephemeral, no persistent checkpointing needed.
+- **Tavily search**: `research_customer` node (`nodes/use_case_research.py`) calls Tavily web search API to find customer pricing/billing info, then summarizes via LLM. Requires `TAVILY_API_KEY` environment variable.
+- **Graph flow**: `research_customer` → `should_clarify?` (conditional) → `ask_clarification` (interrupt/resume) → `compile_use_cases` → END. If no clarification needed, skips directly to compile.
+- **Clarification node**: `nodes/use_case_clarify.py` — generates 2-4 questions with `interrupt()`, resumes with user answers.
+- **Compilation node**: `nodes/use_case_compile.py` — generates `UseCaseCreate`-compatible dicts (title, description, billing_frequency, currency, target_billing_model).
+- **Prompts**: `prompts/use_case_gen.py` — research and compilation system prompts.
+- **WebSocket endpoint**: `ws://host/ws/generate/{project_id}?token={token}` — client sends `start_generation` (customer_name, industry, model_id, file_contents) and `clarification_response` (answers). Server sends `gen_status`, `gen_clarification`, `gen_use_cases`, `gen_error`.
+- **REST endpoint**: `POST /api/projects/{project_id}/generate-use-cases/extract-text` — accepts file upload (PDF/DOCX/TXT), extracts text in-memory (no DB storage), returns plain text.
+- **Frontend dialog**: `GenerateUseCasesDialog.svelte` (`components/project/`) — multi-step: input form (customer name, industry, model, file upload) → progress indicators → clarification cards → use case result cards with selection and save.
+- **Frontend types**: `types/generator.ts` — TypeScript types for generator WebSocket messages, state, and results.
+- **Frontend WebSocket**: `services/generator-websocket.ts` — `GeneratorWebSocketClient` class for the generate endpoint.
+- **Frontend result cards**: `components/project/UseCaseResultCard.svelte` — displays generated use case with select/deselect.
+
 ### Document Processing WebSocket
 
 - **Async processing**: `upload_document()` returns immediately with "pending" status, fires `asyncio.create_task()` for background extraction/chunking/embedding.
@@ -206,7 +226,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 ## Environment Variables
 
 ### Backend (`backend/.env`)
-`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `ENCRYPTION_KEY`
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `DATABASE_URL`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `ENCRYPTION_KEY`, `TAVILY_API_KEY`
 
 ### Frontend (`frontend/.env`)
 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, `PUBLIC_API_URL`, `PUBLIC_WS_URL`
