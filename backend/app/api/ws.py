@@ -180,10 +180,18 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
         await websocket.close()
         return
 
-    config = {"configurable": {"thread_id": thread_id}}
-
     try:
         wf_type = workflow.get("workflow_type", WorkflowType.product_meter_aggregation)
+        config = {
+            "configurable": {"thread_id": thread_id},
+            "run_name": f"mira-{wf_type}",
+            "metadata": {
+                "workflow_id": workflow_id,
+                "workflow_type": wf_type,
+                "source": "websocket",
+            },
+            "tags": ["mira", wf_type, "websocket"],
+        }
         graph = await get_graph(wf_type)
 
         # Send current interrupt state if any
@@ -583,7 +591,17 @@ async def generate_ws(websocket: WebSocket, project_id: str) -> None:
         from app.agents.graphs.use_case_gen import build_use_case_gen_graph
 
         thread_id = str(uuid_mod.uuid4())
-        config = {"configurable": {"thread_id": thread_id}}
+        config = {
+            "configurable": {"thread_id": thread_id},
+            "run_name": "mira-use-case-generator",
+            "metadata": {
+                "project_id": project_id,
+                "customer_name": customer_name,
+                "model_id": model_id,
+                "source": "websocket",
+            },
+            "tags": ["mira", "use_case_gen", "websocket"],
+        }
 
         graph = build_use_case_gen_graph()
 
