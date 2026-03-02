@@ -83,7 +83,7 @@
 	});
 
 	// Refetch objects when workflow moves to a new step (entities were just approved/saved)
-	let prevMessageCount = $state(0);
+	let prevMessageCount = 0;
 	$effect(() => {
 		const count = workflowStore.messages.length;
 		if (count > prevMessageCount && prevMessageCount > 0) {
