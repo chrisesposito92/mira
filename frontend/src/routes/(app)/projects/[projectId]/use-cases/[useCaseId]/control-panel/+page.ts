@@ -5,6 +5,7 @@ import {
 	createProjectService,
 	createGeneratedObjectService,
 	createWorkflowService,
+	ApiError,
 } from '$lib/services';
 import type { PageLoad } from './$types';
 
@@ -20,8 +21,12 @@ export const load: PageLoad = async ({ parent, params }) => {
 	let useCase;
 	try {
 		useCase = await useCaseService.get(params.useCaseId);
-	} catch {
-		error(404, 'Use case not found');
+	} catch (e) {
+		const status = e instanceof ApiError ? e.status : 500;
+		error(
+			status === 404 ? 404 : 500,
+			status === 404 ? 'Use case not found' : 'Failed to load use case',
+		);
 	}
 
 	// Secondary data can fail gracefully
