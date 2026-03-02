@@ -2,11 +2,44 @@
 
 import json
 import logging
+import re
 from typing import Any
 
 from app.schemas.common import ObjectStatus, WorkflowStatus, WorkflowType
 
 logger = logging.getLogger(__name__)
+
+
+def extract_llm_text(content: Any) -> str:
+    """Extract plain text from an LLM response content field.
+
+    Handles both string responses (OpenAI/Gemini) and content-block lists
+    (Anthropic Claude) where response.content is a list of
+    ``[{'type': 'text', 'text': '...'}]`` dicts.
+
+    Also strips markdown code fences (```json ... ```) that LLMs sometimes
+    add even when told not to.
+    """
+    if isinstance(content, str):
+        text = content
+    elif isinstance(content, list):
+        parts: list[str] = []
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "text":
+                parts.append(block["text"])
+            elif isinstance(block, str):
+                parts.append(block)
+        text = "".join(parts)
+    else:
+        text = str(content)
+
+    # Strip markdown code fences (```json ... ``` or ``` ... ```)
+    text = text.strip()
+    fence_match = re.match(r"^```(?:json)?\s*\n?(.*?)\n?\s*```$", text, re.DOTALL)
+    if fence_match:
+        text = fence_match.group(1).strip()
+
+    return text
 
 
 def build_use_case_description(use_case: dict) -> str:

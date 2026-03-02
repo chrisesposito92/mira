@@ -8,6 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from app.agents.llm_factory import get_llm
 from app.agents.prompts.use_case_gen import COMPILATION_PROMPT
 from app.agents.state import UseCaseGenState
+from app.agents.utils import extract_llm_text
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ async def compile_use_cases(state: UseCaseGenState) -> dict:
         ]
     )
 
-    content = response.content if isinstance(response.content, str) else str(response.content)
+    content = extract_llm_text(response.content)
 
     # Parse JSON array of use cases
     try:

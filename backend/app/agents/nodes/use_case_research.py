@@ -10,6 +10,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from app.agents.llm_factory import get_llm
 from app.agents.prompts.use_case_gen import RESEARCH_PROMPT
 from app.agents.state import UseCaseGenState
+from app.agents.utils import extract_llm_text
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -110,7 +111,7 @@ async def research_customer(state: UseCaseGenState) -> dict:
         ]
     )
 
-    content = response.content if isinstance(response.content, str) else str(response.content)
+    content = extract_llm_text(response.content)
 
     # Parse structured response
     try:
