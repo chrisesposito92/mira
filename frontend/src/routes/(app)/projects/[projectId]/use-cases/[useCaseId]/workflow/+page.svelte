@@ -74,9 +74,7 @@
 	}
 
 	const showChat = $derived(workflowStore.workflow !== null && !workflowStore.isCompleted);
-	const showLauncher = $derived(
-		!showChat && !workflowStore.loading,
-	);
+	const showLauncher = $derived(!showChat && !workflowStore.loading);
 	const showLoading = $derived(workflowStore.loading && !workflowStore.workflow);
 
 	const modelName = $derived(
