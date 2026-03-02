@@ -77,6 +77,13 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full details.
 | 8 | Frontend chat interface (workflow UI, WebSocket, HITL) | Done |
 | 9 | Plans & pricing workflow (PlanTemplates, Plans, Pricing) | Done |
 | 10 | Accounts, usage data & remaining workflows | Done |
-| 11+ | Control panel, m3ter sync, ... | Not started |
+| 11 | Control panel (object tree, JSON editor, bulk actions) | Done |
+| 11.5 | Manual object creation (deferred from Phase 11) | Done |
+| 12 | m3ter push & sync (dependency-ordered push, real-time WS progress) | Done |
+| 13 | Document upload E2E & RAG enhancement | Done |
+| 13.5 | AI-powered use case generator (Tavily research, clarification, compilation) | Done |
+| 14 | Polish & error handling | Not started |
+| 15 | E2E & integration testing | Not started |
+| 16 | Deployment | Not started |
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for full phase details.

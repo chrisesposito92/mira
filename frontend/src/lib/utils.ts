@@ -18,3 +18,7 @@ export type WithoutChild<T> = Omit<T, 'child'>;
 export function snakeToTitle(s: string): string {
 	return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+export function capitalize(s: string): string {
+	return s.charAt(0).toUpperCase() + s.slice(1);
+}

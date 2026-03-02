@@ -8,3 +8,5 @@ export { default as CreateProjectDialog } from './CreateProjectDialog.svelte';
 export { default as CreateUseCaseDialog } from './CreateUseCaseDialog.svelte';
 export { default as CreateOrgConnectionDialog } from './CreateOrgConnectionDialog.svelte';
 export { default as UploadProgressBar } from './UploadProgressBar.svelte';
+export { default as GenerateUseCasesDialog } from './GenerateUseCasesDialog.svelte';
+export { default as UseCaseResultCard } from './UseCaseResultCard.svelte';

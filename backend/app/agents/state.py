@@ -89,3 +89,32 @@ class WorkflowState(TypedDict, total=False):
     messages: list[dict]  # chat-style message log
     current_step: str  # for progress tracking
     error: str | None  # terminal error
+
+
+class UseCaseGenState(TypedDict, total=False):
+    """State for the use case generator graph (separate from main workflow)."""
+
+    # Input
+    project_id: str
+    customer_name: str
+    num_use_cases: int  # 1-3
+    notes: str  # optional user notes
+    attachment_text: str  # optional extracted file text
+    model_id: str
+    user_id: str
+
+    # Research
+    research_results: str  # compiled Tavily search results
+
+    # Clarification
+    needs_clarification: bool
+    clarification_questions: list[dict]
+    clarification_answers: list[dict]
+
+    # Output
+    generated_use_cases: list[dict]  # list of UseCaseCreate-compatible dicts
+
+    # Tracking
+    thread_id: str
+    current_step: str
+    error: str | None

@@ -1,14 +1,17 @@
-"""WebSocket endpoints for real-time workflow streaming, push progress, and document processing."""
+"""WebSocket endpoints for real-time workflow streaming, push progress,
+document processing, and use case generation."""
 
 import asyncio
 import json
 import logging
+import uuid as uuid_mod
 from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langgraph.errors import GraphInterrupt
 from langgraph.types import Command
+from supabase import Client
 
 from app.agents.utils import extract_interrupt_payload
 from app.auth.jwt import verify_token
@@ -439,6 +442,29 @@ async def push_ws(websocket: WebSocket, use_case_id: str) -> None:
             pass
 
 
+async def _verify_project_ws(
+    websocket: WebSocket, supabase: Client, project_id: str, user_id: UUID, error_type: str
+) -> bool:
+    """Verify project ownership for a WebSocket connection.
+
+    Sends an error and closes the socket if verification fails.
+    Returns True if ownership is verified.
+    """
+    project_result = supabase.table("projects").select("id, user_id").eq("id", project_id).execute()
+    if not project_result.data:
+        await websocket.send_json({"type": error_type, "message": "Project not found"})
+        await websocket.close()
+        return False
+
+    project_owner = project_result.data[0].get("user_id")
+    if project_owner != str(user_id):
+        await websocket.send_json({"type": error_type, "message": "Project not found"})
+        await websocket.close()
+        return False
+
+    return True
+
+
 @router.websocket("/ws/documents/{project_id}")
 async def document_ws(websocket: WebSocket, project_id: str) -> None:
     """WebSocket endpoint for real-time document processing progress.
@@ -459,18 +485,8 @@ async def document_ws(websocket: WebSocket, project_id: str) -> None:
 
     await websocket.accept()
 
-    # Verify project ownership
     supabase = get_supabase_client()
-    project_result = supabase.table("projects").select("id, user_id").eq("id", project_id).execute()
-    if not project_result.data:
-        await websocket.send_json({"type": "error", "message": "Project not found"})
-        await websocket.close()
-        return
-
-    project_owner = project_result.data[0].get("user_id")
-    if project_owner != str(user_id):
-        await websocket.send_json({"type": "error", "message": "Project not found"})
-        await websocket.close()
+    if not await _verify_project_ws(websocket, supabase, project_id, user_id, "error"):
         return
 
     register_listener(project_id, websocket)
@@ -496,6 +512,179 @@ async def document_ws(websocket: WebSocket, project_id: str) -> None:
         logger.exception("Document WebSocket error for project %s", project_id)
     finally:
         unregister_listener(project_id, websocket)
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+
+
+@router.websocket("/ws/generate/{project_id}")
+async def generate_ws(websocket: WebSocket, project_id: str) -> None:
+    """WebSocket endpoint for use case generation.
+
+    Client -> Server:
+        {type: "start_generate", customer_name, num_use_cases, notes?, attachment_text?, model_id}
+        {type: "clarify", answers: [...]}
+
+    Server -> Client:
+        {type: "gen_status",        step, message}
+        {type: "gen_clarification", questions: [...]}
+        {type: "gen_use_cases",     use_cases: [...]}
+        {type: "gen_error",         message}
+    """
+    user_id = await _authenticate_ws(websocket)
+    if not user_id:
+        await websocket.accept()
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
+
+    await websocket.accept()
+
+    supabase = get_supabase_client()
+    if not await _verify_project_ws(websocket, supabase, project_id, user_id, "gen_error"):
+        return
+
+    thread_id: str | None = None
+    try:
+        # Wait for start_generate message
+        raw = await websocket.receive_text()
+        message = json.loads(raw)
+
+        if message.get("type") != "start_generate":
+            await websocket.send_json(
+                {
+                    "type": "gen_error",
+                    "message": f"Expected start_generate, got {message.get('type')}",
+                }
+            )
+            await websocket.close()
+            return
+
+        # Validate required fields
+        customer_name = message.get("customer_name")
+        model_id = message.get("model_id")
+        if not customer_name or not model_id:
+            await websocket.send_json(
+                {"type": "gen_error", "message": "customer_name and model_id are required"}
+            )
+            await websocket.close()
+            return
+
+        # Validate and clamp num_use_cases to 1-10
+        raw_num = message.get("num_use_cases", 1)
+        num_use_cases = max(1, min(10, int(raw_num))) if isinstance(raw_num, (int, float)) else 1
+
+        # Truncate attachment_text to ~50K chars to avoid overflowing LLM context
+        max_attachment_chars = 50_000
+        attachment_text = message.get("attachment_text", "")
+        if len(attachment_text) > max_attachment_chars:
+            attachment_text = attachment_text[:max_attachment_chars] + "\n\n[Truncated]"
+
+        from app.agents.graphs.use_case_gen import build_use_case_gen_graph
+
+        thread_id = str(uuid_mod.uuid4())
+        config = {"configurable": {"thread_id": thread_id}}
+
+        graph = build_use_case_gen_graph()
+
+        initial_state = {
+            "project_id": project_id,
+            "customer_name": customer_name,
+            "num_use_cases": num_use_cases,
+            "notes": message.get("notes", ""),
+            "attachment_text": attachment_text,
+            "model_id": model_id,
+            "user_id": str(user_id),
+            "thread_id": thread_id,
+            "current_step": "starting",
+        }
+
+        await websocket.send_json(
+            {"type": "gen_status", "step": "researching", "message": "Researching company..."}
+        )
+
+        # Run graph — only check for interrupt if GraphInterrupt was raised
+        try:
+            result = await graph.ainvoke(initial_state, config=config)
+        except GraphInterrupt:
+            result = None
+
+        if result is None:
+            # Graph was interrupted — check for clarification
+            graph_state = await graph.aget_state(config)
+            interrupt_payload = extract_interrupt_payload(graph_state)
+        else:
+            interrupt_payload = None
+
+        is_clarification = (
+            isinstance(interrupt_payload, dict)
+            and interrupt_payload.get("type") == "gen_clarification"
+        )
+        if is_clarification:
+            await websocket.send_json(interrupt_payload)
+
+            # Wait for clarify response
+            while True:
+                try:
+                    raw = await websocket.receive_text()
+                    msg = json.loads(raw)
+                except WebSocketDisconnect:
+                    return
+                except json.JSONDecodeError:
+                    await websocket.send_json({"type": "gen_error", "message": "Invalid JSON"})
+                    continue
+
+                if msg.get("type") == "clarify":
+                    answers = msg.get("answers", [])
+                    await websocket.send_json(
+                        {
+                            "type": "gen_status",
+                            "step": "compiling",
+                            "message": "Generating use cases...",
+                        }
+                    )
+
+                    try:
+                        result = await graph.ainvoke(Command(resume=answers), config=config)
+                    except GraphInterrupt:
+                        result = None
+
+                    break
+                else:
+                    await websocket.send_json(
+                        {
+                            "type": "gen_error",
+                            "message": f"Expected clarify, got {msg.get('type')}",
+                        }
+                    )
+
+        # Get final state if result is still None after clarification resume
+        if result is None:
+            final_state = await graph.aget_state(config)
+            result = final_state.values if hasattr(final_state, "values") else {}
+
+        generated = result.get("generated_use_cases", [])
+        if generated:
+            await websocket.send_json({"type": "gen_use_cases", "use_cases": generated})
+        else:
+            await websocket.send_json(
+                {"type": "gen_error", "message": "No use cases were generated."}
+            )
+
+    except WebSocketDisconnect:
+        logger.info("Generator WebSocket disconnected for project %s", project_id)
+    except Exception as exc:
+        logger.exception("Generator WebSocket error for project %s", project_id)
+        try:
+            await websocket.send_json({"type": "gen_error", "message": str(exc)})
+        except Exception:
+            pass
+    finally:
+        # Clean up question cache to prevent memory leak on disconnect
+        if thread_id:
+            from app.agents.nodes.use_case_clarify import cleanup_question_cache
+
+            cleanup_question_cache(thread_id)
         try:
             await websocket.close()
         except Exception:

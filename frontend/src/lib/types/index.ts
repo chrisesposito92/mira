@@ -61,6 +61,8 @@ export type { DocProcessingStage, DocWsMessage, DocumentUploadProgress } from '.
 
 export { DOC_PROCESSING_STAGES } from './document.js';
 
+export type { GeneratedUseCase, GeneratorWsMessage, GeneratorClientMessage } from './generator.js';
+
 export type {
 	LlmModel,
 	Workflow,
