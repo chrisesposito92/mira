@@ -119,7 +119,7 @@
 		</Card.Content>
 	{/if}
 
-	{#if interactive && !existingDecision}
+	{#if interactive && (!existingDecision || existingDecision.action === 'edit')}
 		<div class="flex gap-2 border-t px-4 py-2">
 			<Button size="sm" variant="default" onclick={approve}>
 				<Check class="mr-1 size-3" />
