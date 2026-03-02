@@ -211,6 +211,13 @@ class ProjectStore {
 				(msg) => this.handleDocWsMessage(msg),
 				() => {
 					this._docWs = null;
+					if (this.uploadProgress?.phase === 'processing') {
+						this.uploadProgress = {
+							...this.uploadProgress,
+							phase: 'error',
+							error: 'Lost connection during processing',
+						};
+					}
 				},
 			);
 			this._docWs.connect(projectId, token);
@@ -252,10 +259,9 @@ class ProjectStore {
 	handleDocWsMessage(msg: DocWsMessage) {
 		switch (msg.type) {
 			case 'doc_processing_started':
-				if (this.uploadProgress && this.uploadProgress.filename === msg.filename) {
+				if (this.uploadProgress?.documentId === msg.document_id) {
 					this.uploadProgress = {
 						...this.uploadProgress,
-						documentId: msg.document_id,
 						phase: 'processing',
 						processingStage: msg.stage,
 					};
