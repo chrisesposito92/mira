@@ -73,7 +73,12 @@
 	]);
 
 	async function handleStart() {
-		if (!selectedModelId || loading) return;
+		if (
+			!selectedModelId ||
+			loading ||
+			!workflowOptions.find((o) => o.type === selectedWorkflowType)?.enabled
+		)
+			return;
 		open = false;
 		await onstart?.(selectedModelId, selectedWorkflowType);
 	}

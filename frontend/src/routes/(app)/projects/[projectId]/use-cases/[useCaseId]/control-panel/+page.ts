@@ -52,7 +52,7 @@ export const load: PageLoad = async ({ parent, params }) => {
 	}
 
 	return {
-		useCase,
+		useCase: useCase!,
 		project: project.status === 'fulfilled' ? project.value : null,
 		objects: objects.status === 'fulfilled' ? objects.value : [],
 		workflows: workflowList,
