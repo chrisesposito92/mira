@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.agents.checkpointer import close_checkpointer_pool
 from app.api import api_router
 from app.auth.jwt import AuthError
 from app.config import settings
@@ -17,6 +18,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await get_db_pool()
     yield
     # Shutdown
+    await close_checkpointer_pool()
     await close_db_pool()
 
 

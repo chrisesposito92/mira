@@ -208,10 +208,16 @@ class WorkflowStore {
 	}
 
 	submitDecision(decision: EntityDecision) {
-		// Deduplicate by index — ignore if this entity already has a decision
-		if (this.pendingDecisions.some((d) => d.index === decision.index)) return;
-
-		this.pendingDecisions = [...this.pendingDecisions, decision];
+		const existing = this.pendingDecisions.find((d) => d.index === decision.index);
+		if (existing) {
+			// Allow replacing an edit with approve/reject, but ignore true duplicates
+			if (existing.action !== 'edit') return;
+			this.pendingDecisions = this.pendingDecisions.map((d) =>
+				d.index === decision.index ? decision : d,
+			);
+		} else {
+			this.pendingDecisions = [...this.pendingDecisions, decision];
+		}
 
 		// If all entities have decisions, send the resume
 		if (

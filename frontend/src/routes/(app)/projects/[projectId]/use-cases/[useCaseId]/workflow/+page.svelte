@@ -4,7 +4,7 @@
 	import { workflowStore } from '$lib/stores';
 	import { createApiClient, createWorkflowService } from '$lib/services';
 	import { toast } from 'svelte-sonner';
-	import { ArrowLeft, SlidersHorizontal } from 'lucide-svelte';
+	import { ArrowLeft, Loader2, SlidersHorizontal } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import type { EntityDecision, ClarificationAnswer, WorkflowType } from '$lib/types/workflow.js';
 
@@ -73,11 +73,9 @@
 		workflowStore.submitClarificationAnswers(answers);
 	}
 
-	const showLauncher = $derived(
-		(!workflowStore.workflow && !workflowStore.loading) ||
-			(workflowStore.isCompleted && !workflowStore.loading),
-	);
-	const showChat = $derived(workflowStore.workflow !== null);
+	const showChat = $derived(workflowStore.workflow !== null && !workflowStore.isCompleted);
+	const showLauncher = $derived(!showChat && !workflowStore.loading);
+	const showLoading = $derived(workflowStore.loading && !workflowStore.workflow);
 
 	const modelName = $derived(
 		workflowStore.models.find((m) => m.id === workflowStore.workflow?.model_id)?.display_name ?? '',
@@ -118,6 +116,13 @@
 			ondecision={handleDecision}
 			onclarify={handleClarification}
 		/>
+	{/if}
+
+	{#if showLoading}
+		<div class="flex flex-1 flex-col items-center justify-center gap-3">
+			<Loader2 class="text-muted-foreground size-8 animate-spin" />
+			<p class="text-muted-foreground text-sm">Starting workflow...</p>
+		</div>
 	{/if}
 
 	{#if showLauncher}
