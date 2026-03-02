@@ -2,7 +2,7 @@
 
 import io
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -20,8 +20,8 @@ def _project_row(**overrides):
         "id": str(uuid4()),
         "user_id": str(MOCK_USER_ID),
         "name": "Test Project",
-        "created_at": datetime.now().isoformat(),
-        "updated_at": datetime.now().isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
     defaults.update(overrides)
     return defaults

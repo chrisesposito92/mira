@@ -170,10 +170,10 @@ START → research_customer (Tavily web search)
 - `compile_use_cases` (`nodes/use_case_compile.py`) — Compiles research + clarification answers into `UseCaseCreate`-compatible dicts (title, description, billing_frequency, currency, target_billing_model)
 
 **WebSocket protocol** (`ws://host/ws/generate/{project_id}`):
-- Client sends: `start_generation` (with customer_name, industry, model_id, file contents), `clarification_response` (answers)
+- Client sends: `start_generate` (with customer_name, num_use_cases, notes?, attachment_text?, model_id), `clarify` (answers)
 - Server sends: `gen_status` (step progress), `gen_clarification` (questions), `gen_use_cases` (results), `gen_error` (failures)
 
-**File text extraction**: `POST /api/projects/{project_id}/generate-use-cases/extract-text` accepts file uploads (PDF/DOCX/TXT), extracts text in-memory (no DB storage), returns plain text for inclusion in the generation context.
+**File text extraction**: `POST /api/projects/{project_id}/generate-use-cases/extract-text` accepts file uploads (PDF/DOCX/TXT/CSV), extracts text in-memory (no DB storage), returns plain text for inclusion in the generation context.
 
 **Frontend**: `GenerateUseCasesDialog.svelte` — multi-step dialog (input form → progress indicators → clarification cards → use case result cards with select + save).
 

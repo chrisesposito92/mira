@@ -11,6 +11,7 @@ from uuid import UUID
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langgraph.errors import GraphInterrupt
 from langgraph.types import Command
+from supabase import Client
 
 from app.agents.utils import extract_interrupt_payload
 from app.auth.jwt import verify_token
@@ -442,7 +443,7 @@ async def push_ws(websocket: WebSocket, use_case_id: str) -> None:
 
 
 async def _verify_project_ws(
-    websocket: WebSocket, supabase: object, project_id: str, user_id: UUID, error_type: str
+    websocket: WebSocket, supabase: Client, project_id: str, user_id: UUID, error_type: str
 ) -> bool:
     """Verify project ownership for a WebSocket connection.
 
@@ -559,8 +560,27 @@ async def generate_ws(websocket: WebSocket, project_id: str) -> None:
             await websocket.close()
             return
 
+        # Validate required fields
+        customer_name = message.get("customer_name")
+        model_id = message.get("model_id")
+        if not customer_name or not model_id:
+            await websocket.send_json(
+                {"type": "gen_error", "message": "customer_name and model_id are required"}
+            )
+            await websocket.close()
+            return
+
+        # Validate and clamp num_use_cases to 1-10
+        raw_num = message.get("num_use_cases", 1)
+        num_use_cases = max(1, min(10, int(raw_num))) if isinstance(raw_num, (int, float)) else 1
+
+        # Truncate attachment_text to ~50K chars to avoid overflowing LLM context
+        max_attachment_chars = 50_000
+        attachment_text = message.get("attachment_text", "")
+        if len(attachment_text) > max_attachment_chars:
+            attachment_text = attachment_text[:max_attachment_chars] + "\n\n[Truncated]"
+
         from app.agents.graphs.use_case_gen import build_use_case_gen_graph
-        from app.agents.nodes.use_case_clarify import cleanup_question_cache
 
         thread_id = str(uuid_mod.uuid4())
         config = {"configurable": {"thread_id": thread_id}}
@@ -569,11 +589,11 @@ async def generate_ws(websocket: WebSocket, project_id: str) -> None:
 
         initial_state = {
             "project_id": project_id,
-            "customer_name": message["customer_name"],
-            "num_use_cases": message.get("num_use_cases", 1),
+            "customer_name": customer_name,
+            "num_use_cases": num_use_cases,
             "notes": message.get("notes", ""),
-            "attachment_text": message.get("attachment_text", ""),
-            "model_id": message["model_id"],
+            "attachment_text": attachment_text,
+            "model_id": model_id,
             "user_id": str(user_id),
             "thread_id": thread_id,
             "current_step": "starting",

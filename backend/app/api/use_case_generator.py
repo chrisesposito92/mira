@@ -60,11 +60,17 @@ async def extract_text(
         raise HTTPException(status_code=400, detail=f"No extractor for file type: {ext}")
 
     try:
-        # Write to temp file since extractors expect file paths
-        with NamedTemporaryFile(suffix=f".{ext}", delete=True) as tmp:
+        # Write to temp file since extractors expect file paths.
+        # Use delete=False to avoid file-locking issues on Windows where the
+        # extractor cannot open the file while NamedTemporaryFile holds it.
+        tmp = NamedTemporaryFile(suffix=f".{ext}", delete=False)
+        try:
             tmp.write(content)
             tmp.flush()
+            tmp.close()
             text = extractor(Path(tmp.name))
+        finally:
+            Path(tmp.name).unlink(missing_ok=True)
     except Exception as exc:
         logger.exception("Text extraction failed for %s", filename)
         raise HTTPException(status_code=500, detail=f"Text extraction failed: {exc}")

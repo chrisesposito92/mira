@@ -96,9 +96,10 @@
 			'application/pdf',
 			'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 			'text/plain',
+			'text/csv',
 		];
-		if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|docx|txt)$/i)) {
-			toast.error('Only PDF, DOCX, and TXT files are accepted');
+		if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|docx|txt|csv)$/i)) {
+			toast.error('Only PDF, DOCX, TXT, and CSV files are accepted');
 			return;
 		}
 
@@ -170,9 +171,12 @@
 		statusMessages = [];
 		step = 'progress';
 
-		wsClient = new GeneratorWebSocketClient(handleWsMessage, handleWsClose);
-		wsClient.connect(projectId, token, () => {
-			wsClient?.send({
+		const client = new GeneratorWebSocketClient(handleWsMessage, handleWsClose);
+		wsClient = client;
+		client.connect(projectId, token, () => {
+			// Use local `client` ref instead of `wsClient` to avoid race condition
+			// where dialog close nulls `wsClient` before the connect callback fires.
+			client.send({
 				type: 'start_generate',
 				customer_name: customerName,
 				num_use_cases: parseInt(numUseCases),
@@ -391,12 +395,12 @@
 							<span class="text-muted-foreground text-sm">
 								Drop a file here or click to browse
 							</span>
-							<span class="text-muted-foreground text-xs">PDF, DOCX, TXT</span>
+							<span class="text-muted-foreground text-xs">PDF, DOCX, TXT, CSV</span>
 						</div>
 						<input
 							id="gen-file-input"
 							type="file"
-							accept=".pdf,.docx,.txt"
+							accept=".pdf,.docx,.txt,.csv"
 							class="hidden"
 							onchange={handleFileSelect}
 						/>

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Cache generated questions by thread_id so that LangGraph's node re-execution
 # on interrupt resume reuses the exact questions the user originally answered.
-_question_cache: dict[str, list] = {}
+_question_cache: dict[str, list[dict]] = {}
 
 
 async def ask_clarification(state: UseCaseGenState) -> dict:
