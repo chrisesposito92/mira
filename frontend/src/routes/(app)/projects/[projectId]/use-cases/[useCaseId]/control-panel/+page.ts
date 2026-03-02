@@ -4,6 +4,7 @@ import {
 	createUseCaseService,
 	createProjectService,
 	createGeneratedObjectService,
+	createWorkflowService,
 } from '$lib/services';
 import type { PageLoad } from './$types';
 
@@ -13,21 +14,46 @@ export const load: PageLoad = async ({ parent, params }) => {
 	const useCaseService = createUseCaseService(client);
 	const projectService = createProjectService(client);
 	const objectService = createGeneratedObjectService(client);
+	const workflowService = createWorkflowService(client);
 
-	// Fetch all three in parallel — use case is required, others are graceful
-	const [useCaseResult, project, objects] = await Promise.allSettled([
-		useCaseService.get(params.useCaseId),
-		projectService.get(params.projectId),
-		objectService.listObjects(params.useCaseId),
-	]);
-
-	if (useCaseResult.status === 'rejected') {
+	// Use case is required
+	let useCase;
+	try {
+		useCase = await useCaseService.get(params.useCaseId);
+	} catch {
 		error(404, 'Use case not found');
 	}
 
+	// Secondary data can fail gracefully
+	const [project, objects, workflows, models] = await Promise.allSettled([
+		projectService.get(params.projectId),
+		objectService.listObjects(params.useCaseId),
+		workflowService.list(params.useCaseId),
+		workflowService.listModels(),
+	]);
+
+	// Find any interrupted workflow
+	const workflowList = workflows.status === 'fulfilled' ? workflows.value : [];
+	const interruptedWorkflow = workflowList.find((w) => w.status === 'interrupted');
+
+	// Load messages for interrupted workflow
+	let interruptedMessages: Awaited<ReturnType<typeof workflowService.listMessages>> = [];
+	if (interruptedWorkflow) {
+		try {
+			interruptedMessages = await workflowService.listMessages(interruptedWorkflow.id);
+		} catch {
+			// Graceful failure
+		}
+	}
+
 	return {
-		useCase: useCaseResult.value,
+		useCase,
 		project: project.status === 'fulfilled' ? project.value : null,
 		objects: objects.status === 'fulfilled' ? objects.value : [],
+		workflows: workflowList,
+		models: models.status === 'fulfilled' ? models.value : [],
+		interruptedWorkflow: interruptedWorkflow ?? null,
+		interruptedMessages,
+		session,
 	};
 };
