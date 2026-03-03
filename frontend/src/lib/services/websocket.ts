@@ -63,6 +63,13 @@ export class WebSocketClient {
 		this.socket.onmessage = (event: MessageEvent) => {
 			try {
 				const msg = JSON.parse(event.data as string) as WsServerMessage;
+				// Only treat "complete" as intentional close.  Terminal errors
+				// close the connection server-side (which triggers onclose);
+				// non-terminal errors ("Invalid JSON", "Unknown message type")
+				// keep the loop running, so we must not kill reconnection.
+				if (msg.type === 'complete') {
+					this.intentionalClose = true;
+				}
 				this.onMessage(msg);
 			} catch {
 				// Ignore malformed messages

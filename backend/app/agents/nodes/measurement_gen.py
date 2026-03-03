@@ -38,9 +38,23 @@ async def generate_measurements(state: WorkflowState) -> dict:
     content = extract_llm_text(response.content)
     measurements = parse_entity_list(content)
 
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_measurements"}
+    ]
+
+    if not measurements:
+        return {
+            "measurements": [],
+            "current_step": "error",
+            "error": (
+                "Failed to generate measurements — the AI model returned an"
+                " invalid response. Please try again or select a different model."
+            ),
+            "messages": messages,
+        }
+
     return {
         "measurements": measurements,
         "current_step": "measurements_generated",
-        "messages": state.get("messages", [])
-        + [{"role": "assistant", "content": content, "step": "generate_measurements"}],
+        "messages": messages,
     }

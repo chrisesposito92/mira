@@ -24,6 +24,11 @@ def route_after_load(state: WorkflowState) -> str:
     return END if state.get("current_step") == "error" else "generate_measurements"
 
 
+def _route_after_gen_measurements(state: WorkflowState) -> str:
+    """Route to END if generation failed, otherwise proceed to validation."""
+    return END if state.get("current_step") == "error" else "validate_measurements"
+
+
 def _build_graph() -> StateGraph:
     """Build the usage submission StateGraph (uncompiled)."""
     graph = StateGraph(WorkflowState)
@@ -39,7 +44,9 @@ def _build_graph() -> StateGraph:
 
     # Short-circuit to END if load fails (no approved entities)
     graph.add_conditional_edges("load_approved_for_usage", route_after_load)
-    graph.add_edge("generate_measurements", "validate_measurements")
+
+    # Measurement pipeline: generate → [error?] → validate → approve
+    graph.add_conditional_edges("generate_measurements", _route_after_gen_measurements)
     graph.add_edge("validate_measurements", "approve_measurements")
 
     # End

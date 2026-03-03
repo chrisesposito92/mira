@@ -248,6 +248,6 @@ Full architecture: `docs/ARCHITECTURE.md`
 - Never use `supabase.auth.getSession()` alone on the server — always use `safeGetSession()` which calls `getUser()` first to validate the JWT
 - Unit tests: Use `TestClient(app)` without `with` (context manager) to avoid triggering the lifespan, which calls `get_db_pool()` and requires a real Postgres connection
 - Unit tests: Use `app.dependency_overrides` with `try/finally` to guarantee cleanup — prevents leaked auth overrides between tests
-- LangGraph `graph.ainvoke()` raises an exception on `interrupt()` — catch it, then read state via `graph.aget_state()` to extract the interrupt payload
+- LangGraph 1.x `graph.ainvoke()` returns normally on `interrupt()` (no exception). Always check `graph.aget_state()` for pending interrupts after `ainvoke()` — never rely solely on catching `GraphInterrupt`. The `except GraphInterrupt: pass` pattern is kept for backward compatibility but the state check is the authoritative source. See `_invoke_and_send_result` in `ws.py` for the canonical pattern.
 - Use `from datetime import UTC` (not `timezone.utc`) — ruff UP017 rule enforces this
 - Mock Supabase rows for ownership checks must include join data (e.g., `use_cases.projects.user_id`) or queries return 404

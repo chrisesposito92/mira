@@ -43,9 +43,23 @@ async def generate_accounts(state: WorkflowState) -> dict:
     content = extract_llm_text(response.content)
     accounts = parse_entity_list(content)
 
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_accounts"}
+    ]
+
+    if not accounts:
+        return {
+            "accounts": [],
+            "current_step": "error",
+            "error": (
+                "Failed to generate accounts — the AI model returned an"
+                " invalid response. Please try again or select a different model."
+            ),
+            "messages": messages,
+        }
+
     return {
         "accounts": accounts,
         "current_step": "accounts_generated",
-        "messages": state.get("messages", [])
-        + [{"role": "assistant", "content": content, "step": "generate_accounts"}],
+        "messages": messages,
     }

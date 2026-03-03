@@ -45,9 +45,23 @@ async def generate_pricing(state: WorkflowState) -> dict:
     content = extract_llm_text(response.content)
     pricing = parse_entity_list(content)
 
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_pricing"}
+    ]
+
+    if not pricing:
+        return {
+            "pricing": [],
+            "current_step": "error",
+            "error": (
+                "Failed to generate pricing — the AI model returned an"
+                " invalid response. Please try again or select a different model."
+            ),
+            "messages": messages,
+        }
+
     return {
         "pricing": pricing,
         "current_step": "pricing_generated",
-        "messages": state.get("messages", [])
-        + [{"role": "assistant", "content": content, "step": "generate_pricing"}],
+        "messages": messages,
     }

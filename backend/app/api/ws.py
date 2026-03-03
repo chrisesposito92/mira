@@ -113,6 +113,28 @@ async def _invoke_and_send_result(
             )
         return True
 
+    # Check for error state (graph reached END with current_step == "error")
+    final_values = graph_state.values if graph_state else {}
+    if final_values.get("current_step") == "error":
+        error_msg = final_values.get("error", "Workflow ended in error state")
+        now = datetime.now(UTC).isoformat()
+        supabase.table("workflows").update(
+            {
+                "status": WorkflowStatus.failed,
+                "error_message": error_msg,
+                "updated_at": now,
+            }
+        ).eq("id", workflow_id).execute()
+        await websocket.send_json({"type": "error", "message": error_msg})
+        save_message_internal(
+            supabase,
+            workflow_id,
+            MessageRole.system,
+            error_msg,
+            metadata={"payload": {"type": "error", "message": error_msg}},
+        )
+        return False
+
     # Workflow completed
     now = datetime.now(UTC).isoformat()
     supabase.table("workflows").update(
@@ -195,7 +217,26 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
         graph = await get_graph(wf_type)
 
         # Send current interrupt state if any
-        await _send_interrupt_if_pending(websocket, graph, config)
+        has_interrupt = await _send_interrupt_if_pending(websocket, graph, config)
+
+        # If the workflow already finished (failed/completed via REST before WS connected),
+        # send the terminal message immediately and close — don't enter the message loop.
+        if not has_interrupt:
+            wf_status = workflow.get("status")
+            if wf_status == WorkflowStatus.failed:
+                error_msg = workflow.get("error_message", "Workflow failed")
+                await websocket.send_json({"type": "error", "message": error_msg})
+                # Don't persist — the error message was already saved when
+                # the workflow was marked failed.  Re-saving on each reconnect
+                # would create duplicates in chat history.
+                await websocket.close()
+                return
+            if wf_status == WorkflowStatus.completed:
+                await websocket.send_json(
+                    {"type": "complete", "message": "Workflow completed successfully."}
+                )
+                await websocket.close()
+                return
 
         # Listen for client messages
         while True:
@@ -621,18 +662,15 @@ async def generate_ws(websocket: WebSocket, project_id: str) -> None:
             {"type": "gen_status", "step": "researching", "message": "Researching company..."}
         )
 
-        # Run graph — only check for interrupt if GraphInterrupt was raised
+        # Run graph — always check state for interrupts (LangGraph 1.x
+        # returns normally on interrupt instead of raising GraphInterrupt).
         try:
             result = await graph.ainvoke(initial_state, config=config)
         except GraphInterrupt:
             result = None
 
-        if result is None:
-            # Graph was interrupted — check for clarification
-            graph_state = await graph.aget_state(config)
-            interrupt_payload = extract_interrupt_payload(graph_state)
-        else:
-            interrupt_payload = None
+        graph_state = await graph.aget_state(config)
+        interrupt_payload = extract_interrupt_payload(graph_state)
 
         is_clarification = (
             isinstance(interrupt_payload, dict)
@@ -676,12 +714,16 @@ async def generate_ws(websocket: WebSocket, project_id: str) -> None:
                         }
                     )
 
-        # Get final state if result is still None after clarification resume
+        # Always read final state from the graph (LangGraph 1.x returns the
+        # state dict from ainvoke, but reading via aget_state is authoritative).
+        final_state = await graph.aget_state(config)
+        final_values = final_state.values if hasattr(final_state, "values") else {}
         if result is None:
-            final_state = await graph.aget_state(config)
-            result = final_state.values if hasattr(final_state, "values") else {}
+            result = final_values
 
-        generated = result.get("generated_use_cases", [])
+        generated = result.get("generated_use_cases", []) or final_values.get(
+            "generated_use_cases", []
+        )
         if generated:
             await websocket.send_json({"type": "gen_use_cases", "use_cases": generated})
         else:

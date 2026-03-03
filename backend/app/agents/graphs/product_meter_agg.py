@@ -33,6 +33,21 @@ def _should_clarify(state: WorkflowState) -> str:
     return "generate_products"
 
 
+def _route_after_gen_products(state: WorkflowState) -> str:
+    """Route to END if generation failed, otherwise proceed to validation."""
+    return END if state.get("current_step") == "error" else "validate_products"
+
+
+def _route_after_gen_meters(state: WorkflowState) -> str:
+    """Route to END if generation failed, otherwise proceed to validation."""
+    return END if state.get("current_step") == "error" else "validate_meters"
+
+
+def _route_after_gen_aggregations(state: WorkflowState) -> str:
+    """Route to END if generation failed, otherwise proceed to validation."""
+    return END if state.get("current_step") == "error" else "validate_aggregations"
+
+
 def _build_graph() -> StateGraph:
     """Build the product/meter/aggregation StateGraph (uncompiled)."""
     graph = StateGraph(WorkflowState)
@@ -66,18 +81,18 @@ def _build_graph() -> StateGraph:
     # After clarification, proceed to product generation
     graph.add_edge("generate_clarifications", "generate_products")
 
-    # Product pipeline: generate → validate → approve
-    graph.add_edge("generate_products", "validate_products")
+    # Product pipeline: generate → [error?] → validate → approve
+    graph.add_conditional_edges("generate_products", _route_after_gen_products)
     graph.add_edge("validate_products", "approve_products")
 
-    # Meter pipeline: generate → validate → approve
+    # Meter pipeline: generate → [error?] → validate → approve
     graph.add_edge("approve_products", "generate_meters")
-    graph.add_edge("generate_meters", "validate_meters")
+    graph.add_conditional_edges("generate_meters", _route_after_gen_meters)
     graph.add_edge("validate_meters", "approve_meters")
 
-    # Aggregation pipeline: generate → validate → approve
+    # Aggregation pipeline: generate → [error?] → validate → approve
     graph.add_edge("approve_meters", "generate_aggregations")
-    graph.add_edge("generate_aggregations", "validate_aggregations")
+    graph.add_conditional_edges("generate_aggregations", _route_after_gen_aggregations)
     graph.add_edge("validate_aggregations", "approve_aggregations")
 
     # End

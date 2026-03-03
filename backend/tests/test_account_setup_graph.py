@@ -312,7 +312,8 @@ class TestGenerateAccounts:
         result = await generate_accounts(state)
 
         assert result["accounts"] == []
-        assert result["current_step"] == "accounts_generated"
+        assert result["current_step"] == "error"
+        assert "error" in result
         mock_llm_instance.ainvoke.assert_called_once()
 
 
@@ -345,7 +346,7 @@ class TestGenerateAccountPlans:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.account_plan_gen.get_llm")
-    async def test_sets_correct_current_step(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
         state = {
             **base_state,
             "accounts": [],
@@ -357,7 +358,9 @@ class TestGenerateAccountPlans:
         mock_get_llm.return_value = mock_llm_instance
 
         result = await generate_account_plans(state)
-        assert result["current_step"] == "account_plans_generated"
+        assert result["current_step"] == "error"
+        assert result["account_plans"] == []
+        assert "error" in result
 
 
 # ---------------------------------------------------------------------------

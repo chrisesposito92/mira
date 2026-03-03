@@ -7,11 +7,10 @@ from app.agents.tools.rag_tool import rag_retrieve
 from app.agents.utils import (
     build_use_case_description,
     fetch_approved_entities,
-    fetch_workflow_window,
     inject_entity_id,
 )
 from app.db.client import get_supabase_client
-from app.schemas.common import EntityType, WorkflowType
+from app.schemas.common import EntityType
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +25,11 @@ async def load_approved_entities(state: WorkflowState) -> dict:
     project_id = state.get("project_id")
     supabase = get_supabase_client()
 
-    # Find the latest completed WF1 to scope entity fetch
-    wf1_result = fetch_workflow_window(
-        supabase, use_case_id, WorkflowType.product_meter_aggregation
-    )
-
-    # Fetch approved entities scoped to the latest WF1 run's time window.
+    # Fetch all approved entities for this use case (no time-window scoping)
     result = fetch_approved_entities(
         supabase,
         use_case_id,
         [EntityType.product, EntityType.meter, EntityType.aggregation],
-        wf1_result,
     )
 
     approved_products: list[dict] = []
@@ -62,7 +55,7 @@ async def load_approved_entities(state: WorkflowState) -> dict:
     # Fetch use case data
     uc_result = (
         supabase.table("use_cases")
-        .select("title, description, industry, target_billing_model")
+        .select("title, description, target_billing_model")
         .eq("id", use_case_id)
         .execute()
     )
