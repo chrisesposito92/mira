@@ -36,6 +36,7 @@ class WorkflowStore {
 	isInterrupted = $derived(this.workflow?.status === 'interrupted');
 	isRunning = $derived(this.workflow?.status === 'running');
 	isCompleted = $derived(this.workflow?.status === 'completed');
+	isFailed = $derived(this.workflow?.status === 'failed');
 	hasPendingInteraction = $derived(
 		this.pendingEntities !== null || this.pendingClarification !== null,
 	);

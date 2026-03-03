@@ -10,6 +10,34 @@ from app.schemas.common import ObjectStatus, WorkflowStatus, WorkflowType
 logger = logging.getLogger(__name__)
 
 
+def _extract_json_block(text: str) -> str | None:
+    """Find the first JSON array or object in *text* and validate it.
+
+    Scans for the first ``[`` or ``{``, then finds the **last** matching
+    ``]`` or ``}`` respectively.  If the extracted substring is valid JSON
+    it is returned; otherwise ``None``.
+    """
+    open_chars = {"[": "]", "{": "}"}
+    first_idx: int | None = None
+    close_char: str | None = None
+    for i, ch in enumerate(text):
+        if ch in open_chars:
+            first_idx = i
+            close_char = open_chars[ch]
+            break
+    if first_idx is None or close_char is None:
+        return None
+    last_idx = text.rfind(close_char)
+    if last_idx <= first_idx:
+        return None
+    candidate = text[first_idx : last_idx + 1]
+    try:
+        json.loads(candidate)
+        return candidate
+    except (json.JSONDecodeError, ValueError):
+        return None
+
+
 def extract_llm_text(content: Any) -> str:
     """Extract plain text from an LLM response content field.
 
@@ -39,6 +67,14 @@ def extract_llm_text(content: Any) -> str:
     if fence_match:
         text = fence_match.group(1).strip()
 
+    # If text still isn't valid JSON, attempt to extract a JSON block
+    try:
+        json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        extracted = _extract_json_block(text)
+        if extracted is not None:
+            text = extracted
+
     return text
 
 
@@ -46,14 +82,11 @@ def build_use_case_description(use_case: dict) -> str:
     """Build a description from use case data for prompt context."""
     title = use_case.get("title", "")
     description = use_case.get("description", "")
-    industry = use_case.get("industry", "")
     parts = []
     if title:
         parts.append(f"Title: {title}")
     if description:
         parts.append(f"Description: {description}")
-    if industry:
-        parts.append(f"Industry: {industry}")
     return "\n".join(parts) if parts else "No use case details available."
 
 
@@ -69,8 +102,14 @@ def parse_entity_list(content: str) -> list[dict]:
                 if isinstance(value, list):
                     return value
             return [parsed]
-    except (json.JSONDecodeError, TypeError):
-        logger.warning("Failed to parse LLM response as JSON: %s", content[:200])
+    except (json.JSONDecodeError, TypeError) as exc:
+        preview = content[:500] if content else "<empty>"
+        logger.error(
+            "Failed to parse LLM response as JSON (length=%d): %s\nContent preview: %s",
+            len(content) if content else 0,
+            exc,
+            preview,
+        )
     return []
 
 
@@ -92,9 +131,18 @@ def fetch_approved_entities(
     supabase: Any,
     use_case_id: str,
     entity_types: list[str],
-    wf_result: Any,
+    wf_result: Any = None,
 ) -> Any:
-    """Fetch approved entities scoped to a workflow's time window."""
+    """Fetch approved entities for a use case.
+
+    The ``wf_result`` parameter is accepted for backward compatibility but is
+    no longer used for time-window scoping.  Earlier versions filtered entities
+    by the predecessor workflow's ``started_at``/``completed_at`` timestamps,
+    but that breaks when the user re-runs a workflow — entities from an earlier
+    (valid) run fall outside the latest run's window.  The ``approved`` status
+    is the authoritative signal; if an entity is approved it should be
+    available to downstream workflows regardless of which run produced it.
+    """
     query = (
         supabase.table("generated_objects")
         .select("id, entity_type, data")
@@ -105,11 +153,6 @@ def fetch_approved_entities(
         query = query.eq("entity_type", entity_types[0])
     else:
         query = query.in_("entity_type", entity_types)
-    if wf_result.data:
-        wf = wf_result.data[0]
-        query = query.gte("created_at", wf["started_at"])
-        if wf.get("completed_at"):
-            query = query.lte("created_at", wf["completed_at"])
     return query.execute()
 
 

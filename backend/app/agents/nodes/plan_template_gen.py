@@ -41,9 +41,23 @@ async def generate_plan_templates(state: WorkflowState) -> dict:
     content = extract_llm_text(response.content)
     plan_templates = parse_entity_list(content)
 
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_plan_templates"}
+    ]
+
+    if not plan_templates:
+        return {
+            "plan_templates": [],
+            "current_step": "error",
+            "error": (
+                "Failed to generate plan templates — the AI model returned an"
+                " invalid response. Please try again or select a different model."
+            ),
+            "messages": messages,
+        }
+
     return {
         "plan_templates": plan_templates,
         "current_step": "plan_templates_generated",
-        "messages": state.get("messages", [])
-        + [{"role": "assistant", "content": content, "step": "generate_plan_templates"}],
+        "messages": messages,
     }

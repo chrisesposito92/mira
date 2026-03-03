@@ -66,19 +66,32 @@
 		}
 	});
 
-	// Auto-close drawer and refetch objects when workflow completes
+	// Auto-close drawer when workflow completes (not on failure)
 	$effect(() => {
 		if (workflowStore.isCompleted && drawerOpen) {
 			const timer = setTimeout(() => {
 				drawerOpen = false;
-				// Refetch objects to show newly generated entities
-				service.listObjects(page.params.useCaseId!).then((objs) => {
-					objectsStore.objects = objs;
-				});
-				// Refresh workflows list for prerequisite gating
-				workflowStore.loadWorkflows(workflowService, data.useCase.id);
-			}, 3000);
+			}, 5000);
 			return () => clearTimeout(timer);
+		}
+	});
+
+	// Refresh objects and workflows when drawer closes
+	let prevDrawerOpen = false;
+	$effect(() => {
+		if (prevDrawerOpen && !drawerOpen) {
+			service.listObjects(page.params.useCaseId!).then((objs) => {
+				objectsStore.objects = objs;
+			});
+			workflowStore.loadWorkflows(workflowService, data.useCase.id);
+		}
+		prevDrawerOpen = drawerOpen;
+	});
+
+	// On failure, refresh workflows immediately so prerequisite gating reflects the failed state
+	$effect(() => {
+		if (workflowStore.isFailed) {
+			workflowStore.loadWorkflows(workflowService, data.useCase.id);
 		}
 	});
 
@@ -188,10 +201,14 @@
 			drawerOpen = true;
 			return;
 		}
+		// Prevent the restore-from-interrupt effect from disrupting this workflow
+		// if a data refresh occurs (e.g., auth token refresh triggers load re-run)
+		workflowInitialized = true;
 		if (!data.session?.access_token) {
 			toast.error('Not authenticated');
 			return;
 		}
+		drawerOpen = true;
 		const wf = await workflowStore.startWorkflow(
 			workflowService,
 			data.useCase.id,
@@ -199,9 +216,7 @@
 			data.session.access_token,
 			workflowType,
 		);
-		if (wf) {
-			drawerOpen = true;
-		} else {
+		if (!wf) {
 			toast.error(workflowStore.error ?? 'Failed to start workflow');
 		}
 	}
@@ -308,6 +323,7 @@
 
 	<WorkflowDrawer
 		bind:open={drawerOpen}
+		loading={workflowStore.loading}
 		messages={workflowStore.messages}
 		thinking={workflowStore.thinking}
 		currentStep={workflowStore.currentStep}

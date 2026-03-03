@@ -68,11 +68,25 @@ async def generate_products(state: WorkflowState) -> dict:
     content = extract_llm_text(response.content)
     products = parse_entity_list(content)
 
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_products"}
+    ]
+
+    if not products:
+        return {
+            "products": [],
+            "current_step": "error",
+            "error": (
+                "Failed to generate products — the AI model returned an"
+                " invalid response. Please try again or select a different model."
+            ),
+            "messages": messages,
+        }
+
     return {
         "products": products,
         "current_step": "products_generated",
-        "messages": state.get("messages", [])
-        + [{"role": "assistant", "content": content, "step": "generate_products"}],
+        "messages": messages,
     }
 
 
@@ -105,11 +119,25 @@ async def generate_meters(state: WorkflowState) -> dict:
     content = extract_llm_text(response.content)
     meters = parse_entity_list(content)
 
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_meters"}
+    ]
+
+    if not meters:
+        return {
+            "meters": [],
+            "current_step": "error",
+            "error": (
+                "Failed to generate meters — the AI model returned an"
+                " invalid response. Please try again or select a different model."
+            ),
+            "messages": messages,
+        }
+
     return {
         "meters": meters,
         "current_step": "meters_generated",
-        "messages": state.get("messages", [])
-        + [{"role": "assistant", "content": content, "step": "generate_meters"}],
+        "messages": messages,
     }
 
 
@@ -144,9 +172,23 @@ async def generate_aggregations(state: WorkflowState) -> dict:
     content = extract_llm_text(response.content)
     aggregations = parse_entity_list(content)
 
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_aggregations"}
+    ]
+
+    if not aggregations:
+        return {
+            "aggregations": [],
+            "current_step": "error",
+            "error": (
+                "Failed to generate aggregations — the AI model returned an"
+                " invalid response. Please try again or select a different model."
+            ),
+            "messages": messages,
+        }
+
     return {
         "aggregations": aggregations,
         "current_step": "aggregations_generated",
-        "messages": state.get("messages", [])
-        + [{"role": "assistant", "content": content, "step": "generate_aggregations"}],
+        "messages": messages,
     }

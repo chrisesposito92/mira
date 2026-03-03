@@ -267,7 +267,7 @@ class TestGenerateMeasurements:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.measurement_gen.get_llm")
-    async def test_sets_correct_current_step(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
         state = {
             **base_state,
             "approved_meters": [],
@@ -279,7 +279,9 @@ class TestGenerateMeasurements:
         mock_get_llm.return_value = mock_llm_instance
 
         result = await generate_measurements(state)
-        assert result["current_step"] == "measurements_generated"
+        assert result["current_step"] == "error"
+        assert result["measurements"] == []
+        assert "error" in result
 
 
 # ---------------------------------------------------------------------------

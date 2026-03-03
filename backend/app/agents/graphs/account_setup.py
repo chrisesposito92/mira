@@ -26,9 +26,19 @@ def route_after_load(state: WorkflowState) -> str:
     return END if state.get("current_step") == "error" else "generate_accounts"
 
 
+def _route_after_gen_accounts(state: WorkflowState) -> str:
+    """Route to END if generation failed, otherwise proceed to validation."""
+    return END if state.get("current_step") == "error" else "validate_accounts"
+
+
 def route_after_approve_accounts(state: WorkflowState) -> str:
     """Route to END if all accounts were rejected, otherwise generate account plans."""
     return END if not state.get("accounts") else "generate_account_plans"
+
+
+def _route_after_gen_account_plans(state: WorkflowState) -> str:
+    """Route to END if generation failed, otherwise proceed to validation."""
+    return END if state.get("current_step") == "error" else "validate_account_plans"
 
 
 def _build_graph() -> StateGraph:
@@ -49,12 +59,16 @@ def _build_graph() -> StateGraph:
 
     # Short-circuit to END if load fails (no approved entities)
     graph.add_conditional_edges("load_approved_for_accounts", route_after_load)
-    graph.add_edge("generate_accounts", "validate_accounts")
+
+    # Account pipeline: generate → [error?] → validate → approve
+    graph.add_conditional_edges("generate_accounts", _route_after_gen_accounts)
     graph.add_edge("validate_accounts", "approve_accounts")
 
     # Short-circuit to END if all accounts were rejected
     graph.add_conditional_edges("approve_accounts", route_after_approve_accounts)
-    graph.add_edge("generate_account_plans", "validate_account_plans")
+
+    # AccountPlan pipeline: generate → [error?] → validate → approve
+    graph.add_conditional_edges("generate_account_plans", _route_after_gen_account_plans)
     graph.add_edge("validate_account_plans", "approve_account_plans")
 
     # End

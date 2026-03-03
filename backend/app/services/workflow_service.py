@@ -106,16 +106,9 @@ async def _invoke_and_handle(
     try:
         await graph.ainvoke(invoke_arg, config=config)
     except GraphInterrupt:
-        graph_state = await graph.aget_state(config)
-        interrupt_payload = extract_interrupt_payload(graph_state)
-        return _update_workflow(
-            supabase,
-            workflow_id,
-            {
-                "status": WorkflowStatus.interrupted,
-                "interrupt_payload": interrupt_payload,
-            },
-        )
+        # LangGraph 0.x raises GraphInterrupt on interrupt(); fall through
+        # to the state check below which handles both 0.x and 1.x behavior.
+        pass
     except Exception as exc:
         logger.exception("Graph invocation failed for workflow %s", workflow_id)
         return _update_workflow(
@@ -127,10 +120,25 @@ async def _invoke_and_handle(
             },
         )
 
+    # Always check graph state for pending interrupts.  LangGraph 1.x returns
+    # normally from ainvoke() on interrupt (no exception), so we must inspect
+    # the checkpointed state rather than relying on the exception alone.
+    graph_state = await graph.aget_state(config)
+    interrupt_payload = extract_interrupt_payload(graph_state)
+
+    if isinstance(interrupt_payload, dict):
+        return _update_workflow(
+            supabase,
+            workflow_id,
+            {
+                "status": WorkflowStatus.interrupted,
+                "interrupt_payload": interrupt_payload,
+            },
+        )
+
     # Check if the graph ended in an error state (e.g., load node returned error
     # and the graph routed to END). This must be marked as failed, not completed,
     # to prevent downstream workflows from incorrectly satisfying prerequisite checks.
-    graph_state = await graph.aget_state(config)
     final_values = graph_state.values if graph_state else {}
     if final_values.get("current_step") == "error":
         error_msg = final_values.get("error", "Workflow ended in error state")

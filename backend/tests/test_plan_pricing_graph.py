@@ -249,7 +249,8 @@ class TestGeneratePlanTemplates:
         result = await generate_plan_templates(state)
 
         assert result["plan_templates"] == []
-        assert result["current_step"] == "plan_templates_generated"
+        assert result["current_step"] == "error"
+        assert "error" in result
         # Verify LLM was called (meaning prompt was built from use_case)
         mock_llm_instance.ainvoke.assert_called_once()
 
@@ -291,7 +292,7 @@ class TestGeneratePlans:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.plan_gen.get_llm")
-    async def test_sets_correct_current_step(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
         state = {
             **base_state,
             "approved_products": [],
@@ -305,7 +306,9 @@ class TestGeneratePlans:
         mock_get_llm.return_value = mock_llm_instance
 
         result = await generate_plans(state)
-        assert result["current_step"] == "plans_generated"
+        assert result["current_step"] == "error"
+        assert result["plans"] == []
+        assert "error" in result
 
 
 class TestGeneratePricing:
@@ -345,7 +348,7 @@ class TestGeneratePricing:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.pricing_gen.get_llm")
-    async def test_sets_correct_current_step(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
         state = {
             **base_state,
             "approved_aggregations": [],
@@ -360,7 +363,9 @@ class TestGeneratePricing:
         mock_get_llm.return_value = mock_llm_instance
 
         result = await generate_pricing(state)
-        assert result["current_step"] == "pricing_generated"
+        assert result["current_step"] == "error"
+        assert result["pricing"] == []
+        assert "error" in result
 
 
 # ---------------------------------------------------------------------------

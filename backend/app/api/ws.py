@@ -113,6 +113,28 @@ async def _invoke_and_send_result(
             )
         return True
 
+    # Check for error state (graph reached END with current_step == "error")
+    final_values = graph_state.values if graph_state else {}
+    if final_values.get("current_step") == "error":
+        error_msg = final_values.get("error", "Workflow ended in error state")
+        now = datetime.now(UTC).isoformat()
+        supabase.table("workflows").update(
+            {
+                "status": WorkflowStatus.failed,
+                "error_message": error_msg,
+                "updated_at": now,
+            }
+        ).eq("id", workflow_id).execute()
+        await websocket.send_json({"type": "error", "message": error_msg})
+        save_message_internal(
+            supabase,
+            workflow_id,
+            MessageRole.system,
+            error_msg,
+            metadata={"payload": {"type": "error", "message": error_msg}},
+        )
+        return False
+
     # Workflow completed
     now = datetime.now(UTC).isoformat()
     supabase.table("workflows").update(
@@ -195,7 +217,30 @@ async def workflow_ws(websocket: WebSocket, workflow_id: str) -> None:
         graph = await get_graph(wf_type)
 
         # Send current interrupt state if any
-        await _send_interrupt_if_pending(websocket, graph, config)
+        has_interrupt = await _send_interrupt_if_pending(websocket, graph, config)
+
+        # If the workflow already finished (failed/completed via REST before WS connected),
+        # send the terminal message immediately and close — don't enter the message loop.
+        if not has_interrupt:
+            wf_status = workflow.get("status")
+            if wf_status == WorkflowStatus.failed:
+                error_msg = workflow.get("error_message", "Workflow failed")
+                await websocket.send_json({"type": "error", "message": error_msg})
+                save_message_internal(
+                    supabase,
+                    workflow_id,
+                    MessageRole.system,
+                    error_msg,
+                    metadata={"payload": {"type": "error", "message": error_msg}},
+                )
+                await websocket.close()
+                return
+            if wf_status == WorkflowStatus.completed:
+                await websocket.send_json(
+                    {"type": "complete", "message": "Workflow completed successfully."}
+                )
+                await websocket.close()
+                return
 
         # Listen for client messages
         while True:

@@ -5,11 +5,10 @@ import logging
 from app.agents.state import WorkflowState
 from app.agents.utils import (
     fetch_approved_entities,
-    fetch_workflow_window,
     inject_entity_id,
 )
 from app.db.client import get_supabase_client
-from app.schemas.common import EntityType, WorkflowType
+from app.schemas.common import EntityType
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +22,11 @@ async def load_approved_for_usage(state: WorkflowState) -> dict:
     use_case_id = state.get("use_case_id", "")
     supabase = get_supabase_client()
 
-    # Find latest completed workflow time windows
-    wf1_result = fetch_workflow_window(
-        supabase, use_case_id, WorkflowType.product_meter_aggregation
-    )
-    wf3_result = fetch_workflow_window(supabase, use_case_id, WorkflowType.account_setup)
-
     # Fetch approved meters from WF1
-    meters_result = fetch_approved_entities(supabase, use_case_id, [EntityType.meter], wf1_result)
+    meters_result = fetch_approved_entities(supabase, use_case_id, [EntityType.meter])
 
     # Fetch approved accounts from WF3
-    accounts_result = fetch_approved_entities(
-        supabase, use_case_id, [EntityType.account], wf3_result
-    )
+    accounts_result = fetch_approved_entities(supabase, use_case_id, [EntityType.account])
 
     approved_meters = [inject_entity_id(row) for row in meters_result.data]
     approved_accounts = [inject_entity_id(row) for row in accounts_result.data]
