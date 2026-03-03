@@ -1,8 +1,16 @@
 <script lang="ts">
 	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 	import EntityCard from './EntityCard.svelte';
 	import ClarificationCard from './ClarificationCard.svelte';
-	import { CheckCircle, AlertCircle, Activity, MessageSquare, ThumbsUp } from 'lucide-svelte';
+	import {
+		CheckCircle,
+		AlertCircle,
+		Activity,
+		MessageSquare,
+		ThumbsUp,
+		CheckCheck,
+	} from 'lucide-svelte';
 	import type { ChatMessage, EntityDecision, ClarificationAnswer } from '$lib/types/workflow.js';
 
 	let {
@@ -11,12 +19,14 @@
 		decisions = [],
 		ondecision,
 		onclarify,
+		onapproveall,
 	}: {
 		message: ChatMessage;
 		interactive?: boolean;
 		decisions?: EntityDecision[];
 		ondecision?: (decision: EntityDecision) => void;
 		onclarify?: (answers: ClarificationAnswer[]) => void;
+		onapproveall?: () => void;
 	} = $props();
 </script>
 
@@ -34,6 +44,12 @@
 			</span>
 			<Badge variant="outline">{message.entities.length} entities</Badge>
 		</div>
+		{#if interactive && message.entities.length > 1}
+			<Button size="sm" variant="outline" class="w-full" onclick={() => onapproveall?.()}>
+				<CheckCheck class="mr-1 size-3" />
+				Approve All ({message.entities.length})
+			</Button>
+		{/if}
 		<div class="space-y-2">
 			{#each message.entities as entity, i}
 				<EntityCard

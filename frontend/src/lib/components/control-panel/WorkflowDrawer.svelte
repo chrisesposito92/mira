@@ -20,8 +20,10 @@
 		status,
 		modelName,
 		pendingDecisions,
+		hasPendingEntities = false,
 		ondecision,
 		onclarify,
+		onapproveall,
 	}: {
 		open: boolean;
 		loading: boolean;
@@ -32,8 +34,10 @@
 		status: WorkflowStatus | null;
 		modelName: string;
 		pendingDecisions: EntityDecision[];
+		hasPendingEntities?: boolean;
 		ondecision: (decision: EntityDecision) => void;
 		onclarify: (answers: ClarificationAnswer[]) => void;
+		onapproveall?: () => void;
 	} = $props();
 </script>
 
@@ -44,7 +48,7 @@
 			<Sheet.Description>AI workflow chat panel</Sheet.Description>
 		</Sheet.Header>
 		<WorkflowHeader {currentStep} {connectionState} {status} {modelName} />
-		<div class="flex-1 overflow-hidden">
+		<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
 			{#if loading && messages.length === 0}
 				<div class="flex h-full flex-col items-center justify-center gap-3">
 					<Loader2 class="text-muted-foreground size-6 animate-spin" />
@@ -56,8 +60,10 @@
 					{thinking}
 					{currentStep}
 					{pendingDecisions}
+					{hasPendingEntities}
 					{ondecision}
 					{onclarify}
+					{onapproveall}
 				/>
 			{/if}
 		</div>

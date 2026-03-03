@@ -226,6 +226,10 @@
 		workflowStore.submitDecision(decision);
 	}
 
+	function handleApproveAll() {
+		workflowStore.approveAll();
+	}
+
 	function handleClarification(answers: ClarificationAnswer[]) {
 		workflowStore.submitClarificationAnswers(answers);
 	}
@@ -332,8 +336,10 @@
 		status={workflowStore.workflow?.status ?? null}
 		{modelName}
 		pendingDecisions={workflowStore.pendingDecisions}
+		hasPendingEntities={workflowStore.pendingEntities !== null}
 		ondecision={handleDecision}
 		onclarify={handleClarification}
+		onapproveall={handleApproveAll}
 	/>
 
 	<CreateObjectDialog bind:open={showCreateDialog} {templates} oncreate={handleCreate} />

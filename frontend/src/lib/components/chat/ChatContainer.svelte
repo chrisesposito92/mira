@@ -12,15 +12,19 @@
 		thinking = false,
 		currentStep = '',
 		pendingDecisions = [],
+		hasPendingEntities = false,
 		ondecision,
 		onclarify,
+		onapproveall,
 	}: {
 		messages: ChatMessageType[];
 		thinking?: boolean;
 		currentStep?: string;
 		pendingDecisions?: EntityDecision[];
+		hasPendingEntities?: boolean;
 		ondecision?: (decision: EntityDecision) => void;
 		onclarify?: (answers: ClarificationAnswer[]) => void;
+		onapproveall?: () => void;
 	} = $props();
 
 	let container: HTMLDivElement | undefined = $state();
@@ -32,7 +36,7 @@
 	);
 
 	function isInteractive(msg: ChatMessageType, index: number): boolean {
-		if (msg.type === 'entities') return index === lastEntitiesIndex;
+		if (msg.type === 'entities') return index === lastEntitiesIndex && hasPendingEntities;
 		if (msg.type === 'clarification') return index === lastClarificationIndex;
 		return false;
 	}
@@ -59,6 +63,7 @@
 				decisions={msg.type === 'entities' ? pendingDecisions : []}
 				{ondecision}
 				{onclarify}
+				{onapproveall}
 			/>
 		{/each}
 		{#if thinking}

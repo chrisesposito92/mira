@@ -208,6 +208,17 @@ class WorkflowStore {
 		}
 	}
 
+	approveAll() {
+		if (!this.pendingEntities) return;
+		for (let i = 0; i < this.pendingEntities.entities.length; i++) {
+			const existing = this.pendingDecisions.find((d) => d.index === i);
+			if (!existing) {
+				this.pendingDecisions = [...this.pendingDecisions, { index: i, action: 'approve' }];
+			}
+		}
+		this.submitAllDecisions();
+	}
+
 	submitDecision(decision: EntityDecision) {
 		const existing = this.pendingDecisions.find((d) => d.index === decision.index);
 		if (existing) {
