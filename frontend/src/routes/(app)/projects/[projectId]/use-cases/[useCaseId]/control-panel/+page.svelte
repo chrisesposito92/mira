@@ -217,6 +217,7 @@
 			workflowType,
 		);
 		if (!wf) {
+			drawerOpen = false;
 			toast.error(workflowStore.error ?? 'Failed to start workflow');
 		}
 	}

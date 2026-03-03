@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any
 
-from app.schemas.common import ObjectStatus, WorkflowStatus, WorkflowType
+from app.schemas.common import ObjectStatus
 
 logger = logging.getLogger(__name__)
 
@@ -113,35 +113,16 @@ def parse_entity_list(content: str) -> list[dict]:
     return []
 
 
-def fetch_workflow_window(supabase: Any, use_case_id: str, workflow_type: WorkflowType) -> Any:
-    """Fetch the latest completed workflow time window for entity scoping."""
-    return (
-        supabase.table("workflows")
-        .select("started_at, completed_at")
-        .eq("use_case_id", use_case_id)
-        .eq("workflow_type", workflow_type)
-        .eq("status", WorkflowStatus.completed)
-        .order("completed_at", desc=True)
-        .limit(1)
-        .execute()
-    )
-
-
 def fetch_approved_entities(
     supabase: Any,
     use_case_id: str,
     entity_types: list[str],
-    wf_result: Any = None,
 ) -> Any:
     """Fetch approved entities for a use case.
 
-    The ``wf_result`` parameter is accepted for backward compatibility but is
-    no longer used for time-window scoping.  Earlier versions filtered entities
-    by the predecessor workflow's ``started_at``/``completed_at`` timestamps,
-    but that breaks when the user re-runs a workflow — entities from an earlier
-    (valid) run fall outside the latest run's window.  The ``approved`` status
-    is the authoritative signal; if an entity is approved it should be
-    available to downstream workflows regardless of which run produced it.
+    Uses ``approved`` status as the authoritative signal — if an entity is
+    approved it should be available to downstream workflows regardless of
+    which run produced it.
     """
     query = (
         supabase.table("generated_objects")
