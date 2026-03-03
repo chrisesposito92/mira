@@ -459,6 +459,55 @@ MEASUREMENT_SCHEMA = {
     },
 }
 
+# Compound Aggregation schema — calculated from simple aggregations using formulas
+COMPOUND_AGGREGATION_SCHEMA = {
+    "name": {
+        "type": "str",
+        "required": True,
+        "description": "Human-readable compound aggregation name",
+        "max_length": 200,
+    },
+    "code": {
+        "type": "str",
+        "required": True,
+        "description": "Unique compound aggregation code (lowercase, alphanumeric + underscore)",
+        "pattern": "^[a-z][a-z0-9_]*$",
+    },
+    "calculation": {
+        "type": "str",
+        "required": True,
+        "description": (
+            'Formula referencing aggregation codes, e.g. "agg_code_1 - (agg_code_2 * 100)"'
+        ),
+    },
+    "quantityPerUnit": {
+        "type": "float",
+        "required": True,
+        "description": "Units divisor (usually 1.0)",
+    },
+    "rounding": {
+        "type": "str",
+        "required": True,
+        "enum": ["UP", "DOWN", "NEAREST", "NONE"],
+        "description": "Rounding mode for the calculated result",
+    },
+    "unit": {
+        "type": "str",
+        "required": True,
+        "description": "User-defined unit label (e.g. 'requests', 'GB')",
+    },
+    "productId": {
+        "type": "str",
+        "required": False,
+        "description": "UUID of the parent product",
+    },
+    "customFields": {
+        "type": "dict",
+        "required": False,
+        "description": "Optional custom key-value pairs",
+    },
+}
+
 _SCHEMAS = {
     EntityType.product: PRODUCT_SCHEMA,
     EntityType.meter: METER_SCHEMA,
@@ -469,6 +518,7 @@ _SCHEMAS = {
     EntityType.account: ACCOUNT_SCHEMA,
     EntityType.account_plan: ACCOUNT_PLAN_SCHEMA,
     EntityType.measurement: MEASUREMENT_SCHEMA,
+    EntityType.compound_aggregation: COMPOUND_AGGREGATION_SCHEMA,
 }
 
 

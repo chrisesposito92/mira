@@ -32,12 +32,18 @@ async def load_approved_entities(state: WorkflowState, config: RunnableConfig) -
     result = fetch_approved_entities(
         supabase,
         use_case_id,
-        [EntityType.product, EntityType.meter, EntityType.aggregation],
+        [
+            EntityType.product,
+            EntityType.meter,
+            EntityType.aggregation,
+            EntityType.compound_aggregation,
+        ],
     )
 
     approved_products: list[dict] = []
     approved_meters: list[dict] = []
     approved_aggregations: list[dict] = []
+    approved_compound_aggregations: list[dict] = []
 
     for row in result.data:
         entity_data = inject_entity_id(row)
@@ -48,6 +54,8 @@ async def load_approved_entities(state: WorkflowState, config: RunnableConfig) -
             approved_meters.append(entity_data)
         elif entity_type == EntityType.aggregation:
             approved_aggregations.append(entity_data)
+        elif entity_type == EntityType.compound_aggregation:
+            approved_compound_aggregations.append(entity_data)
 
     if not approved_products and not approved_meters and not approved_aggregations:
         return {
@@ -85,11 +93,13 @@ async def load_approved_entities(state: WorkflowState, config: RunnableConfig) -
         )
 
     logger.info(
-        "Loaded approved entities for use case %s: %d products, %d meters, %d aggregations",
+        "Loaded approved entities for use case %s: %d products, %d meters, %d aggregations,"
+        " %d compound aggregations",
         use_case_id,
         len(approved_products),
         len(approved_meters),
         len(approved_aggregations),
+        len(approved_compound_aggregations),
     )
 
     # Load memory context from store
@@ -99,6 +109,7 @@ async def load_approved_entities(state: WorkflowState, config: RunnableConfig) -
         "approved_products": approved_products,
         "approved_meters": approved_meters,
         "approved_aggregations": approved_aggregations,
+        "approved_compound_aggregations": approved_compound_aggregations,
         "use_case": use_case,
         "rag_context": rag_context,
         **mem,

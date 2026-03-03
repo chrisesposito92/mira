@@ -92,7 +92,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `nodes/measurement_gen.py` | Measurement generation via LLM |
 | `nodes/validation.py` | Run validation rules on generated entities (4-tuple step mapping + cross-entity validation) |
 | `nodes/approval.py` | Persist entities to DB, `interrupt()` for user approval (5-tuple step config) |
-| `graphs/product_meter_agg.py` | WF1 StateGraph: analyze → [clarify?] → generate → validate → approve (×3 entity types) |
+| `graphs/product_meter_agg.py` | WF1 StateGraph: analyze → [clarify?] → generate → validate → approve (×4 entity types: Product, Meter, Aggregation, CompoundAggregation) |
 | `graphs/plan_pricing.py` | WF2 StateGraph: load_approved → generate → validate → approve (×3: PlanTemplate, Plan, Pricing) |
 | `graphs/account_setup.py` | WF3 StateGraph: load_approved → generate → validate → approve (×2: Account, AccountPlan) |
 | `graphs/usage_submission.py` | WF4 StateGraph: load_approved → generate → validate → approve (×1: Measurement) |
@@ -105,7 +105,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `graphs/use_case_gen.py` | Use case generator StateGraph: research → [clarify?] → compile → END |
 | `prompts/use_case_gen.py` | System prompts for use case generator (research + compilation) |
 | `tools/rag_tool.py` | RAG retrieval wrapper for agent nodes |
-| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, PlanTemplate, Plan, Pricing, Account, AccountPlan, Measurement) |
+| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, CompoundAggregation, PlanTemplate, Plan, Pricing, Account, AccountPlan, Measurement) |
 
 ### Frontend Structure (`frontend/src/`)
 
@@ -156,7 +156,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
-- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing, account, account_plan, measurement. Cross-entity referential integrity checks in `validation/cross_entity.py` (AccountPlan→Account/Plan, Measurement→Meter/Account).
+- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, compound_aggregation, plan_template, plan, pricing, account, account_plan, measurement. Cross-entity referential integrity checks in `validation/cross_entity.py` (AccountPlan→Account/Plan, Measurement→Meter/Account).
 - **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation, plan_pricing, account_setup, usage_submission). Prerequisite chain: WF1 → WF2 → WF3 → WF4. Frontend WorkflowLauncher gates each workflow on predecessor completion.
 - **LangSmith tracing**: Set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` to enable automatic tracing of all LangGraph/LangChain calls. Graph invocation configs include `run_name`, `metadata` (workflow_id, workflow_type, source), and `tags` for filtering in the LangSmith dashboard. No code changes needed to toggle — purely env-var driven.
 

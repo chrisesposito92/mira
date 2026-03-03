@@ -283,7 +283,7 @@ class TestWorkflowHistory:
 
 class TestHelpers:
     def test_get_workflow_num_for_step(self):
-        assert get_workflow_num_for_step("aggregations_approved") == 1
+        assert get_workflow_num_for_step("compound_aggregations_approved") == 1
         assert get_workflow_num_for_step("pricing_approved") == 2
         assert get_workflow_num_for_step("account_plans_approved") == 3
         assert get_workflow_num_for_step("measurements_approved") == 4

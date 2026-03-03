@@ -44,6 +44,13 @@ _STEP_CONFIG: dict[str, tuple[EntityType, str, str, str, str]] = {
         "aggregation_decisions",
         "aggregations_approved",
     ),
+    "compound_aggregations_validated": (
+        EntityType.compound_aggregation,
+        "compound_aggregations",
+        "compound_aggregation_errors",
+        "compound_aggregation_decisions",
+        "compound_aggregations_approved",
+    ),
     "plan_templates_validated": (
         EntityType.plan_template,
         "plan_templates",

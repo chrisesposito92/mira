@@ -10,6 +10,7 @@ from app.agents.llm_factory import get_llm
 from app.agents.memory import load_generation_memory
 from app.agents.prompts.product_meter import (
     AGGREGATION_GENERATION_PROMPT,
+    COMPOUND_AGGREGATION_GENERATION_PROMPT,
     METER_GENERATION_PROMPT,
     PRODUCT_GENERATION_PROMPT,
 )
@@ -201,5 +202,57 @@ async def generate_aggregations(state: WorkflowState, config: RunnableConfig) ->
     return {
         "aggregations": aggregations,
         "current_step": "aggregations_generated",
+        "messages": messages,
+    }
+
+
+async def generate_compound_aggregations(state: WorkflowState, config: RunnableConfig) -> dict:
+    """Generate Compound Aggregation entity configurations using LLM.
+
+    References previously approved aggregations for formula construction.
+    """
+    mem = await load_generation_memory(config, state, "compound_aggregation", from_store=True)
+
+    model_id = state["model_id"]
+    analysis = state.get("analysis", "")
+    rag_context = state.get("rag_context", "")
+    clarification_answers = _format_clarification_answers(state)
+    products = state.get("products", [])
+    aggregations = state.get("aggregations", [])
+
+    prompt = COMPOUND_AGGREGATION_GENERATION_PROMPT.format(
+        analysis=analysis,
+        rag_context=rag_context,
+        clarification_answers=clarification_answers,
+        products=json.dumps(products, indent=2),
+        aggregations=json.dumps(aggregations, indent=2),
+        **mem,
+    )
+
+    llm = get_llm(model_id, temperature=0.2)
+    response = await llm.ainvoke(
+        [
+            SystemMessage(content=prompt),
+            HumanMessage(
+                content="Generate the Compound Aggregation configurations now. "
+                "Return an empty array [] if none are needed."
+            ),
+        ]
+    )
+
+    content = extract_llm_text(response.content)
+    compound_aggregations = parse_entity_list(content)
+
+    messages = state.get("messages", []) + [
+        {"role": "assistant", "content": content, "step": "generate_compound_aggregations"}
+    ]
+
+    # Empty array is valid — not all use cases need compound aggregations
+    if compound_aggregations is None:
+        compound_aggregations = []
+
+    return {
+        "compound_aggregations": compound_aggregations,
+        "current_step": "compound_aggregations_generated",
         "messages": messages,
     }

@@ -32,11 +32,13 @@ Respond with a JSON object:
   "products_needed": ["<product name 1>", ...],
   "meters_needed": ["<meter name 1>", ...],
   "aggregations_needed": ["<aggregation name 1>", ...],
+  "compound_aggregations_needed": ["<compound aggregation name 1 if any>", ...],
   "reasoning": "<why these entities are needed and how they relate>"
 }}
 
 Be specific about which data fields each meter should capture and how aggregations \
-should roll up the data. If anything is ambiguous, set needs_clarification to true.
+should roll up the data. If compound aggregations are needed (calculated from simple \
+aggregations using formulas), list them. If anything is ambiguous, set needs_clarification to true.
 """
 
 CLARIFICATION_PROMPT = """\
@@ -276,6 +278,82 @@ Respond with a JSON array of aggregation objects:
     "targetField": "<data_field_code>",
     "rounding": {{"precision": <int>, "roundingType": "<UP|DOWN|NEAREST>"}},
     "segmentedFields": ["<field_code>", ...]
+  }},
+  ...
+]
+"""
+
+COMPOUND_AGGREGATION_GENERATION_PROMPT = """\
+You are an expert m3ter billing configuration architect. Generate Compound Aggregation \
+entity configurations — these are calculated aggregations derived from simple aggregations \
+using mathematical formulas.
+
+## m3ter Compound Aggregation Schema
+
+A Compound Aggregation calculates a value from one or more simple aggregations using a formula. \
+Required fields:
+- **name** (str): Human-readable name (e.g., "Billable Requests After Free Allowance")
+- **code** (str): Unique machine code, lowercase with underscores
+- **calculation** (str): Formula referencing simple aggregation codes. \
+  Example: "sum_requests - (max_apps * 100)"
+- **quantityPerUnit** (float): Units divisor, usually 1.0
+- **rounding** (str): One of "UP", "DOWN", "NEAREST", "NONE"
+- **unit** (str): Unit label (e.g., "requests", "GB")
+- **productId** (str, optional): UUID of the parent product
+- **customFields** (dict, optional): Key-value pairs for metadata
+
+Example:
+{{
+  "name": "Billable Requests After Free Allowance",
+  "code": "billable_requests_after_free",
+  "calculation": "sum_requests - (max_apps * 100)",
+  "quantityPerUnit": 1.0,
+  "rounding": "UP",
+  "unit": "requests"
+}}
+
+## Approved Aggregations
+
+{aggregations}
+
+## Products Generated
+
+{products}
+
+## Analysis
+
+{analysis}
+
+## Clarification Answers
+
+{clarification_answers}
+
+## RAG Context
+
+{rag_context}
+{project_memory}{correction_patterns}{user_preferences}
+## Instructions
+
+Generate Compound Aggregation configurations that:
+- Reference the correct aggregation codes from the approved aggregations above
+- Use formulas that combine simple aggregations (e.g., subtract free allowances, compute ratios)
+- Use appropriate rounding for the unit of measurement
+
+**IMPORTANT**: If no compound aggregations are needed for this use case, return an \
+empty array `[]`. Only generate compound aggregations when the billing model requires \
+calculated values derived from multiple simple aggregations.
+
+## Output Format
+
+Respond with a JSON array of compound aggregation objects (or empty array if none needed):
+[
+  {{
+    "name": "<compound aggregation name>",
+    "code": "<unique_snake_case_code>",
+    "calculation": "<formula using aggregation codes>",
+    "quantityPerUnit": 1.0,
+    "rounding": "<UP|DOWN|NEAREST|NONE>",
+    "unit": "<unit label>"
   }},
   ...
 ]

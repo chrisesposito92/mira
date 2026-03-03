@@ -24,6 +24,7 @@ async def generate_pricing(state: WorkflowState, config: RunnableConfig) -> dict
 
     model_id = state["model_id"]
     approved_aggregations = state.get("approved_aggregations", [])
+    approved_compound_aggregations = state.get("approved_compound_aggregations", [])
     plans = state.get("plans", [])
     plan_templates = state.get("plan_templates", [])
     analysis = state.get("analysis", "")
@@ -32,6 +33,7 @@ async def generate_pricing(state: WorkflowState, config: RunnableConfig) -> dict
 
     prompt = PRICING_GENERATION_PROMPT.format(
         approved_aggregations=json.dumps(approved_aggregations, indent=2),
+        approved_compound_aggregations=json.dumps(approved_compound_aggregations, indent=2),
         plans=json.dumps(plans, indent=2),
         plan_templates=json.dumps(plan_templates, indent=2),
         analysis=analysis if analysis else build_use_case_description(use_case),
