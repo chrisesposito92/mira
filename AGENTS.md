@@ -1,5 +1,7 @@
 Use your superpowers skills when applicable.
 
+USE LANGSMITH MCP WHILE DEBUGGING WORKFLOWS. IT WILL ALLOW YOU TO SEE TRACES FOR FULL WORKFLOWS AT EACH INDIVIDUAL NODE, ETC. SUPER HELPFUL.
+
 # MIRA — Metering Intelligence & Rating Architect
 
 AI-powered m3ter configuration assistant. Generates correct m3ter billing configs through LangGraph agent workflows with human-in-the-loop approval gates.
