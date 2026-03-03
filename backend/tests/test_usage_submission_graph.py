@@ -77,7 +77,7 @@ class TestUsageSubmissionGraphStructure:
 class TestLoadApprovedForUsage:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved_usage.get_supabase_client")
-    async def test_loads_approved_entities_from_db(self, mock_supabase, base_state):
+    async def test_loads_approved_entities_from_db(self, mock_supabase, base_state, mock_config):
         mock_client = MagicMock()
 
         # Mock meters result
@@ -133,7 +133,7 @@ class TestLoadApprovedForUsage:
         mock_client.table = table_side_effect
         mock_supabase.return_value = mock_client
 
-        result = await load_approved_for_usage(base_state)
+        result = await load_approved_for_usage(base_state, mock_config)
 
         assert len(result["approved_meters"]) == 1
         assert result["approved_meters"][0]["id"] == "meter-aaa"
@@ -143,7 +143,7 @@ class TestLoadApprovedForUsage:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved_usage.get_supabase_client")
-    async def test_errors_when_only_meters_present(self, mock_supabase, base_state):
+    async def test_errors_when_only_meters_present(self, mock_supabase, base_state, mock_config):
         """WF4 should fail if accounts are missing even when meters exist."""
         mock_client = MagicMock()
 
@@ -191,7 +191,7 @@ class TestLoadApprovedForUsage:
         mock_client.table = table_side_effect
         mock_supabase.return_value = mock_client
 
-        result = await load_approved_for_usage(base_state)
+        result = await load_approved_for_usage(base_state, mock_config)
 
         assert "error" in result
         assert result["current_step"] == "error"
@@ -199,7 +199,7 @@ class TestLoadApprovedForUsage:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved_usage.get_supabase_client")
-    async def test_handles_empty_approved_entities(self, mock_supabase, base_state):
+    async def test_handles_empty_approved_entities(self, mock_supabase, base_state, mock_config):
         mock_client = MagicMock()
 
         def table_side_effect(name):
@@ -219,7 +219,7 @@ class TestLoadApprovedForUsage:
         mock_client.table = table_side_effect
         mock_supabase.return_value = mock_client
 
-        result = await load_approved_for_usage(base_state)
+        result = await load_approved_for_usage(base_state, mock_config)
 
         assert "error" in result
         assert result["current_step"] == "error"
@@ -233,7 +233,7 @@ class TestLoadApprovedForUsage:
 class TestGenerateMeasurements:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.measurement_gen.get_llm")
-    async def test_generates_measurement_list(self, mock_get_llm, base_state):
+    async def test_generates_measurement_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_meters": [
@@ -259,7 +259,7 @@ class TestGenerateMeasurements:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(measurements)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_measurements(state)
+        result = await generate_measurements(state, mock_config)
 
         assert len(result["measurements"]) == 1
         assert result["measurements"][0]["uid"] == "meas-001"
@@ -267,7 +267,7 @@ class TestGenerateMeasurements:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.measurement_gen.get_llm")
-    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_meters": [],
@@ -278,7 +278,7 @@ class TestGenerateMeasurements:
         mock_llm_instance.ainvoke.return_value = _make_llm_response([])
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_measurements(state)
+        result = await generate_measurements(state, mock_config)
         assert result["current_step"] == "error"
         assert result["measurements"] == []
         assert "error" in result

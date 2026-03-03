@@ -95,7 +95,9 @@ class TestLoadApprovedForAccounts:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved_accounts.rag_retrieve", new_callable=AsyncMock)
     @patch("app.agents.nodes.load_approved_accounts.get_supabase_client")
-    async def test_loads_approved_entities_from_db(self, mock_supabase, mock_rag, base_state):
+    async def test_loads_approved_entities_from_db(
+        self, mock_supabase, mock_rag, base_state, mock_config
+    ):
         mock_client = MagicMock()
 
         # Mock WF1 entities
@@ -160,7 +162,7 @@ class TestLoadApprovedForAccounts:
         mock_supabase.return_value = mock_client
         mock_rag.return_value = "Relevant account docs..."
 
-        result = await load_approved_for_accounts(base_state)
+        result = await load_approved_for_accounts(base_state, mock_config)
 
         assert len(result["approved_products"]) == 1
         assert result["approved_products"][0]["id"] == "prod-aaa"
@@ -172,7 +174,9 @@ class TestLoadApprovedForAccounts:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved_accounts.rag_retrieve", new_callable=AsyncMock)
     @patch("app.agents.nodes.load_approved_accounts.get_supabase_client")
-    async def test_errors_when_no_approved_plans(self, mock_supabase, mock_rag, base_state):
+    async def test_errors_when_no_approved_plans(
+        self, mock_supabase, mock_rag, base_state, mock_config
+    ):
         """WF3 should fail if no approved plans exist (needed for AccountPlan generation)."""
         mock_client = MagicMock()
 
@@ -223,7 +227,7 @@ class TestLoadApprovedForAccounts:
         mock_supabase.return_value = mock_client
         mock_rag.return_value = ""
 
-        result = await load_approved_for_accounts(base_state)
+        result = await load_approved_for_accounts(base_state, mock_config)
 
         assert "error" in result
         assert result["current_step"] == "error"
@@ -232,7 +236,9 @@ class TestLoadApprovedForAccounts:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved_accounts.rag_retrieve", new_callable=AsyncMock)
     @patch("app.agents.nodes.load_approved_accounts.get_supabase_client")
-    async def test_handles_empty_approved_entities(self, mock_supabase, mock_rag, base_state):
+    async def test_handles_empty_approved_entities(
+        self, mock_supabase, mock_rag, base_state, mock_config
+    ):
         mock_client = MagicMock()
 
         def table_side_effect(name):
@@ -253,7 +259,7 @@ class TestLoadApprovedForAccounts:
         mock_supabase.return_value = mock_client
         mock_rag.return_value = ""
 
-        result = await load_approved_for_accounts(base_state)
+        result = await load_approved_for_accounts(base_state, mock_config)
 
         assert "error" in result
         assert result["current_step"] == "error"
@@ -267,7 +273,7 @@ class TestLoadApprovedForAccounts:
 class TestGenerateAccounts:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.account_gen.get_llm")
-    async def test_generates_account_list(self, mock_get_llm, base_state):
+    async def test_generates_account_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_products": [{"name": "API Gateway", "code": "api_gateway"}],
@@ -287,7 +293,7 @@ class TestGenerateAccounts:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(accounts)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_accounts(state)
+        result = await generate_accounts(state, mock_config)
 
         assert len(result["accounts"]) == 1
         assert result["accounts"][0]["name"] == "Acme Corp"
@@ -295,7 +301,9 @@ class TestGenerateAccounts:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.account_gen.get_llm")
-    async def test_uses_use_case_fallback_when_no_analysis(self, mock_get_llm, base_state):
+    async def test_uses_use_case_fallback_when_no_analysis(
+        self, mock_get_llm, base_state, mock_config
+    ):
         state = {
             **base_state,
             "approved_products": [],
@@ -309,7 +317,7 @@ class TestGenerateAccounts:
         mock_llm_instance.ainvoke.return_value = _make_llm_response([])
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_accounts(state)
+        result = await generate_accounts(state, mock_config)
 
         assert result["accounts"] == []
         assert result["current_step"] == "error"
@@ -320,7 +328,7 @@ class TestGenerateAccounts:
 class TestGenerateAccountPlans:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.account_plan_gen.get_llm")
-    async def test_generates_account_plan_list(self, mock_get_llm, base_state):
+    async def test_generates_account_plan_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "accounts": [{"name": "Acme Corp", "code": "acme_corp", "id": "acc-123"}],
@@ -338,7 +346,7 @@ class TestGenerateAccountPlans:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(account_plans)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_account_plans(state)
+        result = await generate_account_plans(state, mock_config)
 
         assert len(result["account_plans"]) == 1
         assert result["account_plans"][0]["accountId"] == "acc-123"
@@ -346,7 +354,7 @@ class TestGenerateAccountPlans:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.account_plan_gen.get_llm")
-    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "accounts": [],
@@ -357,7 +365,7 @@ class TestGenerateAccountPlans:
         mock_llm_instance.ainvoke.return_value = _make_llm_response([])
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_account_plans(state)
+        result = await generate_account_plans(state, mock_config)
         assert result["current_step"] == "error"
         assert result["account_plans"] == []
         assert "error" in result

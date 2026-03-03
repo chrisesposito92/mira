@@ -45,7 +45,9 @@ class TestAnalyzeUseCase:
     @patch("app.agents.nodes.analysis.rag_retrieve", new_callable=AsyncMock)
     @patch("app.agents.nodes.analysis.get_llm")
     @patch("app.agents.nodes.analysis.get_supabase_client")
-    async def test_successful_analysis(self, mock_supabase, mock_get_llm, mock_rag, base_state):
+    async def test_successful_analysis(
+        self, mock_supabase, mock_get_llm, mock_rag, base_state, mock_config
+    ):
         # Mock Supabase query
         mock_client = MagicMock()
         mock_result = MagicMock()
@@ -82,7 +84,7 @@ class TestAnalyzeUseCase:
         mock_llm_instance.ainvoke.return_value = llm_response
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await analyze_use_case(base_state)
+        result = await analyze_use_case(base_state, mock_config)
 
         assert "analysis" in result
         assert result["needs_clarification"] is False
@@ -95,7 +97,9 @@ class TestAnalyzeUseCase:
     @patch("app.agents.nodes.analysis.rag_retrieve", new_callable=AsyncMock)
     @patch("app.agents.nodes.analysis.get_llm")
     @patch("app.agents.nodes.analysis.get_supabase_client")
-    async def test_use_case_not_found(self, mock_supabase, mock_get_llm, mock_rag, base_state):
+    async def test_use_case_not_found(
+        self, mock_supabase, mock_get_llm, mock_rag, base_state, mock_config
+    ):
         mock_client = MagicMock()
         mock_result = MagicMock()
         mock_result.data = []
@@ -104,7 +108,7 @@ class TestAnalyzeUseCase:
         )
         mock_supabase.return_value = mock_client
 
-        result = await analyze_use_case(base_state)
+        result = await analyze_use_case(base_state, mock_config)
         assert result.get("error") is not None
         assert result["current_step"] == "error"
 
@@ -148,7 +152,7 @@ class TestGenerateClarifications:
 class TestGenerateProducts:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.generation.get_llm")
-    async def test_generates_product_list(self, mock_get_llm, base_state):
+    async def test_generates_product_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "analysis": "Need an API product",
@@ -163,7 +167,7 @@ class TestGenerateProducts:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(products)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_products(state)
+        result = await generate_products(state, mock_config)
 
         assert len(result["products"]) == 2
         assert result["products"][0]["name"] == "API Gateway"
@@ -173,7 +177,7 @@ class TestGenerateProducts:
 class TestGenerateMeters:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.generation.get_llm")
-    async def test_generates_meter_list(self, mock_get_llm, base_state):
+    async def test_generates_meter_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "analysis": "Need API request metering",
@@ -194,7 +198,7 @@ class TestGenerateMeters:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(meters)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_meters(state)
+        result = await generate_meters(state, mock_config)
 
         assert len(result["meters"]) == 1
         assert result["meters"][0]["code"] == "api_request_meter"
@@ -204,7 +208,7 @@ class TestGenerateMeters:
 class TestGenerateAggregations:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.generation.get_llm")
-    async def test_generates_aggregation_list(self, mock_get_llm, base_state):
+    async def test_generates_aggregation_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "analysis": "Need daily request aggregation",
@@ -234,7 +238,7 @@ class TestGenerateAggregations:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(aggregations)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_aggregations(state)
+        result = await generate_aggregations(state, mock_config)
 
         assert len(result["aggregations"]) == 1
         assert result["aggregations"][0]["aggregationType"] == "SUM"

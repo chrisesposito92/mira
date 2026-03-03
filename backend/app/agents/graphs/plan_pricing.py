@@ -13,7 +13,7 @@ Requires a completed Workflow 1 (product_meter_aggregation) for the same use cas
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from app.agents.checkpointer import get_checkpointer
+from app.agents.checkpointer import get_checkpointer, get_store
 from app.agents.nodes.approval import approve_entities
 from app.agents.nodes.load_approved import load_approved_entities
 from app.agents.nodes.plan_gen import generate_plans
@@ -95,5 +95,6 @@ async def build_plan_pricing_graph() -> CompiledStateGraph:
         return _compiled_graph
     graph = _build_graph()
     checkpointer = await get_checkpointer()
-    _compiled_graph = graph.compile(checkpointer=checkpointer)
+    store = await get_store()
+    _compiled_graph = graph.compile(checkpointer=checkpointer, store=store)
     return _compiled_graph

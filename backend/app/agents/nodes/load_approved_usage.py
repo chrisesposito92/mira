@@ -2,6 +2,9 @@
 
 import logging
 
+from langchain_core.runnables import RunnableConfig
+
+from app.agents.memory import load_enrichment_memory
 from app.agents.state import WorkflowState
 from app.agents.utils import (
     fetch_approved_entities,
@@ -13,7 +16,7 @@ from app.schemas.common import EntityType
 logger = logging.getLogger(__name__)
 
 
-async def load_approved_for_usage(state: WorkflowState) -> dict:
+async def load_approved_for_usage(state: WorkflowState, config: RunnableConfig) -> dict:
     """Load approved Meters (WF1) and Accounts (WF3) for measurement generation.
 
     No RAG context is needed for measurement generation since measurements
@@ -52,8 +55,13 @@ async def load_approved_for_usage(state: WorkflowState) -> dict:
         len(approved_accounts),
     )
 
+    # Load memory context from store
+    project_id = state.get("project_id", "")
+    mem = await load_enrichment_memory(config, project_id, up_to_wf=4, use_case_id=use_case_id)
+
     return {
         "approved_meters": approved_meters,
         "approved_accounts": approved_accounts,
+        **mem,
         "current_step": "approved_entities_loaded_for_usage",
     }

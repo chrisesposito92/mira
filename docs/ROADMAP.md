@@ -13,6 +13,7 @@ Phase 1 (Scaffold)
   │     │                 └── Phase 13 (Doc Upload) ← also needs Phase 6
   │     ├── Phase 4 (Backend API)
   │     │     ├── Phase 7 (Agent Core) ← also needs Phase 6
+  │     │     │     ├── Phase 7.5 (Long-Term Memory)
   │     │     │     ├── Phase 9 (Plans/Pricing)
   │     │     │     │     └── Phase 10 (Accounts/Usage)
   │     │     │     └── Phase 12 (m3ter Sync) ← also needs Phase 11
@@ -467,6 +468,31 @@ Phase 1 (Scaffold)
 - [x] Multi-step dialog UI (input → progress → clarification → results)
 - [x] File upload with in-memory text extraction (PDF/DOCX/TXT)
 - [x] Use case result cards with selection and save
+
+---
+
+## Phase 7.5: Long-Term Memory (LangGraph Store)
+
+**3 new files, ~20 modified** | Depends on: Phase 7
+
+- [x] `agents/checkpointer.py` — Shared pool, `get_store()` singleton (`AsyncPostgresStore`), `store.setup()`, pool max_size 10→15
+- [x] `agents/state.py` — Added `workflow_history`, `project_memory`, `correction_patterns` memory fields
+- [x] `agents/memory.py` — Core memory module: `get_store_from_config()`, namespace helpers, save/load for project context, corrections, workflow history, formatting helpers
+- [x] `agents/memory_decisions.py` — UC2: Entity diff engine, preference storage/retrieval (per-user, per-entity-type), weighted pattern classification, prompt formatting
+- [x] `agents/memory_rag.py` — UC4: RAG chunk feedback recording (EMA scoring), retrieval, feedback-based re-ranking (0.7×relevance + 0.3×feedback)
+- [x] All 5 graph builders wired with `store=` parameter in `compile()`
+- [x] UC1: Project-level memory — analysis.py writes context, approval.py captures corrections, generation nodes read memory
+- [x] UC2: User decision memory — approval.py computes diffs, stores preferences; all generation nodes retrieve + inject preferences
+- [x] UC3: Cross-workflow enrichment — approval.py writes workflow summaries; load_approved_* nodes load history into state
+- [x] UC4: RAG feedback — approval.py records chunk signals; rag_tool.py re-ranks with feedback scores
+- [x] All prompt templates updated with `{project_memory}`, `{correction_patterns}`, `{user_preferences}`, `{workflow_history}` placeholders
+- **Tests**:
+  - [x] Memory module tests (24 tests — store access, project context, corrections, workflow history, helpers)
+  - [x] Decision memory tests (26 tests — diff engine, preference storage/retrieval, weight progression, formatting)
+  - [x] RAG feedback tests (23 tests — hashing, parsing, signal computation, recording, re-ranking)
+  - [x] All existing tests updated with `mock_config` fixture (backward compatible)
+- [x] **Verify**: 507 backend tests pass (73 new + 434 existing, 0 regressions)
+- [x] **Verify**: Ruff lint + format clean
 
 ---
 

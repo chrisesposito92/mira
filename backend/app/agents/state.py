@@ -84,6 +84,11 @@ class WorkflowState(TypedDict, total=False):
     # Workflow 4 — Approval decisions
     measurement_decisions: list[dict]
 
+    # Memory — enrichment context loaded from LangGraph Store
+    workflow_history: str  # formatted prior workflow summaries (WF2/3/4)
+    project_memory: str  # accumulated project-level domain knowledge
+    correction_patterns: str  # user correction patterns from prior runs
+
     # Tracking
     thread_id: str  # LangGraph thread_id — unique per workflow run
     messages: list[dict]  # chat-style message log

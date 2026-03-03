@@ -44,7 +44,7 @@ Example:
 ## RAG Context
 
 {rag_context}
-
+{project_memory}{correction_patterns}{user_preferences}{workflow_history}
 ## Instructions
 
 Generate Account configurations that:
@@ -102,6 +102,7 @@ Example:
 
 {approved_plans}
 
+{project_memory}{correction_patterns}{user_preferences}{workflow_history}
 ## Instructions
 
 Generate AccountPlan configurations that:
@@ -162,6 +163,7 @@ Example:
 
 {approved_accounts}
 
+{project_memory}{correction_patterns}{user_preferences}{workflow_history}
 ## Instructions
 
 Generate sample Measurement data that:

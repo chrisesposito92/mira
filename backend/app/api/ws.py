@@ -644,7 +644,7 @@ async def generate_ws(websocket: WebSocket, project_id: str) -> None:
             "tags": ["mira", "use_case_gen", "websocket"],
         }
 
-        graph = build_use_case_gen_graph()
+        graph = await build_use_case_gen_graph()
 
         initial_state = {
             "project_id": project_id,

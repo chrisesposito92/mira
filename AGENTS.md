@@ -71,10 +71,13 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 | Directory | Purpose |
 |-----------|---------|
-| `state.py` | `WorkflowState` TypedDict — full graph state definition (WF1 + WF2 + WF3 + WF4 fields) |
+| `state.py` | `WorkflowState` TypedDict — full graph state definition (WF1-WF4 fields + memory fields: `workflow_history`, `project_memory`, `correction_patterns`, `user_preferences`) |
 | `llm_factory.py` | Multi-model registry + `get_llm()` via `init_chat_model()` (5 models) |
 | `utils.py` | Shared helpers: `extract_interrupt_payload()`, `build_use_case_description()`, `parse_entity_list()` |
-| `checkpointer.py` | `AsyncPostgresSaver` setup reusing `get_db_pool()` |
+| `checkpointer.py` | `AsyncPostgresSaver` + `AsyncPostgresStore` setup, shared pool via `_get_pool()` |
+| `memory.py` | Core long-term memory module — store access, namespace helpers, read/write ops for project context, corrections, workflow history |
+| `memory_decisions.py` | User decision memory — entity diff engine, preference storage/retrieval/formatting per-user per-entity-type |
+| `memory_rag.py` | RAG feedback memory — records approval signals per chunk, EMA scoring, feedback-based re-ranking |
 | `nodes/analysis.py` | Analyze use case (fetch from DB + RAG + LLM) |
 | `nodes/clarification.py` | Generate clarification questions with `interrupt()` |
 | `nodes/generation.py` | Generate Products, Meters, Aggregations (separate functions) |
@@ -148,7 +151,8 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **HITL**: LangGraph `interrupt()` → WebSocket sends to frontend → user approves/edits/rejects → `Command(resume=decision)`
 - **Entity push order**: Product → Meter → Aggregation → PlanTemplate → Plan → Pricing → Account → AccountPlan (Config API). Measurements are submitted separately via the Ingest API. (CompoundAggregation is excluded from push — no mapper or schema support.)
 - **m3ter auth**: OAuth2 client credentials per org (HTTP Basic auth), tokens cached 4h50m (10min buffer on 5hr m3ter token)
-- **RAG**: Two-source retrieval (m3ter docs + user docs), pgvector cosine similarity
+- **RAG**: Two-source retrieval (m3ter docs + user docs), pgvector cosine similarity, feedback-based re-ranking when store available (2x candidates → blended score: 0.7 * cosine + 0.3 * feedback)
+- **Long-term memory**: LangGraph `AsyncPostgresStore` with 4 namespaces: `("project", id, "analysis")` for project-level domain knowledge, `("project", id, "workflow_history")` for cross-workflow summaries, `("user", id, "preferences", entity_type)` for user editing patterns, `("project", id, "rag_feedback")` for RAG chunk quality signals. All memory ops are wrapped in try/except — additive, never required. Nodes access store via `config["configurable"]["__pregel_runtime"].store`.
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all

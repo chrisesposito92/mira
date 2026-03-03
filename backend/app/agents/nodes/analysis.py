@@ -4,8 +4,15 @@ import json
 import logging
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 
 from app.agents.llm_factory import get_llm
+from app.agents.memory import (
+    format_memory_section,
+    get_store_from_config,
+    load_project_context,
+    save_analysis_context,
+)
 from app.agents.prompts.product_meter import ANALYSIS_PROMPT
 from app.agents.state import WorkflowState
 from app.agents.tools.rag_tool import rag_retrieve
@@ -15,7 +22,7 @@ from app.db.client import get_supabase_client
 logger = logging.getLogger(__name__)
 
 
-async def analyze_use_case(state: WorkflowState) -> dict:
+async def analyze_use_case(state: WorkflowState, config: RunnableConfig) -> dict:
     """Analyze the use case to identify billing entities needed.
 
     1. Fetches use case details from the database.
@@ -46,17 +53,25 @@ async def analyze_use_case(state: WorkflowState) -> dict:
         description_parts.append(f"Notes: {use_case['notes']}")
     use_case_description = "\n".join(description_parts)
 
-    # Retrieve RAG context
+    # Load project memory from store
+    store = get_store_from_config(config)
+    project_memory = ""
+    if store:
+        project_memory = await load_project_context(store, project_id or "")
+
+    # Retrieve RAG context (with feedback-based re-ranking when store available)
     rag_context = await rag_retrieve(
         query=f"m3ter billing configuration for: {use_case_description}",
         project_id=project_id,
         k=5,
+        store=store,
     )
 
     # Format the analysis prompt
     prompt = ANALYSIS_PROMPT.format(
         rag_context=rag_context,
         use_case_description=use_case_description,
+        project_memory=format_memory_section("Project Memory", project_memory),
     )
 
     # Run LLM analysis
@@ -78,11 +93,16 @@ async def analyze_use_case(state: WorkflowState) -> dict:
         analysis = content
         needs_clarification = False
 
+    # Save analysis context to project memory
+    if store:
+        await save_analysis_context(store, project_id or "", use_case_id, analysis, use_case)
+
     return {
         "use_case": use_case,
         "rag_context": rag_context,
         "analysis": analysis,
         "needs_clarification": needs_clarification,
+        "project_memory": project_memory,
         "current_step": "analysis_complete",
         "messages": state.get("messages", [])
         + [{"role": "assistant", "content": analysis, "step": "analysis"}],

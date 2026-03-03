@@ -2,6 +2,9 @@
 
 import logging
 
+from langchain_core.runnables import RunnableConfig
+
+from app.agents.memory import load_enrichment_memory
 from app.agents.state import WorkflowState
 from app.agents.tools.rag_tool import rag_retrieve
 from app.agents.utils import (
@@ -15,7 +18,7 @@ from app.schemas.common import EntityType
 logger = logging.getLogger(__name__)
 
 
-async def load_approved_for_accounts(state: WorkflowState) -> dict:
+async def load_approved_for_accounts(state: WorkflowState, config: RunnableConfig) -> dict:
     """Load approved entities from WF1 and WF2 for account generation.
 
     Fetches Products, Meters, Aggregations (from WF1) and PlanTemplates,
@@ -96,13 +99,17 @@ async def load_approved_for_accounts(state: WorkflowState) -> dict:
     use_case = uc_result.data[0] if uc_result.data else {}
     use_case_description = build_use_case_description(use_case)
 
-    # Retrieve RAG context
+    # Retrieve RAG context (with feedback re-ranking)
+    from app.agents.memory import get_store_from_config
+
+    store = get_store_from_config(config)
     rag_context = ""
     try:
         rag_context = await rag_retrieve(
             query=f"m3ter account setup billing configuration for: {use_case_description}",
             project_id=project_id,
             k=5,
+            store=store,
         )
     except Exception:
         logger.warning(
@@ -124,6 +131,9 @@ async def load_approved_for_accounts(state: WorkflowState) -> dict:
         len(approved_pricing),
     )
 
+    # Load memory context from store
+    mem = await load_enrichment_memory(config, project_id, up_to_wf=3, use_case_id=use_case_id)
+
     return {
         "approved_products": approved_products,
         "approved_meters": approved_meters,
@@ -133,5 +143,6 @@ async def load_approved_for_accounts(state: WorkflowState) -> dict:
         "approved_pricing": approved_pricing,
         "use_case": use_case,
         "rag_context": rag_context,
+        **mem,
         "current_step": "approved_entities_loaded_for_accounts",
     }

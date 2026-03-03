@@ -4,8 +4,10 @@ import json
 import logging
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 
 from app.agents.llm_factory import get_llm
+from app.agents.memory import load_generation_memory
 from app.agents.prompts.account_usage import ACCOUNT_PLAN_GENERATION_PROMPT
 from app.agents.state import WorkflowState
 from app.agents.utils import extract_llm_text, parse_entity_list
@@ -13,11 +15,13 @@ from app.agents.utils import extract_llm_text, parse_entity_list
 logger = logging.getLogger(__name__)
 
 
-async def generate_account_plans(state: WorkflowState) -> dict:
+async def generate_account_plans(state: WorkflowState, config: RunnableConfig) -> dict:
     """Generate AccountPlan entity configurations using LLM.
 
     References approved accounts and plans for cross-linking.
     """
+    mem = await load_generation_memory(config, state, "account_plan")
+
     model_id = state["model_id"]
     accounts = state.get("accounts", [])
     approved_plans = state.get("approved_plans", [])
@@ -25,6 +29,7 @@ async def generate_account_plans(state: WorkflowState) -> dict:
     prompt = ACCOUNT_PLAN_GENERATION_PROMPT.format(
         accounts=json.dumps(accounts, indent=2),
         approved_plans=json.dumps(approved_plans, indent=2),
+        **mem,
     )
 
     llm = get_llm(model_id, temperature=0.2)

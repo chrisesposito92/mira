@@ -181,6 +181,45 @@ START → research_customer (Tavily web search)
 
 ---
 
+## Long-Term Memory (LangGraph Store)
+
+MIRA uses LangGraph's `AsyncPostgresStore` for persistent cross-workflow memory, sharing the same Postgres connection pool as the checkpointer. Memory is **additive, never required** — all store operations are wrapped in try/except so workflows degrade gracefully if the store is unavailable.
+
+### Memory Capabilities
+
+| Use Case | Description | Scope |
+|----------|-------------|-------|
+| UC1: Project Memory | Accumulated domain knowledge from analyses + user correction patterns | Per-project |
+| UC2: User Preferences | Learned coding conventions, currency, billing frequency preferences from edits | Per-user, per-entity-type, cross-project |
+| UC3: Workflow Enrichment | Prior workflow summaries injected into later workflows (WF2 sees WF1 context) | Per-project, per-use-case |
+| UC4: RAG Feedback | Approval signals mapped to RAG chunks for re-ranking (EMA scoring) | Per-project |
+
+### Namespace Schema
+
+```
+("project", {project_id}, "analysis")              # UC1: Project-level domain knowledge
+("project", {project_id}, "workflow_history")       # UC3: Cross-workflow summaries
+("user", {user_id}, "preferences", {entity_type})   # UC2: User editing patterns
+("project", {project_id}, "rag_feedback")           # UC4: RAG chunk quality signals
+```
+
+### Store Architecture
+
+- **Singleton**: `get_store()` in `checkpointer.py` returns a shared `AsyncPostgresStore` instance
+- **Graph wiring**: All 5 graphs pass `store=` to `compile()` alongside the checkpointer
+- **Node access**: Nodes declare `config: RunnableConfig` as 2nd parameter; store extracted via `config["configurable"]["__pregel_runtime"].store`
+- **Prompt injection**: `build_memory_context()` returns a dict of formatted sections (`{project_memory}`, `{correction_patterns}`, `{user_preferences}`, `{workflow_history}`) — empty strings when no data exists
+
+### Key Modules
+
+| Module | Purpose |
+|--------|---------|
+| `agents/memory.py` | Core store operations: save/load project context, corrections, workflow history |
+| `agents/memory_decisions.py` | Entity diff engine, preference storage/retrieval with weighted pattern classification |
+| `agents/memory_rag.py` | RAG feedback recording (EMA alpha=0.3), retrieval, feedback-based re-ranking |
+
+---
+
 ## m3ter Integration
 
 - **Auth**: OAuth2 Client Credentials (client_id + client_secret per org) → JWT token

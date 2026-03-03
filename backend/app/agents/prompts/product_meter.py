@@ -22,7 +22,7 @@ are needed to model it correctly in m3ter.
 ## Use Case
 
 {use_case_description}
-
+{project_memory}
 ## Output Format
 
 Respond with a JSON object:
@@ -106,7 +106,7 @@ Example:
 ## RAG Context
 
 {rag_context}
-
+{project_memory}{correction_patterns}{user_preferences}
 ## Instructions
 
 Generate the Product configurations needed for this use case. Each product should:
@@ -173,7 +173,7 @@ Example:
 ## RAG Context
 
 {rag_context}
-
+{project_memory}{correction_patterns}{user_preferences}
 ## Instructions
 
 Generate Meter configurations that:
@@ -254,7 +254,7 @@ Example:
 ## RAG Context
 
 {rag_context}
-
+{project_memory}{correction_patterns}{user_preferences}
 ## Instructions
 
 Generate Aggregation configurations that:
