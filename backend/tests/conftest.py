@@ -132,6 +132,16 @@ TEST_FERNET_KEY = Fernet.generate_key().decode()
 
 
 @pytest.fixture
+def mock_config() -> dict:
+    """Minimal RunnableConfig for node tests that need a config param.
+
+    get_store_from_config({}) returns None, so all memory operations
+    are gracefully skipped — nodes work identically to pre-memory behavior.
+    """
+    return {}
+
+
+@pytest.fixture
 def mock_user_id() -> UUID:
     return MOCK_USER_ID
 

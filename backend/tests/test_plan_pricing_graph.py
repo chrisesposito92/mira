@@ -86,7 +86,9 @@ class TestLoadApprovedEntities:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved.rag_retrieve", new_callable=AsyncMock)
     @patch("app.agents.nodes.load_approved.get_supabase_client")
-    async def test_loads_approved_entities_from_db(self, mock_supabase, mock_rag, base_state):
+    async def test_loads_approved_entities_from_db(
+        self, mock_supabase, mock_rag, base_state, mock_config
+    ):
         mock_client = MagicMock()
 
         # Mock generated_objects query (includes id for cross-entity references)
@@ -150,7 +152,7 @@ class TestLoadApprovedEntities:
 
         mock_rag.return_value = "Relevant plan/pricing documentation..."
 
-        result = await load_approved_entities(base_state)
+        result = await load_approved_entities(base_state, mock_config)
 
         assert len(result["approved_products"]) == 1
         assert len(result["approved_meters"]) == 1
@@ -168,7 +170,9 @@ class TestLoadApprovedEntities:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.load_approved.rag_retrieve", new_callable=AsyncMock)
     @patch("app.agents.nodes.load_approved.get_supabase_client")
-    async def test_handles_empty_approved_entities(self, mock_supabase, mock_rag, base_state):
+    async def test_handles_empty_approved_entities(
+        self, mock_supabase, mock_rag, base_state, mock_config
+    ):
         mock_client = MagicMock()
 
         def table_side_effect(name):
@@ -189,7 +193,7 @@ class TestLoadApprovedEntities:
         mock_supabase.return_value = mock_client
         mock_rag.return_value = ""
 
-        result = await load_approved_entities(base_state)
+        result = await load_approved_entities(base_state, mock_config)
 
         assert "error" in result
         assert result["current_step"] == "error"
@@ -203,7 +207,7 @@ class TestLoadApprovedEntities:
 class TestGeneratePlanTemplates:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.plan_template_gen.get_llm")
-    async def test_generates_plan_template_list(self, mock_get_llm, base_state):
+    async def test_generates_plan_template_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_products": [{"name": "API Gateway", "code": "api_gateway"}],
@@ -225,7 +229,7 @@ class TestGeneratePlanTemplates:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(plan_templates)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_plan_templates(state)
+        result = await generate_plan_templates(state, mock_config)
 
         assert len(result["plan_templates"]) == 1
         assert result["plan_templates"][0]["name"] == "API Gateway Standard"
@@ -233,7 +237,9 @@ class TestGeneratePlanTemplates:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.plan_template_gen.get_llm")
-    async def test_uses_use_case_fallback_when_no_analysis(self, mock_get_llm, base_state):
+    async def test_uses_use_case_fallback_when_no_analysis(
+        self, mock_get_llm, base_state, mock_config
+    ):
         state = {
             **base_state,
             "approved_products": [],
@@ -246,7 +252,7 @@ class TestGeneratePlanTemplates:
         mock_llm_instance.ainvoke.return_value = _make_llm_response([])
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_plan_templates(state)
+        result = await generate_plan_templates(state, mock_config)
 
         assert result["plan_templates"] == []
         assert result["current_step"] == "error"
@@ -258,7 +264,7 @@ class TestGeneratePlanTemplates:
 class TestGeneratePlans:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.plan_gen.get_llm")
-    async def test_generates_plan_list(self, mock_get_llm, base_state):
+    async def test_generates_plan_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_products": [{"name": "API Gateway", "code": "api_gateway"}],
@@ -284,7 +290,7 @@ class TestGeneratePlans:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(plans)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_plans(state)
+        result = await generate_plans(state, mock_config)
 
         assert len(result["plans"]) == 1
         assert result["plans"][0]["code"] == "api_std_monthly"
@@ -292,7 +298,7 @@ class TestGeneratePlans:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.plan_gen.get_llm")
-    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_products": [],
@@ -305,7 +311,7 @@ class TestGeneratePlans:
         mock_llm_instance.ainvoke.return_value = _make_llm_response([])
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_plans(state)
+        result = await generate_plans(state, mock_config)
         assert result["current_step"] == "error"
         assert result["plans"] == []
         assert "error" in result
@@ -314,7 +320,7 @@ class TestGeneratePlans:
 class TestGeneratePricing:
     @pytest.mark.asyncio
     @patch("app.agents.nodes.pricing_gen.get_llm")
-    async def test_generates_pricing_list(self, mock_get_llm, base_state):
+    async def test_generates_pricing_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_aggregations": [{"name": "Daily API Count", "code": "daily_api_count"}],
@@ -340,7 +346,7 @@ class TestGeneratePricing:
         mock_llm_instance.ainvoke.return_value = _make_llm_response(pricing_entities)
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_pricing(state)
+        result = await generate_pricing(state, mock_config)
 
         assert len(result["pricing"]) == 1
         assert result["pricing"][0]["type"] == "DEBIT"
@@ -348,7 +354,7 @@ class TestGeneratePricing:
 
     @pytest.mark.asyncio
     @patch("app.agents.nodes.pricing_gen.get_llm")
-    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state):
+    async def test_returns_error_on_empty_result(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
             "approved_aggregations": [],
@@ -362,7 +368,7 @@ class TestGeneratePricing:
         mock_llm_instance.ainvoke.return_value = _make_llm_response([])
         mock_get_llm.return_value = mock_llm_instance
 
-        result = await generate_pricing(state)
+        result = await generate_pricing(state, mock_config)
         assert result["current_step"] == "error"
         assert result["pricing"] == []
         assert "error" in result

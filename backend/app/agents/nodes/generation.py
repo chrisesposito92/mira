@@ -4,8 +4,10 @@ import json
 import logging
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 
 from app.agents.llm_factory import get_llm
+from app.agents.memory import load_generation_memory
 from app.agents.prompts.product_meter import (
     AGGREGATION_GENERATION_PROMPT,
     METER_GENERATION_PROMPT,
@@ -44,8 +46,10 @@ def _format_clarification_answers(state: WorkflowState) -> str:
     return "\n\n".join(parts) if parts else "No clarification was needed."
 
 
-async def generate_products(state: WorkflowState) -> dict:
+async def generate_products(state: WorkflowState, config: RunnableConfig) -> dict:
     """Generate Product entity configurations using LLM."""
+    mem = await load_generation_memory(config, state, "product", from_store=True)
+
     model_id = state["model_id"]
     analysis = state.get("analysis", "")
     rag_context = state.get("rag_context", "")
@@ -55,6 +59,7 @@ async def generate_products(state: WorkflowState) -> dict:
         analysis=analysis,
         rag_context=rag_context,
         clarification_answers=clarification_answers,
+        **mem,
     )
 
     llm = get_llm(model_id, temperature=0.2)
@@ -90,11 +95,13 @@ async def generate_products(state: WorkflowState) -> dict:
     }
 
 
-async def generate_meters(state: WorkflowState) -> dict:
+async def generate_meters(state: WorkflowState, config: RunnableConfig) -> dict:
     """Generate Meter entity configurations using LLM.
 
     References previously approved Products for cross-linking.
     """
+    mem = await load_generation_memory(config, state, "meter", from_store=True)
+
     model_id = state["model_id"]
     analysis = state.get("analysis", "")
     rag_context = state.get("rag_context", "")
@@ -106,6 +113,7 @@ async def generate_meters(state: WorkflowState) -> dict:
         rag_context=rag_context,
         clarification_answers=clarification_answers,
         products=json.dumps(products, indent=2),
+        **mem,
     )
 
     llm = get_llm(model_id, temperature=0.2)
@@ -141,11 +149,13 @@ async def generate_meters(state: WorkflowState) -> dict:
     }
 
 
-async def generate_aggregations(state: WorkflowState) -> dict:
+async def generate_aggregations(state: WorkflowState, config: RunnableConfig) -> dict:
     """Generate Aggregation entity configurations using LLM.
 
     References previously approved Products and Meters for cross-linking.
     """
+    mem = await load_generation_memory(config, state, "aggregation", from_store=True)
+
     model_id = state["model_id"]
     analysis = state.get("analysis", "")
     rag_context = state.get("rag_context", "")
@@ -159,6 +169,7 @@ async def generate_aggregations(state: WorkflowState) -> dict:
         clarification_answers=clarification_answers,
         products=json.dumps(products, indent=2),
         meters=json.dumps(meters, indent=2),
+        **mem,
     )
 
     llm = get_llm(model_id, temperature=0.2)

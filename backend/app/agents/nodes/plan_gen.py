@@ -4,8 +4,10 @@ import json
 import logging
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 
 from app.agents.llm_factory import get_llm
+from app.agents.memory import load_generation_memory
 from app.agents.prompts.plan_pricing import PLAN_GENERATION_PROMPT
 from app.agents.state import WorkflowState
 from app.agents.utils import build_use_case_description, extract_llm_text, parse_entity_list
@@ -13,11 +15,13 @@ from app.agents.utils import build_use_case_description, extract_llm_text, parse
 logger = logging.getLogger(__name__)
 
 
-async def generate_plans(state: WorkflowState) -> dict:
+async def generate_plans(state: WorkflowState, config: RunnableConfig) -> dict:
     """Generate Plan entity configurations using LLM.
 
     References approved products and plan templates for cross-linking.
     """
+    mem = await load_generation_memory(config, state, "plan")
+
     model_id = state["model_id"]
     approved_products = state.get("approved_products", [])
     plan_templates = state.get("plan_templates", [])
@@ -30,6 +34,7 @@ async def generate_plans(state: WorkflowState) -> dict:
         plan_templates=json.dumps(plan_templates, indent=2),
         analysis=analysis if analysis else build_use_case_description(use_case),
         rag_context=rag_context,
+        **mem,
     )
 
     llm = get_llm(model_id, temperature=0.2)

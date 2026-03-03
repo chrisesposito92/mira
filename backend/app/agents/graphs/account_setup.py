@@ -12,7 +12,7 @@ Requires a completed Workflow 2 (plan_pricing) for the same use case.
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from app.agents.checkpointer import get_checkpointer
+from app.agents.checkpointer import get_checkpointer, get_store
 from app.agents.nodes.account_gen import generate_accounts
 from app.agents.nodes.account_plan_gen import generate_account_plans
 from app.agents.nodes.approval import approve_entities
@@ -87,5 +87,6 @@ async def build_account_setup_graph() -> CompiledStateGraph:
         return _compiled_graph
     graph = _build_graph()
     checkpointer = await get_checkpointer()
-    _compiled_graph = graph.compile(checkpointer=checkpointer)
+    store = await get_store()
+    _compiled_graph = graph.compile(checkpointer=checkpointer, store=store)
     return _compiled_graph

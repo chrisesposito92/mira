@@ -10,6 +10,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
+from app.agents.checkpointer import get_store
 from app.agents.nodes.use_case_clarify import ask_clarification
 from app.agents.nodes.use_case_compile import compile_use_cases
 from app.agents.nodes.use_case_research import research_customer
@@ -54,11 +55,13 @@ def _build_graph() -> StateGraph:
     return graph
 
 
-def build_use_case_gen_graph() -> CompiledStateGraph:
+async def build_use_case_gen_graph() -> CompiledStateGraph:
     """Build a compiled graph with a fresh per-session MemorySaver.
 
     Each session gets its own MemorySaver so checkpoint data is scoped
     to the session lifetime and garbage-collected when the session ends.
+    The shared store is wired in for long-term memory access.
     """
     graph = _build_graph()
-    return graph.compile(checkpointer=MemorySaver())
+    store = await get_store()
+    return graph.compile(checkpointer=MemorySaver(), store=store)

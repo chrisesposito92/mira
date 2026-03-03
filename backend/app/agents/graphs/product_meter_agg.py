@@ -13,7 +13,7 @@ Flow:
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from app.agents.checkpointer import get_checkpointer
+from app.agents.checkpointer import get_checkpointer, get_store
 from app.agents.nodes.analysis import analyze_use_case
 from app.agents.nodes.approval import approve_entities
 from app.agents.nodes.clarification import generate_clarifications
@@ -111,5 +111,6 @@ async def build_product_meter_agg_graph() -> CompiledStateGraph:
         return _compiled_graph
     graph = _build_graph()
     checkpointer = await get_checkpointer()
-    _compiled_graph = graph.compile(checkpointer=checkpointer)
+    store = await get_store()
+    _compiled_graph = graph.compile(checkpointer=checkpointer, store=store)
     return _compiled_graph

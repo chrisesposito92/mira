@@ -43,7 +43,7 @@ Example:
 ## RAG Context
 
 {rag_context}
-
+{project_memory}{correction_patterns}{user_preferences}{workflow_history}
 ## Instructions
 
 Generate PlanTemplate configurations that:
@@ -113,7 +113,7 @@ Example:
 ## RAG Context
 
 {rag_context}
-
+{project_memory}{correction_patterns}{user_preferences}{workflow_history}
 ## Instructions
 
 Generate Plan configurations that:
@@ -260,7 +260,7 @@ Credit applied at the product level:
 ## RAG Context
 
 {rag_context}
-
+{project_memory}{correction_patterns}{user_preferences}{workflow_history}
 ## Instructions
 
 Generate Pricing configurations that:

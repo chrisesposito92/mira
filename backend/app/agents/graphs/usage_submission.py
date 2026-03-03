@@ -11,7 +11,7 @@ Requires a completed Workflow 3 (account_setup) for the same use case.
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from app.agents.checkpointer import get_checkpointer
+from app.agents.checkpointer import get_checkpointer, get_store
 from app.agents.nodes.approval import approve_entities
 from app.agents.nodes.load_approved_usage import load_approved_for_usage
 from app.agents.nodes.measurement_gen import generate_measurements
@@ -65,5 +65,6 @@ async def build_usage_submission_graph() -> CompiledStateGraph:
         return _compiled_graph
     graph = _build_graph()
     checkpointer = await get_checkpointer()
-    _compiled_graph = graph.compile(checkpointer=checkpointer)
+    store = await get_store()
+    _compiled_graph = graph.compile(checkpointer=checkpointer, store=store)
     return _compiled_graph
