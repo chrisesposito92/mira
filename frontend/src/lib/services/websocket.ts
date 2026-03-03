@@ -63,9 +63,11 @@ export class WebSocketClient {
 		this.socket.onmessage = (event: MessageEvent) => {
 			try {
 				const msg = JSON.parse(event.data as string) as WsServerMessage;
-				// Terminal messages mean the workflow is done — don't reconnect
-				// after the server closes the connection.
-				if (msg.type === 'error' || msg.type === 'complete') {
+				// Only treat "complete" as intentional close.  Terminal errors
+				// close the connection server-side (which triggers onclose);
+				// non-terminal errors ("Invalid JSON", "Unknown message type")
+				// keep the loop running, so we must not kill reconnection.
+				if (msg.type === 'complete') {
 					this.intentionalClose = true;
 				}
 				this.onMessage(msg);
