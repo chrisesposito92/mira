@@ -1,3 +1,5 @@
+Use your superpowers skills when applicable.
+
 # MIRA — Metering Intelligence & Rating Architect
 
 AI-powered m3ter configuration assistant. Generates correct m3ter billing configs through LangGraph agent workflows with human-in-the-loop approval gates.
