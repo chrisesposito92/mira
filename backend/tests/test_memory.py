@@ -180,7 +180,7 @@ class TestWorkflowHistory:
             entity_summary="Products (2): API Gateway, Data Pipeline",
         )
 
-        result = await load_workflow_history(store, "proj-1", up_to_wf=2)
+        result = await load_workflow_history(store, "proj-1", up_to_wf=2, use_case_id="uc-1")
         assert "Workflow 1" in result
         assert "API Gateway" in result
 
@@ -210,13 +210,13 @@ class TestWorkflowHistory:
         )
 
         # up_to_wf=2 should only load WF1
-        result = await load_workflow_history(store, "proj-1", up_to_wf=2)
+        result = await load_workflow_history(store, "proj-1", up_to_wf=2, use_case_id="uc-1")
         assert "WF1 entities" in result
         assert "WF2 entities" not in result
         assert "WF3 entities" not in result
 
         # up_to_wf=4 should load WF1, WF2, WF3
-        result = await load_workflow_history(store, "proj-1", up_to_wf=4)
+        result = await load_workflow_history(store, "proj-1", up_to_wf=4, use_case_id="uc-1")
         assert "WF1 entities" in result
         assert "WF2 entities" in result
         assert "WF3 entities" in result
@@ -224,7 +224,7 @@ class TestWorkflowHistory:
     @pytest.mark.asyncio
     async def test_empty_workflow_history(self):
         store = InMemoryStore()
-        result = await load_workflow_history(store, "proj-1", up_to_wf=2)
+        result = await load_workflow_history(store, "proj-1", up_to_wf=2, use_case_id="uc-1")
         assert result == ""
 
     @pytest.mark.asyncio
@@ -244,9 +244,36 @@ class TestWorkflowHistory:
             workflow_num=1,
             entity_summary="Second run",
         )
-        result = await load_workflow_history(store, "proj-1", up_to_wf=2)
+        result = await load_workflow_history(store, "proj-1", up_to_wf=2, use_case_id="uc-1")
         assert "Second run" in result
         assert "First run" not in result
+
+    @pytest.mark.asyncio
+    async def test_scoped_to_use_case(self):
+        """Summaries from other use cases in the same project are excluded."""
+        store = InMemoryStore()
+        await save_workflow_summary(
+            store,
+            project_id="proj-1",
+            use_case_id="uc-1",
+            workflow_num=1,
+            entity_summary="UC1 products",
+        )
+        await save_workflow_summary(
+            store,
+            project_id="proj-1",
+            use_case_id="uc-2",
+            workflow_num=1,
+            entity_summary="UC2 products",
+        )
+
+        result = await load_workflow_history(store, "proj-1", up_to_wf=2, use_case_id="uc-1")
+        assert "UC1 products" in result
+        assert "UC2 products" not in result
+
+        result = await load_workflow_history(store, "proj-1", up_to_wf=2, use_case_id="uc-2")
+        assert "UC2 products" in result
+        assert "UC1 products" not in result
 
 
 # ---------------------------------------------------------------------------

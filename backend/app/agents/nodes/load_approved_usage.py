@@ -57,7 +57,7 @@ async def load_approved_for_usage(state: WorkflowState, config: RunnableConfig) 
 
     # Load memory context from store
     project_id = state.get("project_id", "")
-    mem = await load_enrichment_memory(config, project_id, up_to_wf=4)
+    mem = await load_enrichment_memory(config, project_id, up_to_wf=4, use_case_id=use_case_id)
 
     return {
         "approved_meters": approved_meters,

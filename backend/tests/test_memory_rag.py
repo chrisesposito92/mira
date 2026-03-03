@@ -144,7 +144,7 @@ class TestRecordAndRetrieveRagFeedback:
             [{"action": "approve"}],
         )
 
-        # Second: all rejected (signal=0.0)
+        # Second: all rejected (signal=0.0) — same entity type, EMA applies
         await record_rag_feedback(
             store,
             "proj-1",
@@ -158,6 +158,36 @@ class TestRecordAndRetrieveRagFeedback:
         chunk_hash = list(feedback.keys())[0]
         # EMA: 0.3 * 0.0 + 0.7 * 1.0 = 0.7
         assert abs(feedback[chunk_hash] - 0.7) < 0.01
+
+    @pytest.mark.asyncio
+    async def test_entity_type_partitioning(self):
+        """Feedback from different entity types doesn't overwrite each other."""
+        store = InMemoryStore()
+        rag_context = "--- Source 1 (docs, relevance: 0.85) ---\nShared chunk content."
+
+        # Product: approved (signal=1.0)
+        await record_rag_feedback(
+            store,
+            "proj-1",
+            "product",
+            rag_context,
+            [{"action": "approve"}],
+        )
+
+        # Pricing: rejected (signal=0.0)
+        await record_rag_feedback(
+            store,
+            "proj-1",
+            "pricing",
+            rag_context,
+            [{"action": "reject"}],
+        )
+
+        feedback = await retrieve_rag_feedback(store, "proj-1")
+        # Should have 1 chunk hash with averaged score: (1.0 + 0.0) / 2 = 0.5
+        assert len(feedback) == 1
+        chunk_hash = list(feedback.keys())[0]
+        assert abs(feedback[chunk_hash] - 0.5) < 0.01
 
     @pytest.mark.asyncio
     async def test_empty_rag_context(self):

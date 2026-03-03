@@ -89,7 +89,10 @@ async def record_rag_feedback(
 
         for chunk in chunks:
             chunk_hash = chunk["hash"]
-            existing = await store.aget(namespace, chunk_hash)
+            # Key includes entity_type to prevent cross-entity-type signal overwriting.
+            # A chunk approved for "product" and rejected for "pricing" gets separate entries.
+            key = f"{chunk_hash}_{entity_type}"
+            existing = await store.aget(namespace, key)
 
             if existing and existing.value:
                 old_score = existing.value.get("score", 0.5)
@@ -102,9 +105,10 @@ async def record_rag_feedback(
 
             await store.aput(
                 namespace,
-                chunk_hash,
+                key,
                 {
                     "chunk_hash": chunk_hash,
+                    "entity_type": entity_type,
                     "score": new_score,
                     "count": new_count,
                     "last_signal": signal,
@@ -117,12 +121,24 @@ async def record_rag_feedback(
 async def retrieve_rag_feedback(store: BaseStore, project_id: str) -> dict[str, float]:
     """Read all RAG feedback scores for a project.
 
+    Feedback is stored per entity_type, so multiple entries may exist for the
+    same chunk. Scores are averaged across entity types to produce a single
+    blended score per chunk for re-ranking.
+
     Returns: {chunk_hash: score} dict.
     """
     try:
         namespace = ("project", project_id, "rag_feedback")
         items = await store.asearch(namespace, limit=500)
-        return {item.key: item.value.get("score", 0.5) for item in items if item.value}
+        # Group by raw chunk_hash (entries may be keyed as "hash_entitytype")
+        scores: dict[str, list[float]] = {}
+        for item in items:
+            if not item.value:
+                continue
+            chunk_hash = item.value.get("chunk_hash", item.key)
+            score = item.value.get("score", 0.5)
+            scores.setdefault(chunk_hash, []).append(score)
+        return {h: sum(s) / len(s) for h, s in scores.items()}
     except Exception:
         logger.warning("Failed to retrieve RAG feedback for project %s", project_id)
         return {}

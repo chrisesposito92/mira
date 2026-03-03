@@ -220,14 +220,24 @@ async def load_workflow_history(
     store: BaseStore,
     project_id: str,
     up_to_wf: int,
+    use_case_id: str = "",
 ) -> str:
     """Load workflow summaries up to the given workflow number.
+
+    Args:
+        store: LangGraph store.
+        project_id: Project ID for namespace scoping.
+        up_to_wf: Only include summaries from workflows with number < up_to_wf.
+        use_case_id: If provided, only include summaries for this use case.
+            Prevents cross-use-case contamination in multi-use-case projects.
 
     Returns formatted string for prompt injection. Empty string if none found.
     """
     try:
         all_items = await store.asearch(_workflow_history_namespace(project_id), limit=50)
         items = [item for item in all_items if item.value.get("workflow_num", 0) < up_to_wf]
+        if use_case_id:
+            items = [item for item in items if item.value.get("use_case_id") == use_case_id]
         if not items:
             return ""
         items.sort(key=lambda x: x.value.get("workflow_num", 0))
@@ -340,8 +350,16 @@ async def load_enrichment_memory(
     config: RunnableConfig,
     project_id: str,
     up_to_wf: int,
+    use_case_id: str = "",
 ) -> dict[str, str]:
     """Load memory context for cross-workflow enrichment (load_approved_* nodes).
+
+    Args:
+        config: RunnableConfig with store access.
+        project_id: Project ID for namespace scoping.
+        up_to_wf: Only include workflow summaries from workflows < up_to_wf.
+        use_case_id: Scope workflow history to this use case to prevent
+            cross-use-case contamination in multi-use-case projects.
 
     Returns dict with keys: workflow_history, project_memory, correction_patterns.
     Uses asyncio.gather for concurrent store reads.
@@ -353,7 +371,7 @@ async def load_enrichment_memory(
     pid = project_id or ""
     (project_memory, correction_patterns), workflow_history = await asyncio.gather(
         load_project_and_corrections(store, pid),
-        load_workflow_history(store, pid, up_to_wf=up_to_wf),
+        load_workflow_history(store, pid, up_to_wf=up_to_wf, use_case_id=use_case_id),
     )
     return {
         "workflow_history": workflow_history,

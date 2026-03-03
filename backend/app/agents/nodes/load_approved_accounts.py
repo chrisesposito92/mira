@@ -132,7 +132,7 @@ async def load_approved_for_accounts(state: WorkflowState, config: RunnableConfi
     )
 
     # Load memory context from store
-    mem = await load_enrichment_memory(config, project_id, up_to_wf=3)
+    mem = await load_enrichment_memory(config, project_id, up_to_wf=3, use_case_id=use_case_id)
 
     return {
         "approved_products": approved_products,

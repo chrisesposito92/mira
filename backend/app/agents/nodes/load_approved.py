@@ -93,7 +93,7 @@ async def load_approved_entities(state: WorkflowState, config: RunnableConfig) -
     )
 
     # Load memory context from store
-    mem = await load_enrichment_memory(config, project_id, up_to_wf=2)
+    mem = await load_enrichment_memory(config, project_id, up_to_wf=2, use_case_id=use_case_id)
 
     return {
         "approved_products": approved_products,
