@@ -38,6 +38,13 @@ cd backend && source .venv/bin/activate
 python -m scripts.scrape_m3ter_docs   # Scrape m3ter docs → backend/data/m3ter_docs/*.json
 python -m scripts.seed_embeddings     # Seed pgvector from scraped JSON (requires DB + OpenAI key)
 
+# Evals (must activate venv first)
+cd backend && source .venv/bin/activate
+pytest evals/ -m eval_live --model-id claude-sonnet-4-6 -v  # Live eval — single model
+pytest evals/ -m eval_live -k "cloud_storage" -v            # Single example
+python -m evals.run_eval --all-models                        # Multi-model comparison
+python -m evals.run_eval --save-golden                       # Save golden responses
+
 # Docker
 docker compose up -d          # Local Supabase (postgres:54322, auth:54321, studio:54323)
 ```
@@ -239,6 +246,37 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 ### Frontend (`frontend/.env`)
 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, `PUBLIC_API_URL`, `PUBLIC_WS_URL`
+
+### Evaluation System (`backend/evals/`)
+
+| Directory | Purpose |
+|-----------|---------|
+| `datasets/base.py` | Core dataclasses: EvalExample, ReferenceEntity, WorkflowReference, EvalResult |
+| `datasets/cloud_storage.py` | Example 1: Cloud Storage reference config |
+| `datasets/app_hosting.py` | Example 2: App Hosting with compound aggregation |
+| `datasets/candidate_checks.py` | Example 3: Candidate Checks with segmented aggregation |
+| `datasets/registry.py` | ALL_EXAMPLES list, get_example() helper |
+| `evaluators/structural.py` | Structural validity (JSON, required fields, code format) |
+| `evaluators/schema_compliance.py` | Reuses app.validation.engine.validate_entity() |
+| `evaluators/completeness.py` | Entity count vs reference expected_counts |
+| `evaluators/accuracy.py` | Fuzzy matching with Hungarian algorithm (scipy) |
+| `evaluators/cross_entity.py` | Referential integrity checks |
+| `evaluators/semantic.py` | LLM-as-Judge (claude-opus-4-6) for conceptual correctness |
+| `evaluators/composite.py` | Weighted composite scorer + report formatting |
+| `runner/auto_approver.py` | HITL interrupt loop: auto-approve all entities |
+| `runner/graph_harness.py` | Graph compilation with MemorySaver, mock Supabase/RAG |
+| `runner/workflow_chain.py` | WF1→WF2→WF3 chained execution |
+| `test_eval_wf1.py` | WF1 pytest evals (parametrized by example) |
+| `test_eval_wf2.py` | WF2 pytest evals |
+| `test_eval_wf3.py` | WF3 pytest evals |
+| `test_eval_chain.py` | Full WF1→WF2→WF3 chain eval |
+| `run_eval.py` | Standalone CLI runner |
+
+- **3 reference examples**: Cloud Storage, App Hosting, Candidate Checks — based on m3ter worked examples
+- **6 evaluators**: structural (10%), schema_compliance (20%), completeness (15%), accuracy (25%), cross_entity (10%), semantic (20%)
+- **Auto-approver**: Runs graphs through HITL gates automatically by approving all entities
+- **Graph harness**: Compiles with MemorySaver, mocks Supabase/RAG so evals need no DB
+- **pytest markers**: `@pytest.mark.eval` for all eval tests, `@pytest.mark.eval_live` for tests requiring real LLM calls
 
 ## Gotchas
 
