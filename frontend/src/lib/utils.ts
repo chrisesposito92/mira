@@ -24,6 +24,13 @@ export function capitalize(s: string): string {
 }
 
 export function formatDate(dateStr: string): string {
+	// For date-only strings like "2024-06-01", split manually to avoid
+	// timezone shift (JS Date parses these as UTC, shifting the day in non-UTC zones)
+	const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+	if (match) {
+		const [, y, m, d] = match;
+		return new Date(+y, +m - 1, +d).toLocaleDateString();
+	}
 	return new Date(dateStr).toLocaleDateString();
 }
 

@@ -37,7 +37,7 @@ class TestResetUseCase:
             {"id": str(uuid4())},
             {"id": str(uuid4())},
         ]
-        mock_supabase._table_data["workflows"] = [{"id": str(uuid4())}]
+        mock_supabase._table_data["workflows"] = []
 
         resp = authed_client.post(f"/api/use-cases/{ucid}/reset")
         assert resp.status_code == 200
@@ -59,6 +59,19 @@ class TestResetUseCase:
 
         resp = authed_client.post(f"/api/use-cases/{ucid}/reset")
         assert resp.status_code == 404
+
+    def test_reset_blocked_by_active_workflow(self, authed_client, mock_supabase):
+        ucid = str(uuid4())
+        row = _use_case_row(id=ucid)
+        row["projects"] = {"user_id": str(MOCK_USER_ID)}
+        mock_supabase._table_data["use_cases"] = [row]
+        mock_supabase._table_data["workflows"] = [
+            {"id": str(uuid4()), "status": "running"},
+        ]
+
+        resp = authed_client.post(f"/api/use-cases/{ucid}/reset")
+        assert resp.status_code == 409
+        assert "active" in resp.json()["detail"].lower()
 
     def test_reset_empty_data(self, authed_client, mock_supabase):
         ucid = str(uuid4())
