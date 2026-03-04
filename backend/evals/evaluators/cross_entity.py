@@ -124,10 +124,12 @@ def _check_wf2(state: dict) -> tuple[int, int, list[dict]]:
     valid_refs = 0
     issues: list[dict] = []
 
-    product_ids = _collect_ids(state.get("products", []))
+    product_ids = _collect_ids(state.get("approved_products", state.get("products", [])))
     plan_template_ids = _collect_ids(state.get("plan_templates", []))
-    agg_ids = _collect_ids(state.get("aggregations", []))
-    compound_agg_ids = _collect_ids(state.get("compound_aggregations", []))
+    agg_ids = _collect_ids(state.get("approved_aggregations", state.get("aggregations", [])))
+    compound_agg_ids = _collect_ids(
+        state.get("approved_compound_aggregations", state.get("compound_aggregations", []))
+    )
 
     # planTemplate.productId → product
     for i, pt in enumerate(state.get("plan_templates", [])):
@@ -222,7 +224,7 @@ def _check_wf3(state: dict) -> tuple[int, int, list[dict]]:
     issues: list[dict] = []
 
     account_ids = _collect_ids(state.get("accounts", []))
-    plan_ids = _collect_ids(state.get("plans", []))
+    plan_ids = _collect_ids(state.get("approved_plans", state.get("plans", [])))
 
     for i, ap in enumerate(state.get("account_plans", [])):
         if not isinstance(ap, dict):

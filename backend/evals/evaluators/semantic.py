@@ -117,7 +117,16 @@ async def evaluate(
 
     Scores 6 dimensions (1-5), overall = average / 5.0.
     """
-    use_case_desc = state.get("use_case_description", "No description provided.")
+    # Build use case description from available state fields
+    use_case = state.get("use_case", {})
+    if isinstance(use_case, dict) and use_case:
+        use_case_desc = (
+            f"Title: {use_case.get('title', 'N/A')}\n"
+            f"Description: {use_case.get('description', 'N/A')}\n"
+            f"Billing model: {use_case.get('target_billing_model', 'N/A')}"
+        )
+    else:
+        use_case_desc = state.get("analysis", "No description provided.")
     generated_config = _format_entities(state, workflow_type)
     reference_spec = _format_reference(reference)
 

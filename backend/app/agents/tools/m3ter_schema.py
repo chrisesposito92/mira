@@ -251,6 +251,11 @@ PRICING_SCHEMA = {
         "required": False,
         "description": "UUID of the aggregation to price",
     },
+    "compoundAggregationId": {
+        "type": "str",
+        "required": False,
+        "description": "UUID of the compound aggregation to price (use instead of aggregationId)",
+    },
     "type": {
         "type": "str",
         "required": False,
