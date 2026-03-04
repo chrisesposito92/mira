@@ -261,7 +261,7 @@ async def load_workflow_history(
 # ---------------------------------------------------------------------------
 
 _FINAL_STEPS: dict[str, int] = {
-    "aggregations_approved": 1,
+    "compound_aggregations_approved": 1,
     "pricing_approved": 2,
     "account_plans_approved": 3,
     "measurements_approved": 4,
@@ -289,6 +289,7 @@ def build_workflow_summary_text(state: dict, workflow_num: int) -> str:
             ("products", "Products"),
             ("meters", "Meters"),
             ("aggregations", "Aggregations"),
+            ("compound_aggregations", "CompoundAggregations"),
         ]:
             s = build_entity_summary(key, state.get(key, []), etype)
             if s:

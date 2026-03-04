@@ -31,6 +31,12 @@ _STEP_TO_ENTITY: dict[str, tuple[EntityType, str, str, str]] = {
         "aggregation_errors",
         "aggregations_validated",
     ),
+    "compound_aggregations_generated": (
+        EntityType.compound_aggregation,
+        "compound_aggregations",
+        "compound_aggregation_errors",
+        "compound_aggregations_validated",
+    ),
     "plan_templates_generated": (
         EntityType.plan_template,
         "plan_templates",

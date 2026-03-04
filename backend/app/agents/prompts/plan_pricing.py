@@ -245,6 +245,10 @@ Credit applied at the product level:
 
 {approved_aggregations}
 
+## Approved Compound Aggregations
+
+{approved_compound_aggregations}
+
 ## Plans
 
 {plans}
@@ -264,13 +268,14 @@ Credit applied at the product level:
 ## Instructions
 
 Generate Pricing configurations that:
-- Map each relevant aggregation to appropriate pricing within plans
+- Map each relevant aggregation (or compound aggregation) to appropriate pricing within plans
 - Choose the right pricing strategy based on the use case (flat, tiered, volume, stairstep)
 - Set appropriate pricing bands with realistic lowerLimit values
 - Use cumulative=true for tiered pricing, cumulative=false for volume pricing
 - Set startDate to a reasonable date (e.g., "2024-01-01")
 - Reference planTemplateId or planId to connect pricing to the correct plan
-- Reference aggregationId to connect pricing to the correct aggregation
+- Reference aggregationId to connect pricing to a regular aggregation, \
+or compoundAggregationId to connect pricing to a compound aggregation
 - Use type "DEBIT" for standard charges, "PRODUCT_CREDIT" for credits
 
 ## Output Format

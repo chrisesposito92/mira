@@ -38,6 +38,13 @@ cd backend && source .venv/bin/activate
 python -m scripts.scrape_m3ter_docs   # Scrape m3ter docs → backend/data/m3ter_docs/*.json
 python -m scripts.seed_embeddings     # Seed pgvector from scraped JSON (requires DB + OpenAI key)
 
+# Evals (must activate venv first)
+cd backend && source .venv/bin/activate
+pytest evals/ -m eval_live --model-id claude-sonnet-4-6 -v  # Live eval — single model
+pytest evals/ -m eval_live -k "cloud_storage" -v            # Single example
+python -m evals.run_eval --all-models                        # Multi-model comparison
+python -m evals.run_eval --save-golden                       # Save golden responses
+
 # Docker
 docker compose up -d          # Local Supabase (postgres:54322, auth:54321, studio:54323)
 ```
@@ -92,7 +99,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `nodes/measurement_gen.py` | Measurement generation via LLM |
 | `nodes/validation.py` | Run validation rules on generated entities (4-tuple step mapping + cross-entity validation) |
 | `nodes/approval.py` | Persist entities to DB, `interrupt()` for user approval (5-tuple step config) |
-| `graphs/product_meter_agg.py` | WF1 StateGraph: analyze → [clarify?] → generate → validate → approve (×3 entity types) |
+| `graphs/product_meter_agg.py` | WF1 StateGraph: analyze → [clarify?] → generate → validate → approve (×4 entity types: Product, Meter, Aggregation, CompoundAggregation) |
 | `graphs/plan_pricing.py` | WF2 StateGraph: load_approved → generate → validate → approve (×3: PlanTemplate, Plan, Pricing) |
 | `graphs/account_setup.py` | WF3 StateGraph: load_approved → generate → validate → approve (×2: Account, AccountPlan) |
 | `graphs/usage_submission.py` | WF4 StateGraph: load_approved → generate → validate → approve (×1: Measurement) |
@@ -105,7 +112,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `graphs/use_case_gen.py` | Use case generator StateGraph: research → [clarify?] → compile → END |
 | `prompts/use_case_gen.py` | System prompts for use case generator (research + compilation) |
 | `tools/rag_tool.py` | RAG retrieval wrapper for agent nodes |
-| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, PlanTemplate, Plan, Pricing, Account, AccountPlan, Measurement) |
+| `tools/m3ter_schema.py` | Hardcoded m3ter entity schemas (Product, Meter, Aggregation, CompoundAggregation, PlanTemplate, Plan, Pricing, Account, AccountPlan, Measurement) |
 
 ### Frontend Structure (`frontend/src/`)
 
@@ -156,7 +163,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
 - **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
-- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, plan_template, plan, pricing, account, account_plan, measurement. Cross-entity referential integrity checks in `validation/cross_entity.py` (AccountPlan→Account/Plan, Measurement→Meter/Account).
+- **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, compound_aggregation, plan_template, plan, pricing, account, account_plan, measurement. Cross-entity referential integrity checks in `validation/cross_entity.py` (AccountPlan→Account/Plan, Measurement→Meter/Account).
 - **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation, plan_pricing, account_setup, usage_submission). Prerequisite chain: WF1 → WF2 → WF3 → WF4. Frontend WorkflowLauncher gates each workflow on predecessor completion.
 - **LangSmith tracing**: Set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` to enable automatic tracing of all LangGraph/LangChain calls. Graph invocation configs include `run_name`, `metadata` (workflow_id, workflow_type, source), and `tags` for filtering in the LangSmith dashboard. No code changes needed to toggle — purely env-var driven.
 
@@ -239,6 +246,130 @@ Full architecture: `docs/ARCHITECTURE.md`
 
 ### Frontend (`frontend/.env`)
 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, `PUBLIC_API_URL`, `PUBLIC_WS_URL`
+
+### Evaluation System (`backend/evals/`)
+
+| Directory | Purpose |
+|-----------|---------|
+| `datasets/base.py` | Core dataclasses: EvalExample, ReferenceEntity, WorkflowReference, EvalResult |
+| `datasets/cloud_storage.py` | Example 1: Cloud Storage reference config |
+| `datasets/app_hosting.py` | Example 2: App Hosting with compound aggregation |
+| `datasets/candidate_checks.py` | Example 3: Candidate Checks with segmented aggregation |
+| `datasets/registry.py` | ALL_EXAMPLES list, get_example() helper |
+| `evaluators/structural.py` | Structural validity (JSON, required fields, code format) |
+| `evaluators/schema_compliance.py` | Reuses app.validation.engine.validate_entity() |
+| `evaluators/completeness.py` | Entity count vs reference expected_counts |
+| `evaluators/accuracy.py` | Fuzzy matching with Hungarian algorithm (scipy) |
+| `evaluators/cross_entity.py` | Referential integrity checks |
+| `evaluators/semantic.py` | LLM-as-Judge (claude-opus-4-6) for conceptual correctness |
+| `evaluators/composite.py` | Weighted composite scorer + report formatting |
+| `runner/auto_approver.py` | HITL interrupt loop: auto-approve all entities |
+| `runner/graph_harness.py` | Graph compilation with MemorySaver, mock Supabase/RAG |
+| `runner/workflow_chain.py` | WF1→WF2→WF3 chained execution |
+| `test_eval_wf1.py` | WF1 pytest evals (parametrized by example) |
+| `test_eval_wf2.py` | WF2 pytest evals |
+| `test_eval_wf3.py` | WF3 pytest evals |
+| `test_eval_chain.py` | Full WF1→WF2→WF3 chain eval |
+| `run_eval.py` | Standalone CLI runner |
+
+#### Reference Examples
+
+3 examples based on [m3ter worked examples](https://docs.m3ter.com/guides/getting-started/metering-for-production-worked-examples):
+
+| Example | WF1 Entities | WF2 Entities | Key Feature |
+|---------|-------------|-------------|-------------|
+| `cloud_storage` | 1 product, 1 meter (3 data fields + 1 derived), 3 aggregations | 1 plan template ($20 standing charge), 1 plan, 3 pricing (tiered/flat/stairstep) | Multi-aggregation pricing |
+| `app_hosting` | 1 product, 2 meters, 2 aggregations, 1 compound aggregation | 1 plan template, 1 plan, 1 pricing on compound agg | Compound aggregation formula |
+| `candidate_checks` | 1 product, 1 meter (segmented fields), 1 segmented aggregation | 1 plan template, 1 plan, 6 segment pricing configs | Segmented aggregation |
+
+#### Evaluators (Weighted Composite)
+
+| Evaluator | Weight | What It Checks |
+|-----------|--------|----------------|
+| `structural` | 10% | Valid dict, has `name`/`code`, code matches `^[a-z][a-z0-9_]*$`, no empty required fields |
+| `schema_compliance` | 20% | Runs MIRA's own `validate_entity()` from `app.validation.engine` — same rules as the real app |
+| `completeness` | 15% | Entity count per type vs reference `expected_counts`. Penalty at >150% over-generation |
+| `accuracy` | 25% | Fuzzy name matching + key field comparison using Hungarian algorithm (`scipy.linear_sum_assignment`) for optimal 1:1 entity pairing |
+| `cross_entity` | 10% | Referential integrity: agg→meter field, pricing→aggregation, accountPlan→account/plan. Checks `approved_*` state keys for WF2/WF3 |
+| `semantic` | 20% | LLM-as-Judge (default: claude-opus-4-6) scores 6 dimensions 1-5: relevance, naming, data_model, aggregation_logic, pricing_structure, completeness. Only runs in live mode |
+
+When semantic eval is skipped (no `--judge-model` or mock mode), remaining weights are redistributed proportionally.
+
+#### How It Works
+
+- **Auto-approver**: Runs graphs through HITL `interrupt()` gates by detecting interrupt payloads via `extract_interrupt_payload()` and resuming with approve-all decisions. Max 20 iterations.
+- **Graph harness**: Compiles graphs with `MemorySaver` (no Postgres). Mocks Supabase (analysis node use_case fetch, approval DB writes, load_approved entity loading), RAG retrieval, and memory store. Real LLM calls are preserved.
+- **Workflow chaining**: WF2 receives approved entities from WF1 output. WF3 receives from both WF1+WF2. The mock `load_approved_entities` returns prior workflow state formatted as Supabase rows.
+- **No server needed**: Evals import graph builders directly and run in-process. Only LLM API keys required.
+
+#### Running Evals
+
+**pytest (recommended for individual tests)**:
+
+```bash
+cd backend
+
+# Single example, single workflow
+pytest evals/test_eval_wf1.py -k "cloud_storage" --model-id claude-sonnet-4-6 -v
+
+# All examples for WF1
+pytest evals/test_eval_wf1.py --model-id claude-sonnet-4-6 -v
+
+# Full chain (WF1→WF2→WF3) for one example
+pytest evals/test_eval_chain.py -k "app_hosting" --model-id gpt-5.2 -v
+
+# All eval tests
+pytest evals/ -m eval_live --model-id claude-sonnet-4-6 -v
+```
+
+**pytest CLI options** (defined in `evals/conftest.py`):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--model-id` | `claude-sonnet-4-6` | Model under test — the LLM that generates billing configs |
+| `--eval-mode` | `live` | `live` = real LLM calls, `mock` = replay saved golden responses |
+| `--judge-model` | `claude-opus-4-6` | Model used for LLM-as-Judge semantic evaluation |
+| `-k "name"` | (all) | pytest filter — use example names: `cloud_storage`, `app_hosting`, `candidate_checks` |
+
+**Standalone CLI** (for multi-model comparison and golden file generation):
+
+```bash
+cd backend
+
+# Single model, all workflows
+python -m evals.run_eval --model-id claude-sonnet-4-6
+
+# All 5 models (comparison matrix)
+python -m evals.run_eval --all-models
+
+# Specific workflow + example
+python -m evals.run_eval --workflow wf1 --examples cloud_storage
+
+# Save golden files for mock mode
+python -m evals.run_eval --model-id claude-sonnet-4-6 --save-golden
+
+# Custom judge model
+python -m evals.run_eval --judge-model gpt-5.2
+```
+
+**CLI options** (`python -m evals.run_eval --help`):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--model-id` | `claude-sonnet-4-6` | Model to evaluate |
+| `--all-models` | off | Run across all 5 configured models (claude-sonnet-4-6, claude-opus-4-6, gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview) |
+| `--examples` | `all` | Comma-separated example names or `all` |
+| `--workflow` | `all` | `wf1`, `wf2`, `wf3`, `chain`, or `all` |
+| `--judge-model` | `claude-opus-4-6` | Model for LLM-as-Judge semantic evaluation |
+| `--save-golden` | off | Save LLM responses as JSON to `evals/golden/` for mock replay |
+
+Results are saved to `evals/golden/latest_results.json` after each CLI run.
+
+#### pytest Markers
+
+- `@pytest.mark.eval` — all eval tests (both live and mock)
+- `@pytest.mark.eval_live` — tests requiring real LLM API calls (excluded from CI)
+- CI runs `pytest -m "not integration and not eval_live"` to skip both DB and eval tests
 
 ## Gotchas
 

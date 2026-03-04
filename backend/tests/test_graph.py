@@ -32,6 +32,9 @@ class TestGraphStructure:
             "generate_aggregations",
             "validate_aggregations",
             "approve_aggregations",
+            "generate_compound_aggregations",
+            "validate_compound_aggregations",
+            "approve_compound_aggregations",
         }
         # StateGraph nodes dict includes __start__ and __end__
         node_names = {name for name in graph.nodes if not name.startswith("__")}

@@ -35,10 +35,16 @@ class WorkflowState(TypedDict, total=False):
     meter_decisions: list[dict]
     aggregation_decisions: list[dict]
 
+    # Workflow 1 — Compound Aggregations
+    compound_aggregations: list[dict]
+    compound_aggregation_errors: list[dict]
+    compound_aggregation_decisions: list[dict]
+
     # Workflow 2 — loaded from DB (approved entities from Workflow 1)
     approved_products: list[dict]
     approved_meters: list[dict]
     approved_aggregations: list[dict]
+    approved_compound_aggregations: list[dict]
 
     # Workflow 2 — Generation
     plan_templates: list[dict]

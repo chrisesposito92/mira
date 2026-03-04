@@ -7,6 +7,8 @@ Flow:
     → validate_products → approve_products (interrupt)
     → generate_meters → validate_meters → approve_meters (interrupt)
     → generate_aggregations → validate_aggregations → approve_aggregations (interrupt)
+    → generate_compound_aggregations → validate_compound_aggregations
+      → approve_compound_aggregations (interrupt)
     → END
 """
 
@@ -19,6 +21,7 @@ from app.agents.nodes.approval import approve_entities
 from app.agents.nodes.clarification import generate_clarifications
 from app.agents.nodes.generation import (
     generate_aggregations,
+    generate_compound_aggregations,
     generate_meters,
     generate_products,
 )
@@ -48,6 +51,11 @@ def _route_after_gen_aggregations(state: WorkflowState) -> str:
     return END if state.get("current_step") == "error" else "validate_aggregations"
 
 
+def _route_after_gen_compound_aggs(state: WorkflowState) -> str:
+    """Route to END if generation failed, otherwise proceed to validation."""
+    return END if state.get("current_step") == "error" else "validate_compound_aggregations"
+
+
 def _build_graph() -> StateGraph:
     """Build the product/meter/aggregation StateGraph (uncompiled)."""
     graph = StateGraph(WorkflowState)
@@ -64,6 +72,9 @@ def _build_graph() -> StateGraph:
     graph.add_node("generate_aggregations", generate_aggregations)
     graph.add_node("validate_aggregations", validate_entities)
     graph.add_node("approve_aggregations", approve_entities)
+    graph.add_node("generate_compound_aggregations", generate_compound_aggregations)
+    graph.add_node("validate_compound_aggregations", validate_entities)
+    graph.add_node("approve_compound_aggregations", approve_entities)
 
     # Set entry point
     graph.set_entry_point("analyze_use_case")
@@ -95,8 +106,13 @@ def _build_graph() -> StateGraph:
     graph.add_conditional_edges("generate_aggregations", _route_after_gen_aggregations)
     graph.add_edge("validate_aggregations", "approve_aggregations")
 
+    # Compound aggregation pipeline: generate → [error?] → validate → approve
+    graph.add_edge("approve_aggregations", "generate_compound_aggregations")
+    graph.add_conditional_edges("generate_compound_aggregations", _route_after_gen_compound_aggs)
+    graph.add_edge("validate_compound_aggregations", "approve_compound_aggregations")
+
     # End
-    graph.add_edge("approve_aggregations", END)
+    graph.add_edge("approve_compound_aggregations", END)
 
     return graph
 

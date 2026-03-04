@@ -68,4 +68,4 @@ jobs:
         run: ruff format --check .
 
       - name: Test (unit only)
-        run: pytest -m "not integration" -v
+        run: pytest -m "not integration and not eval_live" -v
