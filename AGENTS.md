@@ -272,11 +272,104 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `test_eval_chain.py` | Full WF1→WF2→WF3 chain eval |
 | `run_eval.py` | Standalone CLI runner |
 
-- **3 reference examples**: Cloud Storage, App Hosting, Candidate Checks — based on m3ter worked examples
-- **6 evaluators**: structural (10%), schema_compliance (20%), completeness (15%), accuracy (25%), cross_entity (10%), semantic (20%)
-- **Auto-approver**: Runs graphs through HITL gates automatically by approving all entities
-- **Graph harness**: Compiles with MemorySaver, mocks Supabase/RAG so evals need no DB
-- **pytest markers**: `@pytest.mark.eval` for all eval tests, `@pytest.mark.eval_live` for tests requiring real LLM calls
+#### Reference Examples
+
+3 examples based on [m3ter worked examples](https://docs.m3ter.com/guides/getting-started/metering-for-production-worked-examples):
+
+| Example | WF1 Entities | WF2 Entities | Key Feature |
+|---------|-------------|-------------|-------------|
+| `cloud_storage` | 1 product, 1 meter (3 data fields + 1 derived), 3 aggregations | 1 plan template ($20 standing charge), 1 plan, 3 pricing (tiered/flat/stairstep) | Multi-aggregation pricing |
+| `app_hosting` | 1 product, 2 meters, 2 aggregations, 1 compound aggregation | 1 plan template, 1 plan, 1 pricing on compound agg | Compound aggregation formula |
+| `candidate_checks` | 1 product, 1 meter (segmented fields), 1 segmented aggregation | 1 plan template, 1 plan, 6 segment pricing configs | Segmented aggregation |
+
+#### Evaluators (Weighted Composite)
+
+| Evaluator | Weight | What It Checks |
+|-----------|--------|----------------|
+| `structural` | 10% | Valid dict, has `name`/`code`, code matches `^[a-z][a-z0-9_]*$`, no empty required fields |
+| `schema_compliance` | 20% | Runs MIRA's own `validate_entity()` from `app.validation.engine` — same rules as the real app |
+| `completeness` | 15% | Entity count per type vs reference `expected_counts`. Penalty at >150% over-generation |
+| `accuracy` | 25% | Fuzzy name matching + key field comparison using Hungarian algorithm (`scipy.linear_sum_assignment`) for optimal 1:1 entity pairing |
+| `cross_entity` | 10% | Referential integrity: agg→meter field, pricing→aggregation, accountPlan→account/plan. Checks `approved_*` state keys for WF2/WF3 |
+| `semantic` | 20% | LLM-as-Judge (default: claude-opus-4-6) scores 6 dimensions 1-5: relevance, naming, data_model, aggregation_logic, pricing_structure, completeness. Only runs in live mode |
+
+When semantic eval is skipped (no `--judge-model` or mock mode), remaining weights are redistributed proportionally.
+
+#### How It Works
+
+- **Auto-approver**: Runs graphs through HITL `interrupt()` gates by detecting interrupt payloads via `extract_interrupt_payload()` and resuming with approve-all decisions. Max 20 iterations.
+- **Graph harness**: Compiles graphs with `MemorySaver` (no Postgres). Mocks Supabase (analysis node use_case fetch, approval DB writes, load_approved entity loading), RAG retrieval, and memory store. Real LLM calls are preserved.
+- **Workflow chaining**: WF2 receives approved entities from WF1 output. WF3 receives from both WF1+WF2. The mock `load_approved_entities` returns prior workflow state formatted as Supabase rows.
+- **No server needed**: Evals import graph builders directly and run in-process. Only LLM API keys required.
+
+#### Running Evals
+
+**pytest (recommended for individual tests)**:
+
+```bash
+cd backend
+
+# Single example, single workflow
+pytest evals/test_eval_wf1.py -k "cloud_storage" --model-id claude-sonnet-4-6 -v
+
+# All examples for WF1
+pytest evals/test_eval_wf1.py --model-id claude-sonnet-4-6 -v
+
+# Full chain (WF1→WF2→WF3) for one example
+pytest evals/test_eval_chain.py -k "app_hosting" --model-id gpt-5.2 -v
+
+# All eval tests
+pytest evals/ -m eval_live --model-id claude-sonnet-4-6 -v
+```
+
+**pytest CLI options** (defined in `evals/conftest.py`):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--model-id` | `claude-sonnet-4-6` | Model under test — the LLM that generates billing configs |
+| `--eval-mode` | `live` | `live` = real LLM calls, `mock` = replay saved golden responses |
+| `--judge-model` | `claude-opus-4-6` | Model used for LLM-as-Judge semantic evaluation |
+| `-k "name"` | (all) | pytest filter — use example names: `cloud_storage`, `app_hosting`, `candidate_checks` |
+
+**Standalone CLI** (for multi-model comparison and golden file generation):
+
+```bash
+cd backend
+
+# Single model, all workflows
+python -m evals.run_eval --model-id claude-sonnet-4-6
+
+# All 5 models (comparison matrix)
+python -m evals.run_eval --all-models
+
+# Specific workflow + example
+python -m evals.run_eval --workflow wf1 --examples cloud_storage
+
+# Save golden files for mock mode
+python -m evals.run_eval --model-id claude-sonnet-4-6 --save-golden
+
+# Custom judge model
+python -m evals.run_eval --judge-model gpt-5.2
+```
+
+**CLI options** (`python -m evals.run_eval --help`):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--model-id` | `claude-sonnet-4-6` | Model to evaluate |
+| `--all-models` | off | Run across all 5 configured models (claude-sonnet-4-6, claude-opus-4-6, gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview) |
+| `--examples` | `all` | Comma-separated example names or `all` |
+| `--workflow` | `all` | `wf1`, `wf2`, `wf3`, `chain`, or `all` |
+| `--judge-model` | `claude-opus-4-6` | Model for LLM-as-Judge semantic evaluation |
+| `--save-golden` | off | Save LLM responses as JSON to `evals/golden/` for mock replay |
+
+Results are saved to `evals/golden/latest_results.json` after each CLI run.
+
+#### pytest Markers
+
+- `@pytest.mark.eval` — all eval tests (both live and mock)
+- `@pytest.mark.eval_live` — tests requiring real LLM API calls (excluded from CI)
+- CI runs `pytest -m "not integration and not eval_live"` to skip both DB and eval tests
 
 ## Gotchas
 
