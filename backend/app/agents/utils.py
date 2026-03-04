@@ -90,10 +90,24 @@ def build_use_case_description(use_case: dict) -> str:
     return "\n".join(parts) if parts else "No use case details available."
 
 
+def _strip_markdown_fences(text: str) -> str:
+    """Strip markdown code fences (```json ... ```) from LLM response."""
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        # Remove opening fence (```json, ```JSON, or just ```)
+        first_newline = stripped.find("\n")
+        if first_newline != -1:
+            stripped = stripped[first_newline + 1 :]
+        # Remove closing fence
+        if stripped.rstrip().endswith("```"):
+            stripped = stripped.rstrip()[:-3].rstrip()
+    return stripped
+
+
 def parse_entity_list(content: str) -> list[dict]:
     """Parse LLM response into a list of entity dicts."""
     try:
-        parsed = json.loads(content)
+        parsed = json.loads(_strip_markdown_fences(content))
         if isinstance(parsed, list):
             return parsed
         if isinstance(parsed, dict):
