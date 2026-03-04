@@ -7,6 +7,7 @@ export interface UseCaseService {
 	create(projectId: string, data: UseCaseCreate): Promise<UseCase>;
 	update(id: string, data: UseCaseUpdate): Promise<UseCase>;
 	delete(id: string): Promise<void>;
+	reset(id: string): Promise<{ message: string }>;
 }
 
 export function createUseCaseService(client: ApiClient): UseCaseService {
@@ -16,5 +17,6 @@ export function createUseCaseService(client: ApiClient): UseCaseService {
 		create: (projectId, data) => client.post<UseCase>(`/api/projects/${projectId}/use-cases`, data),
 		update: (id, data) => client.patch<UseCase>(`/api/use-cases/${id}`, data),
 		delete: (id) => client.delete(`/api/use-cases/${id}`),
+		reset: (id) => client.post<{ message: string }>(`/api/use-cases/${id}/reset`, {}),
 	};
 }

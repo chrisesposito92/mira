@@ -8,6 +8,7 @@
 		CreateObjectDialog,
 		PushProgressPanel,
 		PushConfirmDialog,
+		UseCaseMetadataPanel,
 		WorkflowLauncherDropdown,
 		WorkflowDrawer,
 	} from '$lib/components/control-panel';
@@ -15,17 +16,26 @@
 	import {
 		createApiClient,
 		createGeneratedObjectService,
+		createUseCaseService,
 		createWorkflowService,
 	} from '$lib/services';
 	import { toast } from 'svelte-sonner';
 	import { ArrowLeft, Plus } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { snakeToTitle } from '$lib/utils.js';
-	import type { GeneratedObjectUpdate, ObjectStatus, CreateObjectPayload } from '$lib/types';
+	import type {
+		UseCase,
+		UseCaseUpdate,
+		GeneratedObjectUpdate,
+		ObjectStatus,
+		CreateObjectPayload,
+	} from '$lib/types';
 	import type { EntityDecision, ClarificationAnswer, WorkflowType } from '$lib/types/workflow.js';
 
 	let { data } = $props();
 	let initialized = false;
+	let useCase = $state<UseCase>(data.useCase);
+	let useCaseSaving = $state(false);
 	let showCreateDialog = $state(false);
 	let templates = $state<Record<string, Record<string, unknown>>>({});
 	let showPushConfirm = $state(false);
@@ -33,8 +43,11 @@
 	let drawerOpen = $state(false);
 	let workflowInitialized = false;
 
-	const service = $derived(createGeneratedObjectService(createApiClient(data.supabase)));
-	const workflowService = $derived(createWorkflowService(createApiClient(data.supabase)));
+	const apiClient = $derived(createApiClient(data.supabase));
+	const service = $derived(createGeneratedObjectService(apiClient));
+	const useCaseService = $derived(createUseCaseService(apiClient));
+	const workflowService = $derived(createWorkflowService(apiClient));
+	const objectCount = $derived(objectsStore.objects.length);
 
 	const modelName = $derived(
 		workflowStore.models.find((m) => m.id === workflowStore.workflow?.model_id)?.display_name ?? '',
@@ -195,6 +208,32 @@
 		return false;
 	}
 
+	async function handleUseCaseUpdate(updateData: UseCaseUpdate): Promise<UseCase | null> {
+		useCaseSaving = true;
+		try {
+			const updated = await useCaseService.update(useCase.id, updateData);
+			useCase = updated;
+			toast.success('Use case updated');
+			return updated;
+		} catch {
+			toast.error('Failed to update use case');
+			return null;
+		} finally {
+			useCaseSaving = false;
+		}
+	}
+
+	async function handleUseCaseReset(): Promise<void> {
+		try {
+			await useCaseService.reset(useCase.id);
+			workflowStore.clear();
+			await objectsStore.loadObjects(service, page.params.useCaseId!);
+			toast.success('Objects reset');
+		} catch {
+			toast.error('Failed to reset objects');
+		}
+	}
+
 	async function handleStartWorkflow(modelId: string, workflowType: WorkflowType) {
 		// Guard: if a workflow is already active, reopen the drawer instead of orphaning it
 		if (workflowStore.isRunning || workflowStore.isInterrupted) {
@@ -249,7 +288,7 @@
 		</Button>
 		<div class="flex-1">
 			<h1 class="text-sm font-semibold">Control Panel</h1>
-			<p class="text-muted-foreground text-xs">{data.useCase.title}</p>
+			<p class="text-muted-foreground text-xs">{useCase.title}</p>
 		</div>
 		<WorkflowLauncherDropdown
 			models={workflowStore.models}
@@ -292,6 +331,14 @@
 	<div class="flex flex-1 overflow-hidden">
 		<!-- Object tree (left panel) -->
 		<div class="w-80 shrink-0 overflow-y-auto border-r p-2">
+			<UseCaseMetadataPanel
+				{useCase}
+				{objectCount}
+				saving={useCaseSaving}
+				workflowActive={workflowStore.isRunning || workflowStore.isInterrupted}
+				onupdate={handleUseCaseUpdate}
+				onreset={handleUseCaseReset}
+			/>
 			{#if objectsStore.loading}
 				<div class="text-muted-foreground flex items-center justify-center p-8 text-sm">
 					Loading objects...

@@ -79,3 +79,34 @@ def delete_use_case(supabase: Client, user_id: UUID, use_case_id: UUID) -> None:
     supabase.table("use_cases").delete().eq("id", str(use_case_id)).eq(
         "project_id", existing["project_id"]
     ).execute()
+
+
+def reset_use_case_data(supabase: Client, user_id: UUID, use_case_id: UUID) -> dict:
+    """Delete all generated objects and workflows for a use case."""
+    get_use_case(supabase, user_id, use_case_id)
+
+    # Reject reset if any workflows are still running or interrupted
+    active_workflows = (
+        supabase.table("workflows")
+        .select("id, status")
+        .eq("use_case_id", str(use_case_id))
+        .in_("status", ["running", "interrupted"])
+        .execute()
+    )
+    if active_workflows.data:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot reset while workflows are active. Wait for them to complete or cancel.",
+        )
+
+    objects_result = (
+        supabase.table("generated_objects").delete().eq("use_case_id", str(use_case_id)).execute()
+    )
+    workflows_result = (
+        supabase.table("workflows").delete().eq("use_case_id", str(use_case_id)).execute()
+    )
+
+    return {
+        "objects_deleted": len(objects_result.data),
+        "workflows_deleted": len(workflows_result.data),
+    }
