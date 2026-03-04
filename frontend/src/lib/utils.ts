@@ -22,3 +22,11 @@ export function snakeToTitle(s: string): string {
 export function capitalize(s: string): string {
 	return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+export function formatDate(dateStr: string): string {
+	return new Date(dateStr).toLocaleDateString();
+}
+
+export function formatDateTime(dateStr: string): string {
+	return new Date(dateStr).toLocaleString();
+}

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from supabase import Client
 
 from app.dependencies import get_current_user, get_supabase
+from app.schemas.common import MessageResponse
 from app.schemas.use_cases import UseCaseCreate, UseCaseResponse, UseCaseUpdate
 from app.services import use_case_service as svc
 
@@ -61,3 +62,18 @@ async def delete_use_case(
     supabase: Client = Depends(get_supabase),
 ) -> None:
     svc.delete_use_case(supabase, user_id, use_case_id)
+
+
+@router.post("/api/use-cases/{use_case_id}/reset", response_model=MessageResponse)
+async def reset_use_case(
+    use_case_id: UUID,
+    user_id: UUID = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+) -> dict:
+    result = svc.reset_use_case_data(supabase, user_id, use_case_id)
+    return {
+        "message": (
+            f"Reset complete: {result['objects_deleted']} objects "
+            f"and {result['workflows_deleted']} workflows deleted."
+        )
+    }

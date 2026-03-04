@@ -4,7 +4,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import StatusBadge from '$lib/components/project/StatusBadge.svelte';
 	import JsonEditor from './JsonEditor.svelte';
-	import { snakeToTitle } from '$lib/utils.js';
+	import { snakeToTitle, formatDateTime } from '$lib/utils.js';
 	import { Upload } from 'lucide-svelte';
 	import type { GeneratedObject, GeneratedObjectUpdate } from '$lib/types';
 	import { PUSHABLE_STATUSES } from '$lib/stores/objects.svelte.js';
@@ -72,10 +72,6 @@
 		if (!object) return;
 		onupdate(object.id, { status: 'rejected' });
 	}
-
-	function formatDate(dateStr: string): string {
-		return new Date(dateStr).toLocaleString();
-	}
 </script>
 
 {#if object}
@@ -105,8 +101,8 @@
 				</div>
 			{/if}
 			<div class="text-muted-foreground flex gap-4 text-xs">
-				<span>Created: {formatDate(object.created_at)}</span>
-				<span>Updated: {formatDate(object.updated_at)}</span>
+				<span>Created: {formatDateTime(object.created_at)}</span>
+				<span>Updated: {formatDateTime(object.updated_at)}</span>
 			</div>
 		</div>
 
