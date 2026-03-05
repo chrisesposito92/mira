@@ -34,7 +34,8 @@
 
 	let { data } = $props();
 	let initialized = false;
-	let useCase = $state<UseCase>(data.useCase);
+	let useCaseOverride = $state<UseCase | null>(null);
+	const useCase = $derived(useCaseOverride ?? data.useCase);
 	let useCaseSaving = $state(false);
 	let showCreateDialog = $state(false);
 	let templates = $state<Record<string, Record<string, unknown>>>({});
@@ -212,7 +213,7 @@
 		useCaseSaving = true;
 		try {
 			const updated = await useCaseService.update(useCase.id, updateData);
-			useCase = updated;
+			useCaseOverride = updated;
 			toast.success('Use case updated');
 			return updated;
 		} catch {

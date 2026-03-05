@@ -26,7 +26,7 @@
 		onreset: () => Promise<void>;
 	} = $props();
 
-	let open = $state(false);
+	let open = $state(true);
 	let editing = $state(false);
 	let showResetDialog = $state(false);
 	let pendingUpdate = $state<UseCaseUpdate | null>(null);

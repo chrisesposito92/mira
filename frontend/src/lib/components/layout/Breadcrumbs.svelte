@@ -16,7 +16,11 @@
 	function segmentLabel(segment: string, prevSegment?: string): string {
 		if (uuidPattern.test(segment)) {
 			// Map parent route to a readable label
-			const parentLabels: Record<string, string> = { projects: 'Project', orgs: 'Connection' };
+			const parentLabels: Record<string, string> = {
+				projects: 'Project',
+				orgs: 'Connection',
+				'use-cases': 'Use Case',
+			};
 			return prevSegment ? (parentLabels[prevSegment] ?? 'Detail') : 'Detail';
 		}
 		return labelMap[segment] || decodeURIComponent(segment);
@@ -25,13 +29,17 @@
 	const crumbs = $derived.by(() => {
 		const segments = page.url.pathname.split('/').filter(Boolean);
 		let href = '';
-		return segments.map((segment, i) => {
-			href += `/${segment}`;
-			return {
-				label: segmentLabel(segment, segments[i - 1]),
+		const result: { label: string; href: string }[] = [];
+		for (let i = 0; i < segments.length; i++) {
+			href += `/${segments[i]}`;
+			// Skip UUID segments — they're intermediate IDs with no standalone page
+			if (uuidPattern.test(segments[i])) continue;
+			result.push({
+				label: segmentLabel(segments[i], segments[i - 1]),
 				href,
-			};
-		});
+			});
+		}
+		return result;
 	});
 </script>
 
