@@ -48,6 +48,11 @@ METER_SCHEMA = {
         "min_items": 1,
         "description": "At least one data field for measurement ingestion",
         "item_schema": {
+            "name": {
+                "type": "str",
+                "required": True,
+                "description": "Descriptive name of the field",
+            },
             "code": {
                 "type": "str",
                 "required": True,
@@ -77,10 +82,30 @@ METER_SCHEMA = {
     },
     "derivedFields": {
         "type": "list[dict]",
-        "required": False,
-        "description": "Optional computed fields from data fields",
+        "required": True,
+        "description": "Computed fields from data fields. Use empty array [] if none needed",
         "item_schema": {
+            "name": {
+                "type": "str",
+                "required": True,
+                "description": "Descriptive name of the derived field",
+            },
             "code": {"type": "str", "required": True},
+            "category": {
+                "type": "str",
+                "required": True,
+                "enum": [
+                    "WHO",
+                    "WHAT",
+                    "WHERE",
+                    "MEASURE",
+                    "METADATA",
+                    "OTHER",
+                    "INCOME",
+                    "COST",
+                ],
+                "description": "Field category",
+            },
             "calculation": {
                 "type": "str",
                 "required": True,

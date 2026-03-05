@@ -154,11 +154,15 @@ async def _push_single_entity(
     elif entity_type == EntityType.plan:
         return await client.create_plan(payload)
     elif entity_type == EntityType.pricing:
-        # Pricing requires planId in URL path
+        # Pricing requires either planId or planTemplateId in URL path
         plan_m3ter_id = payload.get("planId")
-        if not plan_m3ter_id:
-            raise ValueError("Pricing entity must have a resolved planId")
-        return await client.create_pricing(plan_m3ter_id, payload)
+        plan_template_m3ter_id = payload.get("planTemplateId")
+        if plan_m3ter_id:
+            return await client.create_pricing(plan_m3ter_id, payload)
+        elif plan_template_m3ter_id:
+            return await client.create_pricing_on_template(plan_template_m3ter_id, payload)
+        else:
+            raise ValueError("Pricing entity must have a resolved planId or planTemplateId")
     elif entity_type == EntityType.account:
         return await client.create_account(payload)
     elif entity_type == EntityType.account_plan:

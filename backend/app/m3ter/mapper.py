@@ -53,6 +53,10 @@ def map_entity_to_m3ter_payload(entity_type: EntityType, data: dict[str, Any]) -
             continue
         payload[key] = value
 
+    # m3ter API requires derivedFields to be present (at least []) for meters
+    if entity_type == EntityType.meter and "derivedFields" not in payload:
+        payload["derivedFields"] = []
+
     return payload
 
 

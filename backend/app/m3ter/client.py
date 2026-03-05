@@ -159,6 +159,18 @@ class M3terClient:
                 return resp.json()
             except httpx.HTTPStatusError as e:
                 last_exc = e
+                # Log the response body for non-2xx errors (m3ter returns details)
+                try:
+                    body = e.response.text
+                except Exception:
+                    body = "<unreadable>"
+                logger.error(
+                    "m3ter API %s %s returned %d: %s",
+                    method,
+                    path,
+                    e.response.status_code,
+                    body,
+                )
                 if e.response.status_code not in _RETRYABLE_STATUS_CODES:
                     raise
                 if attempt < _MAX_RETRIES - 1:
@@ -248,6 +260,19 @@ class M3terClient:
         return await self._config_api_request(
             "POST",
             f"/organizations/{self.org_id}/plans/{plan_m3ter_id}/pricing",
+            data,
+        )
+
+    async def create_pricing_on_template(
+        self, plan_template_m3ter_id: str, data: dict[str, Any]
+    ) -> dict:
+        """Create pricing under a plan template via the Config API.
+
+        m3ter nests Pricing under PlanTemplate, so the template's m3ter ID is in the URL path.
+        """
+        return await self._config_api_request(
+            "POST",
+            f"/organizations/{self.org_id}/plantemplates/{plan_template_m3ter_id}/pricing",
             data,
         )
 

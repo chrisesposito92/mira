@@ -138,13 +138,19 @@ configurations that capture usage data for the products being billed.
 A Meter defines how usage data is ingested and structured. Required fields:
 - **name** (str): Human-readable meter name (e.g., "API Request Meter")
 - **code** (str): Unique machine code, lowercase with underscores (e.g., "api_request_meter")
-- **dataFields** (list): Fields that capture usage dimensions:
+- **productId** (str): UUID of the parent product this meter belongs to. Use the product's "id" \
+field from the approved products below.
+- **dataFields** (list): Fields that capture usage dimensions. Each field requires:
+  - **name** (str): Descriptive name for the field (e.g., "Request Count")
   - **code** (str): Machine code for the field
   - **category** (str): One of "WHO", "WHAT", "WHERE", "MEASURE",
     "METADATA", "OTHER", "INCOME", "COST"
   - **unit** (str, optional): Unit of measurement (e.g., "requests", "bytes", "seconds")
-- **derivedFields** (list, optional): Calculated fields based on dataFields:
+- **derivedFields** (list, REQUIRED — use empty array [] if none needed): \
+Calculated fields based on dataFields. Each derived field requires:
+  - **name** (str): Descriptive name for the derived field
   - **code** (str): Machine code
+  - **category** (str): Same categories as dataFields
   - **calculation** (str): Expression using dataField codes
   - **unit** (str, optional): Unit of result
 
@@ -152,10 +158,12 @@ Example:
 {{
   "name": "API Request Meter",
   "code": "api_request_meter",
+  "productId": "<product_uuid_from_approved_products>",
   "dataFields": [
-    {{"code": "request_count", "category": "MEASURE", "unit": "requests"}},
-    {{"code": "region", "category": "WHERE"}},
-    {{"code": "endpoint", "category": "WHAT"}}
+    {{"name": "Request Count", "code": "request_count", "category": "MEASURE", \
+"unit": "requests"}},
+    {{"name": "Region", "code": "region", "category": "WHERE"}},
+    {{"name": "Endpoint", "code": "endpoint", "category": "WHAT"}}
   ],
   "derivedFields": []
 }}
@@ -183,7 +191,9 @@ Generate Meter configurations that:
 - Use appropriate data field categories \
 (WHO=customer, WHAT=resource, WHERE=location, MEASURE=quantity, INCOME=revenue, COST=cost)
 - Have unique, descriptive codes
-- Reference the products they meter for
+- Reference the correct productId from the approved products above
+- Include "name" for every dataField and derivedField entry
+- Always include "derivedFields" (use empty array [] if no derived fields are needed)
 
 ## Output Format
 
@@ -192,14 +202,18 @@ Respond with a JSON array of meter objects:
   {{
     "name": "<meter name>",
     "code": "<unique_snake_case_code>",
+    "productId": "<product_uuid>",
     "dataFields": [
-      {{"code": "<code>",
+      {{"name": "<descriptive name>",
+        "code": "<code>",
         "category": "<WHO|WHAT|WHERE|MEASURE|METADATA|OTHER|INCOME|COST>",
         "unit": "<optional unit>"}},
       ...
     ],
     "derivedFields": [
-      {{"code": "<code>",
+      {{"name": "<descriptive name>",
+        "code": "<code>",
+        "category": "<MEASURE|...>",
         "calculation": "<expression>",
         "unit": "<optional unit>"}},
       ...
@@ -218,7 +232,8 @@ configurations that define how metered usage data is rolled up for billing.
 An Aggregation defines how to roll up meter data for billing. Required fields:
 - **name** (str): Human-readable name (e.g., "Daily API Request Count")
 - **code** (str): Unique machine code, lowercase with underscores
-- **meterCode** (str): Code of the meter this aggregation references
+- **meterId** (str): UUID (the "id" field) of the meter this aggregation references. \
+Use the meter's "id" from the approved meters below.
 - **aggregationType** (str): One of "SUM", "COUNT", "MIN", "MAX", "MEAN", "LATEST", "CUSTOM"
 - **targetField** (str): The dataField or derivedField code to aggregate
 - **rounding** (dict, optional): Rounding configuration:
@@ -230,7 +245,7 @@ Example:
 {{
   "name": "Daily API Request Count",
   "code": "daily_api_request_count",
-  "meterCode": "api_request_meter",
+  "meterId": "<meter_uuid_from_approved_meters>",
   "aggregationType": "SUM",
   "targetField": "request_count",
   "rounding": {{"precision": 0, "roundingType": "UP"}},
@@ -260,7 +275,7 @@ Example:
 ## Instructions
 
 Generate Aggregation configurations that:
-- Reference the correct meter codes from the generated meters
+- Reference the correct meterId (UUID) from the generated meters above
 - Use the appropriate aggregation type for the billing use case
 - Target the correct data fields
 - Include segmentation where billing varies by dimension (region, tier, etc.)
@@ -273,7 +288,7 @@ Respond with a JSON array of aggregation objects:
   {{
     "name": "<aggregation name>",
     "code": "<unique_snake_case_code>",
-    "meterCode": "<meter_code>",
+    "meterId": "<meter_uuid>",
     "aggregationType": "<SUM|COUNT|MIN|MAX|MEAN|LATEST|CUSTOM>",
     "targetField": "<data_field_code>",
     "rounding": {{"precision": <int>, "roundingType": "<UP|DOWN|NEAREST>"}},
