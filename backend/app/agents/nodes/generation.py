@@ -15,7 +15,7 @@ from app.agents.prompts.product_meter import (
     PRODUCT_GENERATION_PROMPT,
 )
 from app.agents.state import WorkflowState
-from app.agents.utils import extract_llm_text, parse_entity_list
+from app.agents.utils import extract_llm_text, inject_parent_references, parse_entity_list
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +128,10 @@ async def generate_meters(state: WorkflowState, config: RunnableConfig) -> dict:
     content = extract_llm_text(response.content)
     meters = parse_entity_list(content)
 
+    # Inject productId from approved products
+    if meters and products:
+        inject_parent_references(meters, "productId", products, code_hint_field="productCode")
+
     messages = state.get("messages", []) + [
         {"role": "assistant", "content": content, "step": "generate_meters"}
     ]
@@ -183,6 +187,10 @@ async def generate_aggregations(state: WorkflowState, config: RunnableConfig) ->
 
     content = extract_llm_text(response.content)
     aggregations = parse_entity_list(content)
+
+    # Inject meterId from approved meters
+    if aggregations and meters:
+        inject_parent_references(aggregations, "meterId", meters, code_hint_field="meterCode")
 
     messages = state.get("messages", []) + [
         {"role": "assistant", "content": content, "step": "generate_aggregations"}
@@ -242,6 +250,12 @@ async def generate_compound_aggregations(state: WorkflowState, config: RunnableC
 
     content = extract_llm_text(response.content)
     compound_aggregations = parse_entity_list(content)
+
+    # Inject productId from approved products
+    if compound_aggregations and products:
+        inject_parent_references(
+            compound_aggregations, "productId", products, code_hint_field="productCode"
+        )
 
     messages = state.get("messages", []) + [
         {"role": "assistant", "content": content, "step": "generate_compound_aggregations"}

@@ -10,7 +10,12 @@ from app.agents.llm_factory import get_llm
 from app.agents.memory import load_generation_memory
 from app.agents.prompts.plan_pricing import PRICING_GENERATION_PROMPT
 from app.agents.state import WorkflowState
-from app.agents.utils import build_use_case_description, extract_llm_text, parse_entity_list
+from app.agents.utils import (
+    build_use_case_description,
+    extract_llm_text,
+    inject_parent_references,
+    parse_entity_list,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +56,30 @@ async def generate_pricing(state: WorkflowState, config: RunnableConfig) -> dict
 
     content = extract_llm_text(response.content)
     pricing = parse_entity_list(content)
+
+    # Inject aggregationId from approved aggregations (regular + compound)
+    all_aggregations = list(approved_aggregations) + list(approved_compound_aggregations)
+    if pricing and all_aggregations:
+        inject_parent_references(
+            pricing, "aggregationId", all_aggregations, code_hint_field="aggregationCode"
+        )
+        # Also handle compoundAggregationId if present
+        inject_parent_references(
+            pricing,
+            "compoundAggregationId",
+            approved_compound_aggregations,
+            code_hint_field="compoundAggregationCode",
+        )
+
+    # Inject planTemplateId from plan templates
+    if pricing and plan_templates:
+        inject_parent_references(
+            pricing, "planTemplateId", plan_templates, code_hint_field="planTemplateCode"
+        )
+
+    # Inject planId from plans (some pricing uses planId instead)
+    if pricing and plans:
+        inject_parent_references(pricing, "planId", plans, code_hint_field="planCode")
 
     messages = state.get("messages", []) + [
         {"role": "assistant", "content": content, "step": "generate_pricing"}

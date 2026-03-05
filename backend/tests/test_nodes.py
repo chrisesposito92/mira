@@ -182,7 +182,7 @@ class TestGenerateMeters:
             **base_state,
             "analysis": "Need API request metering",
             "rag_context": "m3ter docs...",
-            "products": [{"name": "API Gateway", "code": "api_gateway"}],
+            "products": [{"id": "prod-1", "name": "API Gateway", "code": "api_gateway"}],
         }
 
         meters = [
@@ -213,9 +213,10 @@ class TestGenerateAggregations:
             **base_state,
             "analysis": "Need daily request aggregation",
             "rag_context": "m3ter docs...",
-            "products": [{"name": "API Gateway", "code": "api_gateway"}],
+            "products": [{"id": "prod-1", "name": "API Gateway", "code": "api_gateway"}],
             "meters": [
                 {
+                    "id": "meter-1",
                     "name": "API Request Meter",
                     "code": "api_request_meter",
                     "dataFields": [

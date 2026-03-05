@@ -210,7 +210,7 @@ class TestGeneratePlanTemplates:
     async def test_generates_plan_template_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
-            "approved_products": [{"name": "API Gateway", "code": "api_gateway"}],
+            "approved_products": [{"id": "prod-aaa", "name": "API Gateway", "code": "api_gateway"}],
             "analysis": "Need a standard plan template",
             "rag_context": "m3ter docs...",
         }
@@ -267,9 +267,10 @@ class TestGeneratePlans:
     async def test_generates_plan_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
-            "approved_products": [{"name": "API Gateway", "code": "api_gateway"}],
+            "approved_products": [{"id": "prod-aaa", "name": "API Gateway", "code": "api_gateway"}],
             "plan_templates": [
                 {
+                    "id": "pt-aaa",
                     "name": "API Gateway Standard",
                     "code": "api_gateway_standard",
                     "planTemplateId": "pt-uuid",
@@ -323,11 +324,19 @@ class TestGeneratePricing:
     async def test_generates_pricing_list(self, mock_get_llm, base_state, mock_config):
         state = {
             **base_state,
-            "approved_aggregations": [{"name": "Daily API Count", "code": "daily_api_count"}],
-            "plans": [
-                {"name": "API Standard", "code": "api_standard", "planTemplateId": "pt-uuid"}
+            "approved_aggregations": [
+                {"id": "agg-aaa", "name": "Daily API Count", "code": "daily_api_count"}
             ],
-            "plan_templates": [{"name": "API Template", "code": "api_template"}],
+            "approved_compound_aggregations": [],
+            "plans": [
+                {
+                    "id": "plan-aaa",
+                    "name": "API Standard",
+                    "code": "api_standard",
+                    "planTemplateId": "pt-uuid",
+                }
+            ],
+            "plan_templates": [{"id": "pt-aaa", "name": "API Template", "code": "api_template"}],
             "analysis": "Need flat pricing",
             "rag_context": "m3ter docs...",
         }

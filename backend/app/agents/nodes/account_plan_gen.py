@@ -10,7 +10,7 @@ from app.agents.llm_factory import get_llm
 from app.agents.memory import load_generation_memory
 from app.agents.prompts.account_usage import ACCOUNT_PLAN_GENERATION_PROMPT
 from app.agents.state import WorkflowState
-from app.agents.utils import extract_llm_text, parse_entity_list
+from app.agents.utils import extract_llm_text, inject_parent_references, parse_entity_list
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,16 @@ async def generate_account_plans(state: WorkflowState, config: RunnableConfig) -
 
     content = extract_llm_text(response.content)
     account_plans = parse_entity_list(content)
+
+    # Inject accountId and planId from approved parents
+    if account_plans and accounts:
+        inject_parent_references(
+            account_plans, "accountId", accounts, code_hint_field="accountCode"
+        )
+    if account_plans and approved_plans:
+        inject_parent_references(
+            account_plans, "planId", approved_plans, code_hint_field="planCode"
+        )
 
     messages = state.get("messages", []) + [
         {"role": "assistant", "content": content, "step": "generate_account_plans"}

@@ -10,7 +10,12 @@ from app.agents.llm_factory import get_llm
 from app.agents.memory import load_generation_memory
 from app.agents.prompts.plan_pricing import PLAN_GENERATION_PROMPT
 from app.agents.state import WorkflowState
-from app.agents.utils import build_use_case_description, extract_llm_text, parse_entity_list
+from app.agents.utils import (
+    build_use_case_description,
+    extract_llm_text,
+    inject_parent_references,
+    parse_entity_list,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +52,12 @@ async def generate_plans(state: WorkflowState, config: RunnableConfig) -> dict:
 
     content = extract_llm_text(response.content)
     plans = parse_entity_list(content)
+
+    # Inject planTemplateId from approved plan templates
+    if plans and plan_templates:
+        inject_parent_references(
+            plans, "planTemplateId", plan_templates, code_hint_field="planTemplateCode"
+        )
 
     messages = state.get("messages", []) + [
         {"role": "assistant", "content": content, "step": "generate_plans"}
