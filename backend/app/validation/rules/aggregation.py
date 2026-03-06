@@ -1,6 +1,6 @@
 """Validation rules for m3ter Aggregation entities."""
 
-from app.validation.common import validate_code, validate_name
+from app.validation.common import VALID_ROUNDING_MODES, validate_code, validate_name
 from app.validation.engine import ValidationError
 
 VALID_AGGREGATION_TYPES = {
@@ -14,7 +14,6 @@ VALID_AGGREGATION_TYPES = {
     "UNIQUE",
     "CUSTOM_SQL",
 }
-VALID_ROUNDING_TYPES = {"UP", "DOWN", "NEAREST", "NONE"}
 
 
 def validate(data: dict) -> list[ValidationError]:
@@ -70,13 +69,13 @@ def validate(data: dict) -> list[ValidationError]:
                     field="rounding", message="rounding must be a string", severity="error"
                 )
             )
-        elif rounding not in VALID_ROUNDING_TYPES:
+        elif rounding not in VALID_ROUNDING_MODES:
             errors.append(
                 ValidationError(
                     field="rounding",
                     message=(
                         f"invalid rounding '{rounding}'."
-                        f" Must be one of: {', '.join(sorted(VALID_ROUNDING_TYPES))}"
+                        f" Must be one of: {', '.join(sorted(VALID_ROUNDING_MODES))}"
                     ),
                     severity="error",
                 )

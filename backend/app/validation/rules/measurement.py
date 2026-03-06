@@ -2,9 +2,41 @@
 
 import re
 
+from app.validation.common import (
+    MEASUREMENT_ALL_CATEGORIES,
+    MEASUREMENT_NUMERIC_CATEGORIES,
+    MEASUREMENT_STRING_CATEGORIES,
+)
 from app.validation.engine import ValidationError
 
 _ISO_8601_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})$")
+
+
+def _validate_category_values(
+    data: dict,
+    categories: frozenset[str],
+    expected_type: type | tuple[type, ...],
+    type_label: str,
+    errors: list[ValidationError],
+) -> None:
+    """Validate that all values in category dicts match the expected type."""
+    for cat in categories:
+        cat_data = data.get(cat)
+        if cat_data is not None:
+            if not isinstance(cat_data, dict):
+                errors.append(
+                    ValidationError(field=cat, message=f"{cat} must be a dict", severity="error")
+                )
+            else:
+                for key, value in cat_data.items():
+                    if not isinstance(value, expected_type):
+                        errors.append(
+                            ValidationError(
+                                field=f"{cat}.{key}",
+                                message=f"{cat}.{key} must be {type_label}",
+                                severity="error",
+                            )
+                        )
 
 
 def validate(data: dict) -> list[ValidationError]:
@@ -74,11 +106,7 @@ def validate(data: dict) -> list[ValidationError]:
             )
 
     # Category fields — at least one must be present
-    NUMERIC_CATEGORIES = {"measure", "cost", "income"}
-    STRING_CATEGORIES = {"who", "what", "where", "other", "metadata"}
-    ALL_CATEGORIES = NUMERIC_CATEGORIES | STRING_CATEGORIES
-
-    has_any_category = any(data.get(cat) is not None for cat in ALL_CATEGORIES)
+    has_any_category = any(data.get(cat) is not None for cat in MEASUREMENT_ALL_CATEGORIES)
     if not has_any_category:
         errors.append(
             ValidationError(
@@ -88,49 +116,8 @@ def validate(data: dict) -> list[ValidationError]:
             )
         )
 
-    for cat in NUMERIC_CATEGORIES:
-        cat_data = data.get(cat)
-        if cat_data is not None:
-            if not isinstance(cat_data, dict):
-                errors.append(
-                    ValidationError(
-                        field=cat,
-                        message=f"{cat} must be a dict",
-                        severity="error",
-                    )
-                )
-            else:
-                for key, value in cat_data.items():
-                    if not isinstance(value, (int, float)):
-                        errors.append(
-                            ValidationError(
-                                field=f"{cat}.{key}",
-                                message=f"{cat}.{key} must be numeric",
-                                severity="error",
-                            )
-                        )
-
-    for cat in STRING_CATEGORIES:
-        cat_data = data.get(cat)
-        if cat_data is not None:
-            if not isinstance(cat_data, dict):
-                errors.append(
-                    ValidationError(
-                        field=cat,
-                        message=f"{cat} must be a dict",
-                        severity="error",
-                    )
-                )
-            else:
-                for key, value in cat_data.items():
-                    if not isinstance(value, str):
-                        errors.append(
-                            ValidationError(
-                                field=f"{cat}.{key}",
-                                message=f"{cat}.{key} must be a string",
-                                severity="error",
-                            )
-                        )
+    _validate_category_values(data, MEASUREMENT_NUMERIC_CATEGORIES, (int, float), "numeric", errors)
+    _validate_category_values(data, MEASUREMENT_STRING_CATEGORIES, str, "a string", errors)
 
     return errors
 

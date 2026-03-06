@@ -3,6 +3,7 @@
 from dataclasses import asdict
 
 from app.schemas.common import EntityType
+from app.validation.common import MEASUREMENT_ALL_CATEGORIES
 from app.validation.engine import ValidationError
 
 
@@ -115,22 +116,21 @@ def _validate_measurement_refs(entities: list[dict], context: dict) -> list[dict
             )
 
         # Data field key validation (warning only)
-        # Collect all data field keys from category dicts
-        NUMERIC_CATEGORIES = {"measure", "cost", "income"}
-        STRING_CATEGORIES = {"who", "what", "where", "other", "metadata"}
-        all_data_keys: set[str] = set()
-        for cat in NUMERIC_CATEGORIES | STRING_CATEGORIES:
+        # Track which category each key came from for accurate error fields
+        data_key_sources: dict[str, str] = {}
+        for cat in MEASUREMENT_ALL_CATEGORIES:
             cat_data = entity.get(cat)
             if isinstance(cat_data, dict):
-                all_data_keys.update(cat_data.keys())
+                for key in cat_data:
+                    data_key_sources[key] = cat
 
-        if meter_code and meter_code in meter_data_fields and all_data_keys:
+        if meter_code and meter_code in meter_data_fields and data_key_sources:
             expected_fields = meter_data_fields[meter_code]
-            for key in all_data_keys:
+            for key, source_cat in data_key_sources.items():
                 if key not in expected_fields:
                     errors.append(
                         ValidationError(
-                            field=f"measure.{key}",
+                            field=f"{source_cat}.{key}",
                             message=(
                                 f"data key '{key}' not found in meter '{meter_code}' dataFields"
                             ),

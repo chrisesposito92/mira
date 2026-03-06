@@ -1,9 +1,12 @@
 """Validation rules for m3ter CompoundAggregation entities."""
 
-from app.validation.common import validate_code, validate_custom_fields, validate_name
+from app.validation.common import (
+    VALID_ROUNDING_MODES,
+    validate_code,
+    validate_custom_fields,
+    validate_name,
+)
 from app.validation.engine import ValidationError
-
-VALID_ROUNDING_MODES = {"UP", "DOWN", "NEAREST", "NONE"}
 
 
 def validate(data: dict) -> list[ValidationError]:
