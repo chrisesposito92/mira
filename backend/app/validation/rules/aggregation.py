@@ -108,9 +108,9 @@ def validate(data: dict) -> list[ValidationError]:
             )
         )
 
-    # unit: required, must be a string
+    # unit: required, non-empty string
     unit = data.get("unit")
-    if unit is None:
+    if not unit:
         errors.append(ValidationError(field="unit", message="unit is required", severity="error"))
     elif not isinstance(unit, str):
         errors.append(

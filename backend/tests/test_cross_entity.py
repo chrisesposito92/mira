@@ -136,6 +136,32 @@ class TestMeasurementCrossValidation:
         assert len(errors) == 1
         assert errors[0]["errors"][0]["severity"] == "warning"
 
+    def test_category_mismatch_warning(self) -> None:
+        """A MEASURE field placed under 'who' should produce a warning."""
+        entities = [
+            {
+                "uid": "m-1",
+                "meter": "api_requests",
+                "account": "acme_corp",
+                "ts": "2024-01-15T10:00:00Z",
+                "who": {"requests": "wrong_category"},
+            }
+        ]
+        context = {
+            "approved_meters": [
+                {
+                    "code": "api_requests",
+                    "dataFields": [{"code": "requests", "category": "MEASURE"}],
+                }
+            ],
+            "approved_accounts": [{"code": "acme_corp"}],
+        }
+        errors = validate_cross_entity(EntityType.measurement, entities, context)
+        assert len(errors) == 1
+        assert errors[0]["errors"][0]["severity"] == "warning"
+        assert "measure" in errors[0]["errors"][0]["message"]
+        assert "who" in errors[0]["errors"][0]["message"]
+
     def test_empty_entities_returns_empty(self) -> None:
         errors = validate_cross_entity(EntityType.measurement, [], {})
         assert errors == []

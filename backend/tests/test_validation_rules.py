@@ -237,3 +237,9 @@ class TestAggregationValidation:
             data["aggregation"] = agg_type
             errors = validate_entity(EntityType.aggregation, data)
             assert len(errors) == 0, f"{agg_type} should be valid"
+
+    def test_empty_unit_fails(self):
+        data = self._valid_aggregation()
+        data["unit"] = ""
+        errors = validate_entity(EntityType.aggregation, data)
+        assert any(e.field == "unit" for e in errors)
