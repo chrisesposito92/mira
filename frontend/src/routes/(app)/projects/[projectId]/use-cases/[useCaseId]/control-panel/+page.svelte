@@ -336,7 +336,7 @@
 				{useCase}
 				{objectCount}
 				saving={useCaseSaving}
-				workflowActive={workflowStore.isRunning || workflowStore.isInterrupted}
+				workflowActive={workflowStore.isRunning}
 				onupdate={handleUseCaseUpdate}
 				onreset={handleUseCaseReset}
 			/>

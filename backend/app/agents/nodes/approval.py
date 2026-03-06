@@ -121,6 +121,16 @@ async def approve_entities(state: WorkflowState, config: RunnableConfig) -> dict
     use_case_id = state.get("use_case_id", "")
     thread_id = state.get("thread_id", "")
 
+    # Skip approval entirely when the LLM generated 0 entities for this step
+    if not entities:
+        logger.info("No %s entities to approve — skipping interrupt", entity_type)
+        return {
+            entities_key: [],
+            decisions_key: [],
+            "current_step": approved_step,
+            "messages": state.get("messages", []),
+        }
+
     # Build interrupt payload (no DB insert yet — LangGraph re-executes the node
     # from the top on resume, so inserting before interrupt() would create duplicates)
     payload = {

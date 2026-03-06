@@ -28,16 +28,18 @@ const defaultProps = {
 };
 
 describe('UseCaseMetadataPanel', () => {
-	it('renders collapsed by default with trigger text', () => {
+	it('renders expanded by default with content visible', () => {
 		render(UseCaseMetadataPanel, { props: defaultProps });
 		const trigger = screen.getAllByText('Use Case Details')[0];
 		expect(trigger).toBeTruthy();
-		// Content area should be hidden
+		// Content area should be visible (open = true by default)
 		const content = document.querySelector('[data-collapsible-content]');
-		expect(content?.hasAttribute('hidden')).toBe(true);
+		expect(content?.hasAttribute('hidden')).toBe(false);
+		expect(screen.getAllByText('Cloud Storage Billing').length).toBeGreaterThanOrEqual(1);
+		expect(screen.getAllByText('Monthly').length).toBeGreaterThanOrEqual(1);
 	});
 
-	it('expands on click and shows content', async () => {
+	it('collapses on click and hides content', async () => {
 		const user = userEvent.setup();
 		render(UseCaseMetadataPanel, { props: defaultProps });
 
@@ -45,9 +47,7 @@ describe('UseCaseMetadataPanel', () => {
 		await user.click(trigger);
 
 		const content = document.querySelector('[data-collapsible-content]');
-		expect(content?.hasAttribute('hidden')).toBe(false);
-		expect(screen.getAllByText('Cloud Storage Billing').length).toBeGreaterThanOrEqual(1);
-		expect(screen.getAllByText('Monthly').length).toBeGreaterThanOrEqual(1);
+		expect(content?.hasAttribute('hidden')).toBe(true);
 	});
 
 	it('shows edit button with pencil icon when expanded', async () => {
