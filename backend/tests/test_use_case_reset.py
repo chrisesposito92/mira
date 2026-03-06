@@ -71,7 +71,7 @@ class TestResetUseCase:
 
         resp = authed_client.post(f"/api/use-cases/{ucid}/reset")
         assert resp.status_code == 409
-        assert "active" in resp.json()["detail"].lower()
+        assert "running" in resp.json()["detail"].lower()
 
     def test_reset_empty_data(self, authed_client, mock_supabase):
         ucid = str(uuid4())
