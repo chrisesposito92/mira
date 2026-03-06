@@ -6,7 +6,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { ChevronRight, ChevronDown, Pencil } from 'lucide-svelte';
+	import { ChevronRight, ChevronDown, Pencil, RotateCcw } from 'lucide-svelte';
 	import { capitalize, formatDate } from '$lib/utils.js';
 	import type { UseCase, UseCaseUpdate, BillingFrequency } from '$lib/types';
 
@@ -29,6 +29,8 @@
 	let open = $state(true);
 	let editing = $state(false);
 	let showResetDialog = $state(false);
+	let showStandaloneResetDialog = $state(false);
+	let resetting = $state(false);
 	let pendingUpdate = $state<UseCaseUpdate | null>(null);
 
 	// Edit form state
@@ -88,6 +90,16 @@
 			}
 		}
 		pendingUpdate = null;
+	}
+
+	async function confirmStandaloneReset() {
+		resetting = true;
+		try {
+			await onreset();
+		} finally {
+			resetting = false;
+			showStandaloneResetDialog = false;
+		}
 	}
 
 	function displayDate(dateStr: string | null): string {
@@ -191,9 +203,22 @@
 			<div class="space-y-2">
 				<div class="flex items-start justify-between gap-2">
 					<p class="text-sm font-semibold">{useCase.title}</p>
-					<Button variant="ghost" size="sm" class="size-7 shrink-0 p-0" onclick={startEditing}>
-						<Pencil class="size-3.5" />
-					</Button>
+					<div class="flex shrink-0 gap-0.5">
+						{#if objectCount > 0 && !workflowActive}
+							<Button
+								variant="ghost"
+								size="sm"
+								class="size-7 p-0"
+								title="Reset all objects and workflows"
+								onclick={() => (showStandaloneResetDialog = true)}
+							>
+								<RotateCcw class="size-3.5" />
+							</Button>
+						{/if}
+						<Button variant="ghost" size="sm" class="size-7 p-0" onclick={startEditing}>
+							<Pencil class="size-3.5" />
+						</Button>
+					</div>
 				</div>
 				{#if useCase.description}
 					<p class="text-muted-foreground line-clamp-2 text-xs">{useCase.description}</p>
@@ -237,6 +262,26 @@
 			<AlertDialog.Cancel onclick={() => (showResetDialog = false)}>Cancel</AlertDialog.Cancel>
 			<Button variant="outline" onclick={() => confirmSave(false)}>Save Without Reset</Button>
 			<Button onclick={() => confirmSave(true)}>Save & Reset</Button>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
+
+<AlertDialog.Root bind:open={showStandaloneResetDialog}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Reset all generated data?</AlertDialog.Title>
+			<AlertDialog.Description>
+				This will delete all {objectCount} generated object{objectCount !== 1 ? 's' : ''} and workflow
+				history for this use case. This cannot be undone.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel onclick={() => (showStandaloneResetDialog = false)}
+				>Cancel</AlertDialog.Cancel
+			>
+			<Button variant="destructive" onclick={confirmStandaloneReset} disabled={resetting}>
+				{resetting ? 'Resetting...' : 'Reset'}
+			</Button>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
