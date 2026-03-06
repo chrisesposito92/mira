@@ -51,7 +51,7 @@ class TestGetModels:
         resp = authed_client.get("/api/models")
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data) == 5
+        assert len(data) == 6
         model_ids = {m["id"] for m in data}
         assert "claude-sonnet-4-6" in model_ids
         assert "gpt-5.2" in model_ids

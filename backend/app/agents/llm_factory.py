@@ -10,6 +10,7 @@ from app.config import settings
 # Model registry: model_id → (provider, model_name)
 MODEL_REGISTRY: dict[str, tuple[str, str]] = {
     "gpt-5.2": ("openai", "gpt-5.2"),
+    "gpt-5.4": ("openai", "gpt-5.4-2026-03-05"),
     "gemini-3-flash-preview": ("google_genai", "gemini-3-flash-preview"),
     "gemini-3.1-pro-preview": ("google_genai", "gemini-3.1-pro-preview"),
     "claude-opus-4-6": ("anthropic", "claude-opus-4-6"),

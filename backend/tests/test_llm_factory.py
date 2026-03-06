@@ -7,11 +7,12 @@ from app.agents.llm_factory import MODEL_REGISTRY, get_llm, list_models
 
 class TestModelRegistry:
     def test_registry_has_five_models(self):
-        assert len(MODEL_REGISTRY) == 5
+        assert len(MODEL_REGISTRY) == 6
 
     def test_all_expected_models_present(self):
         expected = {
             "gpt-5.2",
+            "gpt-5.4",
             "gemini-3-flash-preview",
             "gemini-3.1-pro-preview",
             "claude-opus-4-6",
@@ -40,7 +41,7 @@ class TestGetLlm:
 class TestListModels:
     def test_returns_all_five_models(self):
         models = list_models()
-        assert len(models) == 5
+        assert len(models) == 6
 
     def test_each_model_has_required_fields(self):
         models = list_models()

@@ -162,7 +162,7 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Long-term memory**: LangGraph `AsyncPostgresStore` with 4 namespaces: `("project", id, "analysis")` for project-level domain knowledge, `("project", id, "workflow_history")` for cross-workflow summaries, `("user", id, "preferences", entity_type)` for user editing patterns, `("project", id, "rag_feedback")` for RAG chunk quality signals. All memory ops are wrapped in try/except — additive, never required. Nodes access store via `config["configurable"]["__pregel_runtime"].store`.
 - **Checkpointing**: LangGraph AsyncPostgresSaver, resume by thread_id
 - **Workflow API**: `POST /api/use-cases/{id}/workflows/start` → `POST /api/workflows/{id}/resume` (REST) or `ws://host/ws/workflows/{id}` (WebSocket)
-- **LLM models**: gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
+- **LLM models**: gpt-5.2, gpt-5.4, gemini-3-flash-preview, gemini-3.1-pro-preview, claude-opus-4-6, claude-sonnet-4-6 — `GET /api/models` lists all
 - **Validation**: Per-entity rule modules (`validation/rules/`) → `ValidationError` dataclass with field, message, severity. Shared helpers in `validation/common.py` (`validate_name`, `validate_code`, `validate_code_format`, `validate_custom_fields`, `validate_non_negative`). Covers: product, meter, aggregation, compound_aggregation, plan_template, plan, pricing, account, account_plan, measurement. Cross-entity referential integrity checks in `validation/cross_entity.py` (AccountPlan→Account/Plan, Measurement→Meter/Account).
 - **Multi-workflow**: `workflow_type` field selects graph via `get_graph()` helper (product_meter_aggregation, plan_pricing, account_setup, usage_submission). Prerequisite chain: WF1 → WF2 → WF3 → WF4. Frontend WorkflowLauncher gates each workflow on predecessor completion.
 - **LangSmith tracing**: Set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` to enable automatic tracing of all LangGraph/LangChain calls. Graph invocation configs include `run_name`, `metadata` (workflow_id, workflow_type, source), and `tags` for filtering in the LangSmith dashboard. No code changes needed to toggle — purely env-var driven.
@@ -339,7 +339,7 @@ cd backend
 # Single model, all workflows
 python -m evals.run_eval --model-id claude-sonnet-4-6
 
-# All 5 models (comparison matrix)
+# All 6 models (comparison matrix)
 python -m evals.run_eval --all-models
 
 # Specific workflow + example
@@ -357,7 +357,7 @@ python -m evals.run_eval --judge-model gpt-5.2
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--model-id` | `claude-sonnet-4-6` | Model to evaluate |
-| `--all-models` | off | Run across all 5 configured models (claude-sonnet-4-6, claude-opus-4-6, gpt-5.2, gemini-3-flash-preview, gemini-3.1-pro-preview) |
+| `--all-models` | off | Run across all 6 configured models (claude-sonnet-4-6, claude-opus-4-6, gpt-5.2, gpt-5.4, gemini-3-flash-preview, gemini-3.1-pro-preview) |
 | `--examples` | `all` | Comma-separated example names or `all` |
 | `--workflow` | `all` | `wf1`, `wf2`, `wf3`, `chain`, or `all` |
 | `--judge-model` | `claude-opus-4-6` | Model for LLM-as-Judge semantic evaluation |
