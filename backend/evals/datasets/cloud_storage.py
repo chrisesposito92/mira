@@ -42,7 +42,7 @@ _wf1_reference = WorkflowReference(
                 entity_type="aggregations",
                 name="Gigabyte Store Aggregation",
                 key_fields={
-                    "aggregationType": "SUM",
+                    "aggregation": "SUM",
                     "targetField": "gigabyte_store",
                 },
             ),
@@ -50,7 +50,7 @@ _wf1_reference = WorkflowReference(
                 entity_type="aggregations",
                 name="Graphic File Submits Aggregation",
                 key_fields={
-                    "aggregationType": "SUM",
+                    "aggregation": "SUM",
                     "targetField": "graphic_file_submits",
                 },
             ),
@@ -58,7 +58,7 @@ _wf1_reference = WorkflowReference(
                 entity_type="aggregations",
                 name="Processing Average Aggregation",
                 key_fields={
-                    "aggregationType": "MAX",
+                    "aggregation": "MAX",
                     "targetField": "processing_average",
                 },
             ),

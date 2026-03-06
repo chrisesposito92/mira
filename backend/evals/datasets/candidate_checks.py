@@ -41,7 +41,7 @@ _wf1_reference = WorkflowReference(
                 entity_type="aggregations",
                 name="Candidate Checks Aggregation 1",
                 key_fields={
-                    "aggregationType": "SUM",
+                    "aggregation": "SUM",
                     "targetField": "checks",
                     "segmentedFields": ["location", "type"],
                 },

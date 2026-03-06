@@ -234,11 +234,11 @@ An Aggregation defines how to roll up meter data for billing. Required fields:
 - **code** (str): Unique machine code, lowercase with underscores
 - **meterId** (str): UUID (the "id" field) of the meter this aggregation references. \
 Use the meter's "id" from the approved meters below.
-- **aggregationType** (str): One of "SUM", "COUNT", "MIN", "MAX", "MEAN", "LATEST", "CUSTOM"
+- **aggregation** (str): One of "SUM", "COUNT", "MIN", "MAX", "MEAN", "LATEST", "CUSTOM"
 - **targetField** (str): The dataField or derivedField code to aggregate
-- **rounding** (dict, optional): Rounding configuration:
-  - **precision** (int): Decimal places
-  - **roundingType** (str): "UP", "DOWN", "NEAREST"
+- **quantityPerUnit** (float): Units divisor, usually 1.0
+- **unit** (str): User-defined unit label (e.g., "requests", "GB")
+- **rounding** (str, optional): One of "UP", "DOWN", "NEAREST", "NONE"
 - **segmentedFields** (list[str], optional): dataField codes to segment/group by
 
 Example:
@@ -246,9 +246,11 @@ Example:
   "name": "Daily API Request Count",
   "code": "daily_api_request_count",
   "meterId": "<meter_uuid_from_approved_meters>",
-  "aggregationType": "SUM",
+  "aggregation": "SUM",
   "targetField": "request_count",
-  "rounding": {{"precision": 0, "roundingType": "UP"}},
+  "quantityPerUnit": 1.0,
+  "unit": "requests",
+  "rounding": "UP",
   "segmentedFields": ["region"]
 }}
 
@@ -276,7 +278,7 @@ Example:
 
 Generate Aggregation configurations that:
 - Reference the correct meterId (UUID) from the generated meters above
-- Use the appropriate aggregation type for the billing use case
+- Use the appropriate aggregation method for the billing use case
 - Target the correct data fields
 - Include segmentation where billing varies by dimension (region, tier, etc.)
 - Apply rounding appropriate for the unit of measurement
@@ -289,9 +291,11 @@ Respond with a JSON array of aggregation objects:
     "name": "<aggregation name>",
     "code": "<unique_snake_case_code>",
     "meterId": "<meter_uuid>",
-    "aggregationType": "<SUM|COUNT|MIN|MAX|MEAN|LATEST|CUSTOM>",
+    "aggregation": "<SUM|COUNT|MIN|MAX|MEAN|LATEST|CUSTOM>",
     "targetField": "<data_field_code>",
-    "rounding": {{"precision": <int>, "roundingType": "<UP|DOWN|NEAREST>"}},
+    "quantityPerUnit": 1.0,
+    "unit": "<unit label>",
+    "rounding": "<UP|DOWN|NEAREST|NONE>",
     "segmentedFields": ["<field_code>", ...]
   }},
   ...
@@ -314,6 +318,7 @@ Required fields:
 - **quantityPerUnit** (float): Units divisor, usually 1.0
 - **rounding** (str): One of "UP", "DOWN", "NEAREST", "NONE"
 - **unit** (str): Unit label (e.g., "requests", "GB")
+- **evaluateNullAggregations** (bool, optional): Whether to evaluate when referenced aggregation values are null (default false)
 - **productId** (str, optional): UUID of the parent product
 - **customFields** (dict, optional): Key-value pairs for metadata
 
@@ -353,6 +358,9 @@ Generate Compound Aggregation configurations that:
 - Reference the correct aggregation codes from the approved aggregations above
 - Use formulas that combine simple aggregations (e.g., subtract free allowances, compute ratios)
 - Use appropriate rounding for the unit of measurement
+
+Set evaluateNullAggregations to true if the formula should evaluate even when some \
+aggregation values are null.
 
 **IMPORTANT**: If no compound aggregations are needed for this use case, return an \
 empty array `[]`. Only generate compound aggregations when the billing model requires \

@@ -57,40 +57,80 @@ def validate(data: dict) -> list[ValidationError]:
             )
         )
 
-    # end_ts — optional, ISO 8601 if present
-    end_ts = data.get("end_ts")
-    if end_ts is not None:
-        if not isinstance(end_ts, str):
+    # ets — optional, ISO 8601 if present
+    ets = data.get("ets")
+    if ets is not None:
+        if not isinstance(ets, str):
             errors.append(
-                ValidationError(field="end_ts", message="end_ts must be a string", severity="error")
+                ValidationError(field="ets", message="ets must be a string", severity="error")
             )
-        elif not _ISO_8601_PATTERN.match(end_ts):
+        elif not _ISO_8601_PATTERN.match(ets):
             errors.append(
                 ValidationError(
-                    field="end_ts",
-                    message="end_ts must be in ISO 8601 format",
+                    field="ets",
+                    message="ets must be in ISO 8601 format",
                     severity="error",
                 )
             )
 
-    # data — required, dict with numeric values
-    measurement_data = data.get("data")
-    if measurement_data is None:
-        errors.append(ValidationError(field="data", message="data is required", severity="error"))
-    elif not isinstance(measurement_data, dict):
+    # Category fields — at least one must be present
+    NUMERIC_CATEGORIES = {"measure", "cost", "income"}
+    STRING_CATEGORIES = {"who", "what", "where", "other", "metadata"}
+    ALL_CATEGORIES = NUMERIC_CATEGORIES | STRING_CATEGORIES
+
+    has_any_category = any(data.get(cat) is not None for cat in ALL_CATEGORIES)
+    if not has_any_category:
         errors.append(
-            ValidationError(field="data", message="data must be a dict", severity="error")
+            ValidationError(
+                field="measure",
+                message="at least one category field (measure, cost, income, who, what, where, other, metadata) is required",
+                severity="error",
+            )
         )
-    else:
-        for key, value in measurement_data.items():
-            if not isinstance(value, (int, float)):
+
+    for cat in NUMERIC_CATEGORIES:
+        cat_data = data.get(cat)
+        if cat_data is not None:
+            if not isinstance(cat_data, dict):
                 errors.append(
                     ValidationError(
-                        field=f"data.{key}",
-                        message=f"data.{key} must be numeric",
+                        field=cat,
+                        message=f"{cat} must be a dict",
                         severity="error",
                     )
                 )
+            else:
+                for key, value in cat_data.items():
+                    if not isinstance(value, (int, float)):
+                        errors.append(
+                            ValidationError(
+                                field=f"{cat}.{key}",
+                                message=f"{cat}.{key} must be numeric",
+                                severity="error",
+                            )
+                        )
+
+    for cat in STRING_CATEGORIES:
+        cat_data = data.get(cat)
+        if cat_data is not None:
+            if not isinstance(cat_data, dict):
+                errors.append(
+                    ValidationError(
+                        field=cat,
+                        message=f"{cat} must be a dict",
+                        severity="error",
+                    )
+                )
+            else:
+                for key, value in cat_data.items():
+                    if not isinstance(value, str):
+                        errors.append(
+                            ValidationError(
+                                field=f"{cat}.{key}",
+                                message=f"{cat}.{key} must be a string",
+                                severity="error",
+                            )
+                        )
 
     return errors
 

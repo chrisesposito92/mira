@@ -67,16 +67,40 @@ def _validate_pricing_bands(
                 )
             prev_lower_limit = lower_limit
 
-        # Must have at least fixedPrice or unitPrice
+        # fixedPrice: required, numeric
         fixed_price = band.get("fixedPrice")
-        unit_price = band.get("unitPrice")
-        has_fixed = isinstance(fixed_price, (int, float))
-        has_unit = isinstance(unit_price, (int, float))
-        if not has_fixed and not has_unit:
+        if fixed_price is None:
             errors.append(
                 ValidationError(
-                    field=prefix,
-                    message="each band must have at least fixedPrice or unitPrice (numeric)",
+                    field=f"{prefix}.fixedPrice",
+                    message="fixedPrice is required (use 0 if not applicable)",
+                    severity="error",
+                )
+            )
+        elif not isinstance(fixed_price, (int, float)):
+            errors.append(
+                ValidationError(
+                    field=f"{prefix}.fixedPrice",
+                    message="fixedPrice must be numeric",
+                    severity="error",
+                )
+            )
+
+        # unitPrice: required, numeric
+        unit_price = band.get("unitPrice")
+        if unit_price is None:
+            errors.append(
+                ValidationError(
+                    field=f"{prefix}.unitPrice",
+                    message="unitPrice is required (use 0 if not applicable)",
+                    severity="error",
+                )
+            )
+        elif not isinstance(unit_price, (int, float)):
+            errors.append(
+                ValidationError(
+                    field=f"{prefix}.unitPrice",
+                    message="unitPrice must be numeric",
                     severity="error",
                 )
             )
@@ -202,6 +226,17 @@ def validate(data: dict) -> list[ValidationError]:
             ValidationError(
                 field="cumulative",
                 message="cumulative must be a boolean",
+                severity="error",
+            )
+        )
+
+    # segment: optional, must be dict if present
+    segment = data.get("segment")
+    if segment is not None and not isinstance(segment, dict):
+        errors.append(
+            ValidationError(
+                field="segment",
+                message="segment must be a dict",
                 severity="error",
             )
         )

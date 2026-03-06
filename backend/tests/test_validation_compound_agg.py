@@ -89,3 +89,24 @@ def test_rounding_none_is_valid():
     data["rounding"] = "NONE"
     errors = validate_entity(EntityType.compound_aggregation, data)
     assert errors == []
+
+
+def test_evaluate_null_aggregations_true():
+    data = _valid_compound_agg()
+    data["evaluateNullAggregations"] = True
+    errors = validate_entity(EntityType.compound_aggregation, data)
+    assert errors == []
+
+
+def test_evaluate_null_aggregations_false():
+    data = _valid_compound_agg()
+    data["evaluateNullAggregations"] = False
+    errors = validate_entity(EntityType.compound_aggregation, data)
+    assert errors == []
+
+
+def test_evaluate_null_aggregations_invalid_type():
+    data = _valid_compound_agg()
+    data["evaluateNullAggregations"] = "yes"
+    errors = validate_entity(EntityType.compound_aggregation, data)
+    assert any(e.field == "evaluateNullAggregations" for e in errors)

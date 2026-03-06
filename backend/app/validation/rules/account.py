@@ -20,18 +20,26 @@ def validate(data: dict) -> list[ValidationError]:
     validate_name(data, errors)
     validate_code(data, errors)
 
-    # email — required, basic format check
-    email = data.get("email")
+    # emailAddress — required, basic format check
+    email = data.get("emailAddress")
     if not email:
-        errors.append(ValidationError(field="email", message="email is required", severity="error"))
+        errors.append(
+            ValidationError(
+                field="emailAddress", message="emailAddress is required", severity="error"
+            )
+        )
     elif not isinstance(email, str):
         errors.append(
-            ValidationError(field="email", message="email must be a string", severity="error")
+            ValidationError(
+                field="emailAddress", message="emailAddress must be a string", severity="error"
+            )
         )
     elif not _EMAIL_PATTERN.match(email):
         errors.append(
             ValidationError(
-                field="email", message="email must be a valid email address", severity="error"
+                field="emailAddress",
+                message="emailAddress must be a valid email address",
+                severity="error",
             )
         )
 

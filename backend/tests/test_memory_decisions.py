@@ -91,11 +91,11 @@ class TestComputeEntityDiff:
         assert diffs == []
 
     def test_entity_specific_fields_tracked(self):
-        original = {"aggregationType": "SUM"}
-        edited = {"aggregationType": "COUNT"}
+        original = {"aggregation": "SUM"}
+        edited = {"aggregation": "COUNT"}
         diffs = compute_entity_diff(original, edited, "aggregation")
         assert len(diffs) == 1
-        assert diffs[0]["field"] == "aggregationType"
+        assert diffs[0]["field"] == "aggregation"
 
 
 # ---------------------------------------------------------------------------

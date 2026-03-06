@@ -31,7 +31,7 @@ def _valid_pricing() -> dict:
     return {
         "startDate": "2024-01-01",
         "planId": "plan-123",
-        "pricingBands": [{"lowerLimit": 0, "unitPrice": 0.01}],
+        "pricingBands": [{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.01}],
     }
 
 
@@ -235,11 +235,17 @@ class TestPricingValidation:
         errors = _errors_for(EntityType.pricing, data)
         assert "pricingBands[0].lowerLimit" in _error_fields(errors)
 
-    def test_band_missing_both_prices(self) -> None:
+    def test_band_missing_fixed_price(self) -> None:
         data = _valid_pricing()
-        data["pricingBands"] = [{"lowerLimit": 0}]
+        data["pricingBands"] = [{"lowerLimit": 0, "unitPrice": 0.01}]
         errors = _errors_for(EntityType.pricing, data)
-        assert "pricingBands[0]" in _error_fields(errors)
+        assert "pricingBands[0].fixedPrice" in _error_fields(errors)
+
+    def test_band_missing_unit_price(self) -> None:
+        data = _valid_pricing()
+        data["pricingBands"] = [{"lowerLimit": 0, "fixedPrice": 10.0}]
+        errors = _errors_for(EntityType.pricing, data)
+        assert "pricingBands[0].unitPrice" in _error_fields(errors)
 
     def test_bands_not_sorted_warning(self) -> None:
         data = _valid_pricing()
@@ -266,7 +272,7 @@ class TestPricingValidation:
 
     def test_overage_pricing_bands_validation(self) -> None:
         data = _valid_pricing()
-        data["overagePricingBands"] = [{"lowerLimit": -1, "unitPrice": 0.02}]
+        data["overagePricingBands"] = [{"lowerLimit": -1, "fixedPrice": 0, "unitPrice": 0.02}]
         errors = _errors_for(EntityType.pricing, data)
         assert "overagePricingBands[0].lowerLimit" in _error_fields(errors)
 
@@ -291,7 +297,7 @@ class TestPricingValidation:
     def test_valid_flat_pricing(self) -> None:
         """Flat pricing: single band starting at 0 with a unitPrice."""
         data = _valid_pricing()
-        data["pricingBands"] = [{"lowerLimit": 0, "unitPrice": 0.05}]
+        data["pricingBands"] = [{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.05}]
         errors = _errors_for(EntityType.pricing, data)
         assert errors == []
 
@@ -299,9 +305,9 @@ class TestPricingValidation:
         """Tiered pricing: multiple bands with ascending lowerLimits."""
         data = _valid_pricing()
         data["pricingBands"] = [
-            {"lowerLimit": 0, "unitPrice": 0.10},
-            {"lowerLimit": 100, "unitPrice": 0.08},
-            {"lowerLimit": 1000, "unitPrice": 0.05},
+            {"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.10},
+            {"lowerLimit": 100, "fixedPrice": 0, "unitPrice": 0.08},
+            {"lowerLimit": 1000, "fixedPrice": 0, "unitPrice": 0.05},
         ]
         errors = _errors_for(EntityType.pricing, data)
         assert errors == []
@@ -317,12 +323,12 @@ class TestPricingValidation:
         assert errors == []
 
     def test_valid_stairstep_pricing(self) -> None:
-        """Stairstep pricing: bands with only fixedPrice (no unitPrice)."""
+        """Stairstep pricing: bands with fixedPrice and unitPrice=0."""
         data = _valid_pricing()
         data["pricingBands"] = [
-            {"lowerLimit": 0, "fixedPrice": 10.0},
-            {"lowerLimit": 100, "fixedPrice": 25.0},
-            {"lowerLimit": 500, "fixedPrice": 50.0},
+            {"lowerLimit": 0, "fixedPrice": 10.0, "unitPrice": 0},
+            {"lowerLimit": 100, "fixedPrice": 25.0, "unitPrice": 0},
+            {"lowerLimit": 500, "fixedPrice": 50.0, "unitPrice": 0},
         ]
         errors = _errors_for(EntityType.pricing, data)
         assert errors == []
@@ -330,7 +336,7 @@ class TestPricingValidation:
     def test_valid_counter_pricing(self) -> None:
         """Counter pricing: single band with 0 unitPrice (free events counted)."""
         data = _valid_pricing()
-        data["pricingBands"] = [{"lowerLimit": 0, "unitPrice": 0}]
+        data["pricingBands"] = [{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0}]
         errors = _errors_for(EntityType.pricing, data)
         assert errors == []
 
@@ -347,3 +353,15 @@ class TestPricingValidation:
         data["code"] = "Invalid-Code"
         errors = _errors_for(EntityType.pricing, data)
         assert "code" in _error_fields(errors)
+
+    def test_valid_segment(self) -> None:
+        data = _valid_pricing()
+        data["segment"] = {"location": "US", "type": "Standard"}
+        errors = _errors_for(EntityType.pricing, data)
+        assert errors == []
+
+    def test_invalid_segment_type(self) -> None:
+        data = _valid_pricing()
+        data["segment"] = "US-Standard"
+        errors = _errors_for(EntityType.pricing, data)
+        assert "segment" in _error_fields(errors)

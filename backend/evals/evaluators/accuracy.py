@@ -20,7 +20,7 @@ WORKFLOW_ENTITY_KEYS: dict[str, list[str]] = {
 }
 
 # Fields that require exact matching
-EXACT_MATCH_FIELDS = {"aggregationType", "category", "billFrequency", "rounding", "type"}
+EXACT_MATCH_FIELDS = {"aggregation", "category", "billFrequency", "rounding", "type"}
 
 # Fields that are numeric (within 10% tolerance)
 NUMERIC_FIELDS = {

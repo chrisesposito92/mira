@@ -11,7 +11,7 @@ def _valid_measurement() -> dict:
         "meter": "api_requests",
         "account": "acme_corp",
         "ts": "2024-01-15T10:30:00Z",
-        "data": {"requests": 150, "bytes": 2048.5},
+        "measure": {"requests": 150, "bytes": 2048.5},
     }
 
 
@@ -64,39 +64,56 @@ class TestMeasurementValidation:
         errors = _errors_for(EntityType.measurement, data)
         assert errors == []
 
-    def test_missing_data(self) -> None:
-        data = _valid_measurement()
-        del data["data"]
+    def test_missing_all_categories(self) -> None:
+        data = {
+            "uid": "meas-001",
+            "meter": "api_requests",
+            "account": "acme_corp",
+            "ts": "2024-01-15T10:30:00Z",
+        }
         errors = _errors_for(EntityType.measurement, data)
-        assert "data" in _error_fields(errors)
+        assert "measure" in _error_fields(errors)
 
-    def test_data_not_dict(self) -> None:
+    def test_measure_not_dict(self) -> None:
         data = _valid_measurement()
-        data["data"] = [1, 2, 3]
+        data["measure"] = [1, 2, 3]
         errors = _errors_for(EntityType.measurement, data)
-        assert "data" in _error_fields(errors)
+        assert "measure" in _error_fields(errors)
 
-    def test_data_with_non_numeric_values(self) -> None:
+    def test_measure_with_non_numeric_values(self) -> None:
         data = _valid_measurement()
-        data["data"] = {"requests": "not_a_number"}
+        data["measure"] = {"requests": "not_a_number"}
         errors = _errors_for(EntityType.measurement, data)
-        assert "data.requests" in _error_fields(errors)
+        assert "measure.requests" in _error_fields(errors)
 
-    def test_valid_end_ts(self) -> None:
+    def test_string_category_with_non_string_values(self) -> None:
         data = _valid_measurement()
-        data["end_ts"] = "2024-01-15T11:30:00Z"
+        data["who"] = {"customer_id": 12345}
+        errors = _errors_for(EntityType.measurement, data)
+        assert "who.customer_id" in _error_fields(errors)
+
+    def test_valid_with_multiple_categories(self) -> None:
+        data = _valid_measurement()
+        data["who"] = {"customer_id": "cust-123"}
+        data["where"] = {"region": "us-east-1"}
         errors = _errors_for(EntityType.measurement, data)
         assert errors == []
 
-    def test_invalid_end_ts_format(self) -> None:
+    def test_valid_ets(self) -> None:
         data = _valid_measurement()
-        data["end_ts"] = "not-a-date"
+        data["ets"] = "2024-01-15T11:30:00Z"
         errors = _errors_for(EntityType.measurement, data)
-        assert "end_ts" in _error_fields(errors)
+        assert errors == []
+
+    def test_invalid_ets_format(self) -> None:
+        data = _valid_measurement()
+        data["ets"] = "not-a-date"
+        errors = _errors_for(EntityType.measurement, data)
+        assert "ets" in _error_fields(errors)
 
     def test_valid_with_all_fields(self) -> None:
         data = _valid_measurement()
-        data["end_ts"] = "2024-01-15T11:30:00Z"
+        data["ets"] = "2024-01-15T11:30:00Z"
         errors = _errors_for(EntityType.measurement, data)
         assert errors == []
 

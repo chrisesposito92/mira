@@ -100,6 +100,17 @@ def validate(data: dict) -> list[ValidationError]:
             )
         )
 
+    # evaluateNullAggregations: optional, must be bool if present
+    eval_null = data.get("evaluateNullAggregations")
+    if eval_null is not None and not isinstance(eval_null, bool):
+        errors.append(
+            ValidationError(
+                field="evaluateNullAggregations",
+                message="evaluateNullAggregations must be a boolean",
+                severity="error",
+            )
+        )
+
     # productId: optional, UUID format if present
     product_id = data.get("productId")
     if product_id is not None and not isinstance(product_id, str):

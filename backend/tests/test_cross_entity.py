@@ -62,7 +62,7 @@ class TestMeasurementCrossValidation:
                 "meter": "api_requests",
                 "account": "acme_corp",
                 "ts": "2024-01-15T10:00:00Z",
-                "data": {"requests": 100},
+                "measure": {"requests": 100},
             }
         ]
         context = {
@@ -84,7 +84,7 @@ class TestMeasurementCrossValidation:
                 "meter": "nonexistent_meter",
                 "account": "acme_corp",
                 "ts": "2024-01-15T10:00:00Z",
-                "data": {"requests": 100},
+                "measure": {"requests": 100},
             }
         ]
         context = {
@@ -102,7 +102,7 @@ class TestMeasurementCrossValidation:
                 "meter": "api_requests",
                 "account": "nonexistent_account",
                 "ts": "2024-01-15T10:00:00Z",
-                "data": {"requests": 100},
+                "measure": {"requests": 100},
             }
         ]
         context = {
@@ -120,7 +120,7 @@ class TestMeasurementCrossValidation:
                 "meter": "api_requests",
                 "account": "acme_corp",
                 "ts": "2024-01-15T10:00:00Z",
-                "data": {"unknown_field": 100},
+                "measure": {"unknown_field": 100},
             }
         ]
         context = {

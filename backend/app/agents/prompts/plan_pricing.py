@@ -160,9 +160,10 @@ or "GLOBAL_CREDIT" (account-wide credit)
 - **endDate** (str, optional): End date in ISO format
 - **pricingBands** (list, REQUIRED, min 1 item): Pricing tiers, each with:
   - **lowerLimit** (float, required): Lower boundary for this band (first band is usually 0)
-  - **fixedPrice** (float, optional): Fixed fee for this band
-  - **unitPrice** (float, optional): Per-unit price within this band
+  - **fixedPrice** (float, REQUIRED): Fixed fee for this band (use 0 if not applicable)
+  - **unitPrice** (float, REQUIRED): Per-unit price within this band (use 0 if not applicable)
 - **overagePricingBands** (list, optional): Same structure as pricingBands, for overage
+- **segment** (dict, optional): Segment key-value pairs for segmented aggregation pricing
 - **description** (str, optional): Human-readable pricing description
 - **tiersSpanPlan** (bool, optional): Whether tiers persist across billing periods
 - **minimumSpend** (float, optional): Minimum spend for this pricing
@@ -179,7 +180,7 @@ Single band, charge per unit:
   "cumulative": false,
   "startDate": "2024-01-01",
   "pricingBands": [
-    {{"lowerLimit": 0, "unitPrice": 0.01}}
+    {{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.01}}
   ]
 }}
 
@@ -192,9 +193,9 @@ Each tier prices only units within its range:
   "cumulative": true,
   "startDate": "2024-01-01",
   "pricingBands": [
-    {{"lowerLimit": 0, "unitPrice": 0.10}},
-    {{"lowerLimit": 1000, "unitPrice": 0.05}},
-    {{"lowerLimit": 10000, "unitPrice": 0.01}}
+    {{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.10}},
+    {{"lowerLimit": 1000, "fixedPrice": 0, "unitPrice": 0.05}},
+    {{"lowerLimit": 10000, "fixedPrice": 0, "unitPrice": 0.01}}
   ]
 }}
 
@@ -207,9 +208,9 @@ Total usage determines ONE price for ALL units:
   "cumulative": false,
   "startDate": "2024-01-01",
   "pricingBands": [
-    {{"lowerLimit": 0, "unitPrice": 0.10}},
-    {{"lowerLimit": 1000, "unitPrice": 0.05}},
-    {{"lowerLimit": 10000, "unitPrice": 0.01}}
+    {{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.10}},
+    {{"lowerLimit": 1000, "fixedPrice": 0, "unitPrice": 0.05}},
+    {{"lowerLimit": 10000, "fixedPrice": 0, "unitPrice": 0.01}}
   ]
 }}
 
@@ -222,9 +223,9 @@ Fixed fee based on which band total usage falls into:
   "cumulative": false,
   "startDate": "2024-01-01",
   "pricingBands": [
-    {{"lowerLimit": 0, "fixedPrice": 10.00}},
-    {{"lowerLimit": 100, "fixedPrice": 25.00}},
-    {{"lowerLimit": 500, "fixedPrice": 50.00}}
+    {{"lowerLimit": 0, "fixedPrice": 10.00, "unitPrice": 0}},
+    {{"lowerLimit": 100, "fixedPrice": 25.00, "unitPrice": 0}},
+    {{"lowerLimit": 500, "fixedPrice": 50.00, "unitPrice": 0}}
   ]
 }}
 
@@ -237,7 +238,21 @@ Credit applied at the product level:
   "cumulative": false,
   "startDate": "2024-01-01",
   "pricingBands": [
-    {{"lowerLimit": 0, "unitPrice": 0.05}}
+    {{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.05}}
+  ]
+}}
+
+### 6. Segmented Pricing
+Per-segment pricing for segmented aggregations:
+{{
+  "planTemplateId": "pt-uuid",
+  "aggregationId": "agg-uuid",
+  "type": "DEBIT",
+  "cumulative": false,
+  "startDate": "2024-01-01",
+  "segment": {{"location": "US", "type": "Standard"}},
+  "pricingBands": [
+    {{"lowerLimit": 0, "fixedPrice": 0, "unitPrice": 0.20}}
   ]
 }}
 
@@ -290,9 +305,10 @@ Respond with a JSON array of pricing objects:
     "cumulative": <true_or_false>,
     "startDate": "<ISO_date>",
     "pricingBands": [
-      {{"lowerLimit": <number>, "unitPrice": <optional>, "fixedPrice": <optional>}},
+      {{"lowerLimit": <number>, "fixedPrice": <number>, "unitPrice": <number>}},
       ...
     ],
+    "segment": {{<optional key-value pairs>}},
     "description": "<optional description>",
     "customFields": {{<optional key-value pairs>}}
   }},

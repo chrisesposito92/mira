@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 _ENTITY_SPECIFIC_FIELDS: dict[str, list[str]] = {
     "plan_template": ["currency", "billFrequency", "standingCharge", "minimumSpend"],
     "pricing": ["pricingBands", "cumulative", "type"],
-    "account": ["email", "currency", "daysBeforeBillDue"],
+    "account": ["emailAddress", "currency", "daysBeforeBillDue"],
     "meter": ["dataFields", "derivedFields"],
-    "aggregation": ["aggregationType", "targetField", "meterCode"],
+    "aggregation": ["aggregation", "targetField", "meterCode"],
 }
 
 _UNIVERSAL_FIELDS = {"name", "code", "customFields"}

@@ -399,14 +399,18 @@ class TestPayloadMapper:
             "name": "Total API Calls",
             "code": "total_api_calls",
             "meterId": "meter-uuid",
-            "aggregationType": "SUM",
+            "aggregation": "SUM",
             "targetField": "requests",
-            "rounding": {"precision": 2, "roundingType": "UP"},
+            "rounding": "UP",
+            "quantityPerUnit": 1.0,
+            "unit": "requests",
             "segmentedFields": ["region"],
         }
         result = map_entity_to_m3ter_payload(EntityType.aggregation, data)
-        assert result["aggregationType"] == "SUM"
-        assert result["rounding"] == {"precision": 2, "roundingType": "UP"}
+        assert result["aggregation"] == "SUM"
+        assert result["rounding"] == "UP"
+        assert result["quantityPerUnit"] == 1.0
+        assert result["unit"] == "requests"
         assert result["segmentedFields"] == ["region"]
 
     def test_pricing_maps_correctly(self):
@@ -435,15 +439,15 @@ class TestPayloadMapper:
         data = {
             "name": "Acme Corp",
             "code": "acme",
-            "email": "billing@acme.com",
+            "emailAddress": "billing@acme.com",
             "currency": "USD",
-            "address": {"line1": "123 Main St"},
+            "address": {"addressLine1": "123 Main St"},
             "parentAccountId": None,
             "purchaseOrderNumber": "PO-001",
             "daysBeforeBillDue": 30,
         }
         result = map_entity_to_m3ter_payload(EntityType.account, data)
-        assert result["email"] == "billing@acme.com"
+        assert result["emailAddress"] == "billing@acme.com"
         assert "parentAccountId" not in result  # None stripped
 
     def test_measurements_mapper(self):
@@ -457,7 +461,7 @@ class TestPayloadMapper:
                 "meter": "api_calls",
                 "account": "acme",
                 "ts": "2024-01-15T10:30:00Z",
-                "data": {"requests": 100},
+                "measure": {"requests": 100},
                 "extra": "stripped",
             }
         ]

@@ -115,14 +115,22 @@ def _validate_measurement_refs(entities: list[dict], context: dict) -> list[dict
             )
 
         # Data field key validation (warning only)
-        data = entity.get("data", {})
-        if meter_code and meter_code in meter_data_fields and isinstance(data, dict):
+        # Collect all data field keys from category dicts
+        NUMERIC_CATEGORIES = {"measure", "cost", "income"}
+        STRING_CATEGORIES = {"who", "what", "where", "other", "metadata"}
+        all_data_keys: set[str] = set()
+        for cat in NUMERIC_CATEGORIES | STRING_CATEGORIES:
+            cat_data = entity.get(cat)
+            if isinstance(cat_data, dict):
+                all_data_keys.update(cat_data.keys())
+
+        if meter_code and meter_code in meter_data_fields and all_data_keys:
             expected_fields = meter_data_fields[meter_code]
-            for key in data:
+            for key in all_data_keys:
                 if key not in expected_fields:
                     errors.append(
                         ValidationError(
-                            field=f"data.{key}",
+                            field=f"measure.{key}",
                             message=(
                                 f"data key '{key}' not found in meter '{meter_code}' dataFields"
                             ),

@@ -231,7 +231,7 @@ class TestGenerateAggregations:
                 "name": "Daily API Count",
                 "code": "daily_api_count",
                 "meterCode": "api_request_meter",
-                "aggregationType": "SUM",
+                "aggregation": "SUM",
                 "targetField": "request_count",
             }
         ]
@@ -242,7 +242,7 @@ class TestGenerateAggregations:
         result = await generate_aggregations(state, mock_config)
 
         assert len(result["aggregations"]) == 1
-        assert result["aggregations"][0]["aggregationType"] == "SUM"
+        assert result["aggregations"][0]["aggregation"] == "SUM"
         assert result["current_step"] == "aggregations_generated"
 
 
@@ -291,8 +291,10 @@ class TestValidateEntities:
                 {
                     "name": "Daily Count",
                     "code": "daily_count",
-                    "aggregationType": "SUM",
+                    "aggregation": "SUM",
                     "targetField": "count",
+                    "quantityPerUnit": 1.0,
+                    "unit": "requests",
                 }
             ],
         }
