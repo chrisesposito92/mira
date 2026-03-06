@@ -318,7 +318,8 @@ Required fields:
 - **quantityPerUnit** (float): Units divisor, usually 1.0
 - **rounding** (str): One of "UP", "DOWN", "NEAREST", "NONE"
 - **unit** (str): Unit label (e.g., "requests", "GB")
-- **evaluateNullAggregations** (bool, optional): Whether to evaluate when referenced aggregation values are null (default false)
+- **evaluateNullAggregations** (bool, optional): Whether to evaluate when
+  referenced aggregation values are null (default false)
 - **productId** (str, optional): UUID of the parent product
 - **customFields** (dict, optional): Key-value pairs for metadata
 

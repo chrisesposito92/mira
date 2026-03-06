@@ -111,7 +111,10 @@ def validate(data: dict) -> list[ValidationError]:
         errors.append(
             ValidationError(
                 field="measure",
-                message="at least one category field (measure, cost, income, who, what, where, other, metadata) is required",
+                message=(
+                    "at least one category field (measure, cost, income,"
+                    " who, what, where, other, metadata) is required"
+                ),
                 severity="error",
             )
         )

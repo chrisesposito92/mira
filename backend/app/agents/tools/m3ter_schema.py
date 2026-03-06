@@ -413,7 +413,8 @@ ACCOUNT_SCHEMA = {
     "address": {
         "type": "dict",
         "required": False,
-        "description": "Account address (addressLine1, addressLine2, locality, region, postCode, country)",
+        "description": "Account address (addressLine1, addressLine2, "
+        "locality, region, postCode, country)",
     },
     "parentAccountId": {
         "type": "str",
@@ -575,7 +576,8 @@ COMPOUND_AGGREGATION_SCHEMA = {
     "evaluateNullAggregations": {
         "type": "bool",
         "required": False,
-        "description": "Whether to evaluate when referenced aggregation values are null (default false)",
+        "description": "Whether to evaluate when referenced aggregation "
+        "values are null (default false)",
     },
     "productId": {
         "type": "str",

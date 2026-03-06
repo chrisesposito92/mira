@@ -2,8 +2,6 @@
 
 import uuid
 
-import pytest
-
 from app.agents.utils import inject_parent_references
 
 

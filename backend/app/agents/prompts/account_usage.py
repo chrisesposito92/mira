@@ -11,7 +11,8 @@ An Account represents a customer in the m3ter billing system. Required fields:
 - **code** (str): Unique machine code, lowercase with underscores (e.g., "acme_corp")
 - **emailAddress** (str): Primary contact email address for billing (e.g., "billing@acme.com")
 - **currency** (str, optional): 3-character ISO currency code (e.g., "USD", "EUR")
-- **address** (dict, optional): Account address with addressLine1, addressLine2, locality, region, postCode, country
+- **address** (dict, optional): Account address with addressLine1, addressLine2,
+  locality, region, postCode, country
 - **parentAccountId** (str, optional): UUID of parent account for hierarchical billing
 - **purchaseOrderNumber** (str, optional): Purchase order reference
 - **daysBeforeBillDue** (int, optional): Days before bill is due (>= 0)
@@ -179,10 +180,12 @@ Generate sample Measurement data that:
 - Creates 3-10 realistic usage events per account
 - References correct meter codes from approved meters
 - References correct account codes from approved accounts
-- Map each data field to the correct category dict based on the meter's dataField categories (e.g., MEASURE fields go in `measure`, WHO fields go in `who`)
+- Map each data field to the correct category dict based on the meter's dataField categories
+  (e.g., MEASURE fields go in `measure`, WHO fields go in `who`)
 - Uses realistic timestamps spread across a billing period
 - Generates unique UIDs for each measurement
-- Includes realistic numeric values in numeric category dicts (measure, cost, income) and string values in string category dicts (who, what, where, other, metadata)
+- Includes realistic numeric values in numeric category dicts (measure, cost, income)
+  and string values in string category dicts (who, what, where, other, metadata)
 
 ## Output Format
 
