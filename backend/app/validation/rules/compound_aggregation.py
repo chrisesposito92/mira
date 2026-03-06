@@ -1,9 +1,12 @@
 """Validation rules for m3ter CompoundAggregation entities."""
 
-from app.validation.common import validate_code, validate_custom_fields, validate_name
+from app.validation.common import (
+    VALID_ROUNDING_MODES,
+    validate_code,
+    validate_custom_fields,
+    validate_name,
+)
 from app.validation.engine import ValidationError
-
-VALID_ROUNDING_MODES = {"UP", "DOWN", "NEAREST", "NONE"}
 
 
 def validate(data: dict) -> list[ValidationError]:
@@ -96,6 +99,17 @@ def validate(data: dict) -> list[ValidationError]:
             ValidationError(
                 field="unit",
                 message="unit must be a string",
+                severity="error",
+            )
+        )
+
+    # evaluateNullAggregations: optional, must be bool if present
+    eval_null = data.get("evaluateNullAggregations")
+    if eval_null is not None and not isinstance(eval_null, bool):
+        errors.append(
+            ValidationError(
+                field="evaluateNullAggregations",
+                message="evaluateNullAggregations must be a boolean",
                 severity="error",
             )
         )

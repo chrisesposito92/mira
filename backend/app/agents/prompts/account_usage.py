@@ -9,9 +9,10 @@ configurations for customers who will use the billing plans.
 An Account represents a customer in the m3ter billing system. Required fields:
 - **name** (str): Human-readable account name (e.g., "Acme Corporation")
 - **code** (str): Unique machine code, lowercase with underscores (e.g., "acme_corp")
-- **email** (str): Primary contact email for billing (e.g., "billing@acme.com")
+- **emailAddress** (str): Primary contact email address for billing (e.g., "billing@acme.com")
 - **currency** (str, optional): 3-character ISO currency code (e.g., "USD", "EUR")
-- **address** (dict, optional): Account address with line1, city, state, postCode, country
+- **address** (dict, optional): Account address with addressLine1, addressLine2,
+  locality, region, postCode, country
 - **parentAccountId** (str, optional): UUID of parent account for hierarchical billing
 - **purchaseOrderNumber** (str, optional): Purchase order reference
 - **daysBeforeBillDue** (int, optional): Days before bill is due (>= 0)
@@ -21,7 +22,7 @@ Example:
 {{
   "name": "Acme Corporation",
   "code": "acme_corp",
-  "email": "billing@acme.com",
+  "emailAddress": "billing@acme.com",
   "currency": "USD",
   "daysBeforeBillDue": 30,
   "customFields": {{
@@ -50,7 +51,7 @@ Example:
 Generate Account configurations that:
 - Create representative customer accounts for the use case (2-5 accounts)
 - Use appropriate names and codes that reflect customer segments
-- Set realistic email addresses for billing contacts
+- Set realistic emailAddress values for billing contacts
 - Match currency to the plans if specified
 - Use unique, descriptive snake_case codes
 
@@ -61,7 +62,7 @@ Respond with a JSON array of account objects:
   {{
     "name": "<account name>",
     "code": "<unique_snake_case_code>",
-    "email": "<billing_email>",
+    "emailAddress": "<billing_email>",
     "currency": "<optional_ISO_code>",
     "daysBeforeBillDue": <optional_int>,
     "customFields": {{<optional key-value pairs>}}
@@ -140,8 +141,17 @@ Note: Measurements do NOT have name or code fields. Required fields:
 - **meter** (str, REQUIRED): Meter code (NOT UUID) to submit measurement against
 - **account** (str, REQUIRED): Account code (NOT UUID) to submit measurement for
 - **ts** (str, REQUIRED): Timestamp in ISO 8601 format (e.g., "2024-01-15T10:30:00Z")
-- **end_ts** (str, optional): End timestamp for duration-based measurements
-- **data** (dict, REQUIRED): Measurement data with numeric values keyed by data field codes
+- **ets** (str, optional): End timestamp for duration-based measurements (ISO 8601)
+- **measure** (dict, optional): Numeric values keyed by MEASURE data field codes
+- **cost** (dict, optional): Numeric values keyed by COST data field codes
+- **income** (dict, optional): Numeric values keyed by INCOME data field codes
+- **who** (dict, optional): String values keyed by WHO data field codes
+- **what** (dict, optional): String values keyed by WHAT data field codes
+- **where** (dict, optional): String values keyed by WHERE data field codes
+- **other** (dict, optional): String values keyed by OTHER data field codes
+- **metadata** (dict, optional): String values keyed by METADATA data field codes
+
+At least one category field must be present per measurement.
 
 Example:
 {{
@@ -149,7 +159,7 @@ Example:
   "meter": "api_requests",
   "account": "acme_corp",
   "ts": "2024-01-15T10:30:00Z",
-  "data": {{
+  "measure": {{
     "requests": 150,
     "bytes_transferred": 2048000
   }}
@@ -170,10 +180,12 @@ Generate sample Measurement data that:
 - Creates 3-10 realistic usage events per account
 - References correct meter codes from approved meters
 - References correct account codes from approved accounts
-- Uses data field keys that match the meter's dataFields
+- Map each data field to the correct category dict based on the meter's dataField categories
+  (e.g., MEASURE fields go in `measure`, WHO fields go in `who`)
 - Uses realistic timestamps spread across a billing period
 - Generates unique UIDs for each measurement
-- Includes realistic numeric values in the data dict
+- Includes realistic numeric values in numeric category dicts (measure, cost, income)
+  and string values in string category dicts (who, what, where, other, metadata)
 
 ## Output Format
 
@@ -184,8 +196,8 @@ Respond with a JSON array of measurement objects:
     "meter": "<meter_code>",
     "account": "<account_code>",
     "ts": "<ISO_8601_timestamp>",
-    "data": {{
-      "<field_code>": <numeric_value>,
+    "measure": {{
+      "<measure_field_code>": <numeric_value>,
       ...
     }}
   }},

@@ -135,10 +135,10 @@ AGGREGATION_SCHEMA = {
         "required": False,
         "description": "UUID of the parent meter (set after meter approval)",
     },
-    "aggregationType": {
+    "aggregation": {
         "type": "str",
         "required": True,
-        "enum": ["SUM", "MIN", "MAX", "COUNT", "LATEST", "MEAN", "CUSTOM"],
+        "enum": ["SUM", "MIN", "MAX", "COUNT", "LATEST", "MEAN", "UNIQUE", "CUSTOM_SQL"],
         "description": "How measurements are aggregated",
     },
     "targetField": {
@@ -147,17 +147,20 @@ AGGREGATION_SCHEMA = {
         "description": "Data field code to aggregate on",
     },
     "rounding": {
-        "type": "dict",
+        "type": "str",
         "required": False,
-        "description": "Optional rounding configuration",
-        "item_schema": {
-            "precision": {"type": "int", "required": True},
-            "roundingType": {
-                "type": "str",
-                "required": True,
-                "enum": ["UP", "DOWN", "NEAREST"],
-            },
-        },
+        "enum": ["UP", "DOWN", "NEAREST", "NONE"],
+        "description": "Rounding mode for the aggregated result",
+    },
+    "quantityPerUnit": {
+        "type": "float",
+        "required": True,
+        "description": "Units divisor for the aggregated quantity (usually 1.0)",
+    },
+    "unit": {
+        "type": "str",
+        "required": True,
+        "description": "User-defined unit label (e.g. 'requests', 'GB')",
     },
     "segmentedFields": {
         "type": "list[str]",
@@ -320,13 +323,13 @@ PRICING_SCHEMA = {
             },
             "fixedPrice": {
                 "type": "float",
-                "required": False,
-                "description": "Fixed price for this band",
+                "required": True,
+                "description": "Fixed fee for this band (use 0 if not applicable)",
             },
             "unitPrice": {
                 "type": "float",
-                "required": False,
-                "description": "Per-unit price for this band",
+                "required": True,
+                "description": "Per-unit price for this band (use 0 if not applicable)",
             },
         },
     },
@@ -342,15 +345,23 @@ PRICING_SCHEMA = {
             },
             "fixedPrice": {
                 "type": "float",
-                "required": False,
-                "description": "Fixed price for this overage band",
+                "required": True,
+                "description": "Fixed fee for this overage band (use 0 if not applicable)",
             },
             "unitPrice": {
                 "type": "float",
-                "required": False,
-                "description": "Per-unit price for this overage band",
+                "required": True,
+                "description": "Per-unit price for this overage band (use 0 if not applicable)",
             },
         },
+    },
+    "segment": {
+        "type": "dict",
+        "required": False,
+        "description": (
+            "Segment key-value pairs for segmented aggregation pricing"
+            ' (e.g., {"location": "US", "type": "Standard"})'
+        ),
     },
     "description": {
         "type": "str",
@@ -389,10 +400,10 @@ ACCOUNT_SCHEMA = {
         "description": "Unique account code (lowercase, alphanumeric + underscore)",
         "pattern": "^[a-z][a-z0-9_]*$",
     },
-    "email": {
+    "emailAddress": {
         "type": "str",
         "required": True,
-        "description": "Primary contact email for the account",
+        "description": "Primary contact email address for the account",
     },
     "currency": {
         "type": "str",
@@ -402,7 +413,8 @@ ACCOUNT_SCHEMA = {
     "address": {
         "type": "dict",
         "required": False,
-        "description": "Account address (line1, line2, city, state, postCode, country)",
+        "description": "Account address (addressLine1, addressLine2, "
+        "locality, region, postCode, country)",
     },
     "parentAccountId": {
         "type": "str",
@@ -477,15 +489,50 @@ MEASUREMENT_SCHEMA = {
         "required": True,
         "description": "Timestamp in ISO 8601 format (e.g., 2024-01-15T10:30:00Z)",
     },
-    "end_ts": {
+    "ets": {
         "type": "str",
         "required": False,
         "description": "End timestamp for duration-based measurements (ISO 8601)",
     },
-    "data": {
+    "measure": {
         "type": "dict",
-        "required": True,
-        "description": "Measurement data with numeric values keyed by data field codes",
+        "required": False,
+        "description": "Numeric measurement values keyed by MEASURE data field codes",
+    },
+    "cost": {
+        "type": "dict",
+        "required": False,
+        "description": "Numeric cost values keyed by COST data field codes",
+    },
+    "income": {
+        "type": "dict",
+        "required": False,
+        "description": "Numeric income values keyed by INCOME data field codes",
+    },
+    "who": {
+        "type": "dict",
+        "required": False,
+        "description": "String values keyed by WHO data field codes",
+    },
+    "what": {
+        "type": "dict",
+        "required": False,
+        "description": "String values keyed by WHAT data field codes",
+    },
+    "where": {
+        "type": "dict",
+        "required": False,
+        "description": "String values keyed by WHERE data field codes",
+    },
+    "other": {
+        "type": "dict",
+        "required": False,
+        "description": "String values keyed by OTHER data field codes",
+    },
+    "metadata": {
+        "type": "dict",
+        "required": False,
+        "description": "String values keyed by METADATA data field codes",
     },
 }
 
@@ -525,6 +572,12 @@ COMPOUND_AGGREGATION_SCHEMA = {
         "type": "str",
         "required": True,
         "description": "User-defined unit label (e.g. 'requests', 'GB')",
+    },
+    "evaluateNullAggregations": {
+        "type": "bool",
+        "required": False,
+        "description": "Whether to evaluate when referenced aggregation "
+        "values are null (default false)",
     },
     "productId": {
         "type": "str",

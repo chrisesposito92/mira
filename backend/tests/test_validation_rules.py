@@ -156,8 +156,10 @@ class TestAggregationValidation:
         return {
             "name": "Daily API Requests",
             "code": "daily_api_requests",
-            "aggregationType": "SUM",
+            "aggregation": "SUM",
             "targetField": "request_count",
+            "quantityPerUnit": 1.0,
+            "unit": "requests",
         }
 
     def test_valid_aggregation_passes(self):
@@ -166,7 +168,7 @@ class TestAggregationValidation:
 
     def test_valid_with_rounding(self):
         data = self._valid_aggregation()
-        data["rounding"] = {"precision": 2, "roundingType": "UP"}
+        data["rounding"] = "UP"
         errors = validate_entity(EntityType.aggregation, data)
         assert len(errors) == 0
 
@@ -184,15 +186,15 @@ class TestAggregationValidation:
 
     def test_missing_aggregation_type_fails(self):
         data = self._valid_aggregation()
-        del data["aggregationType"]
+        del data["aggregation"]
         errors = validate_entity(EntityType.aggregation, data)
-        assert any(e.field == "aggregationType" for e in errors)
+        assert any(e.field == "aggregation" for e in errors)
 
     def test_invalid_aggregation_type_fails(self):
         data = self._valid_aggregation()
-        data["aggregationType"] = "AVERAGE"  # not a valid type
+        data["aggregation"] = "AVERAGE"  # not a valid type
         errors = validate_entity(EntityType.aggregation, data)
-        assert any(e.field == "aggregationType" for e in errors)
+        assert any(e.field == "aggregation" for e in errors)
 
     def test_missing_target_field_fails(self):
         data = self._valid_aggregation()
@@ -202,15 +204,15 @@ class TestAggregationValidation:
 
     def test_invalid_rounding_type_fails(self):
         data = self._valid_aggregation()
-        data["rounding"] = {"precision": 2, "roundingType": "INVALID"}
+        data["rounding"] = "INVALID"
         errors = validate_entity(EntityType.aggregation, data)
-        assert any("roundingType" in e.field for e in errors)
+        assert any(e.field == "rounding" for e in errors)
 
-    def test_rounding_missing_precision_fails(self):
+    def test_rounding_not_string_fails(self):
         data = self._valid_aggregation()
-        data["rounding"] = {"roundingType": "UP"}
+        data["rounding"] = 42
         errors = validate_entity(EntityType.aggregation, data)
-        assert any("precision" in e.field for e in errors)
+        assert any(e.field == "rounding" for e in errors)
 
     def test_segmented_fields_not_list_fails(self):
         data = self._valid_aggregation()
@@ -219,9 +221,25 @@ class TestAggregationValidation:
         assert any(e.field == "segmentedFields" for e in errors)
 
     def test_all_valid_aggregation_types_accepted(self):
-        valid_types = ["SUM", "MIN", "MAX", "COUNT", "LATEST", "MEAN", "CUSTOM"]
+        valid_types = [
+            "SUM",
+            "MIN",
+            "MAX",
+            "COUNT",
+            "LATEST",
+            "MEAN",
+            "CUSTOM",
+            "UNIQUE",
+            "CUSTOM_SQL",
+        ]
         for agg_type in valid_types:
             data = self._valid_aggregation()
-            data["aggregationType"] = agg_type
+            data["aggregation"] = agg_type
             errors = validate_entity(EntityType.aggregation, data)
             assert len(errors) == 0, f"{agg_type} should be valid"
+
+    def test_empty_unit_fails(self):
+        data = self._valid_aggregation()
+        data["unit"] = ""
+        errors = validate_entity(EntityType.aggregation, data)
+        assert any(e.field == "unit" for e in errors)

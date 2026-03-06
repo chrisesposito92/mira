@@ -6,6 +6,12 @@ from app.validation.engine import ValidationError
 
 CODE_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 
+VALID_ROUNDING_MODES = frozenset({"UP", "DOWN", "NEAREST", "NONE"})
+
+MEASUREMENT_NUMERIC_CATEGORIES = frozenset({"measure", "cost", "income"})
+MEASUREMENT_STRING_CATEGORIES = frozenset({"who", "what", "where", "other", "metadata"})
+MEASUREMENT_ALL_CATEGORIES = MEASUREMENT_NUMERIC_CATEGORIES | MEASUREMENT_STRING_CATEGORIES
+
 
 def validate_name(data: dict, errors: list[ValidationError]) -> None:
     """Validate the 'name' field: required, string, 1-200 chars."""

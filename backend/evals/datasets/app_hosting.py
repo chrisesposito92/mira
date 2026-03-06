@@ -51,7 +51,7 @@ _wf1_reference = WorkflowReference(
                 entity_type="aggregations",
                 name="Max Apps Hosted",
                 key_fields={
-                    "aggregationType": "MAX",
+                    "aggregation": "MAX",
                     "targetField": "number_apps",
                 },
             ),
@@ -59,7 +59,7 @@ _wf1_reference = WorkflowReference(
                 entity_type="aggregations",
                 name="Number App Requests",
                 key_fields={
-                    "aggregationType": "SUM",
+                    "aggregation": "SUM",
                     "targetField": "number_requests",
                 },
             ),

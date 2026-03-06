@@ -8,7 +8,7 @@ def _valid_account() -> dict:
     return {
         "name": "Acme Corp",
         "code": "acme_corp",
-        "email": "billing@acme.com",
+        "emailAddress": "billing@acme.com",
     }
 
 
@@ -47,15 +47,15 @@ class TestAccountValidation:
 
     def test_missing_email(self) -> None:
         data = _valid_account()
-        del data["email"]
+        del data["emailAddress"]
         errors = _errors_for(EntityType.account, data)
-        assert "email" in _error_fields(errors)
+        assert "emailAddress" in _error_fields(errors)
 
     def test_invalid_email_format(self) -> None:
         data = _valid_account()
-        data["email"] = "not-an-email"
+        data["emailAddress"] = "not-an-email"
         errors = _errors_for(EntityType.account, data)
-        assert "email" in _error_fields(errors)
+        assert "emailAddress" in _error_fields(errors)
 
     def test_invalid_currency_lowercase(self) -> None:
         data = _valid_account()
@@ -83,7 +83,7 @@ class TestAccountValidation:
 
     def test_valid_address(self) -> None:
         data = _valid_account()
-        data["address"] = {"line1": "123 Main St", "city": "NYC"}
+        data["address"] = {"addressLine1": "123 Main St", "locality": "NYC"}
         errors = _errors_for(EntityType.account, data)
         assert errors == []
 
@@ -108,7 +108,7 @@ class TestAccountValidation:
     def test_valid_with_all_optional_fields(self) -> None:
         data = _valid_account()
         data["currency"] = "EUR"
-        data["address"] = {"line1": "1 Rue de Paris", "city": "Paris"}
+        data["address"] = {"addressLine1": "1 Rue de Paris", "locality": "Paris"}
         data["daysBeforeBillDue"] = 15
         data["customFields"] = {"tier": "enterprise"}
         errors = _errors_for(EntityType.account, data)

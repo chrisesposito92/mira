@@ -3,6 +3,7 @@
 from dataclasses import asdict
 
 from app.schemas.common import EntityType
+from app.validation.common import MEASUREMENT_ALL_CATEGORIES
 from app.validation.engine import ValidationError
 
 
@@ -83,12 +84,17 @@ def _validate_measurement_refs(entities: list[dict], context: dict) -> list[dict
     meter_codes = {m.get("code") for m in approved_meters if m.get("code")}
     account_codes = {a.get("code") for a in approved_accounts if a.get("code")}
 
-    # Collect meter data field codes for data key validation
-    meter_data_fields: dict[str, set[str]] = {}
+    # Collect meter data field codes with their expected categories
+    # Maps meter_code -> {field_code: expected_category_lowercase}
+    meter_data_fields: dict[str, dict[str, str]] = {}
     for m in approved_meters:
         code = m.get("code")
         if code and m.get("dataFields"):
-            meter_data_fields[code] = {df.get("code") for df in m["dataFields"] if df.get("code")}
+            meter_data_fields[code] = {
+                df["code"]: df.get("category", "").lower()
+                for df in m["dataFields"]
+                if df.get("code")
+            }
 
     all_errors: list[dict] = []
     for i, entity in enumerate(entities):
@@ -115,16 +121,35 @@ def _validate_measurement_refs(entities: list[dict], context: dict) -> list[dict
             )
 
         # Data field key validation (warning only)
-        data = entity.get("data", {})
-        if meter_code and meter_code in meter_data_fields and isinstance(data, dict):
-            expected_fields = meter_data_fields[meter_code]
-            for key in data:
-                if key not in expected_fields:
+        # Track which category each key came from for accurate error fields
+        data_key_sources: dict[str, str] = {}
+        for cat in MEASUREMENT_ALL_CATEGORIES:
+            cat_data = entity.get(cat)
+            if isinstance(cat_data, dict):
+                for key in cat_data:
+                    data_key_sources[key] = cat
+
+        if meter_code and meter_code in meter_data_fields and data_key_sources:
+            field_categories = meter_data_fields[meter_code]
+            for key, source_cat in data_key_sources.items():
+                if key not in field_categories:
                     errors.append(
                         ValidationError(
-                            field=f"data.{key}",
+                            field=f"{source_cat}.{key}",
                             message=(
                                 f"data key '{key}' not found in meter '{meter_code}' dataFields"
+                            ),
+                            severity="warning",
+                        )
+                    )
+                elif field_categories[key] != source_cat:
+                    expected_cat = field_categories[key]
+                    errors.append(
+                        ValidationError(
+                            field=f"{source_cat}.{key}",
+                            message=(
+                                f"field '{key}' belongs to category "
+                                f"'{expected_cat}', not '{source_cat}'"
                             ),
                             severity="warning",
                         )
