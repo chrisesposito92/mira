@@ -64,6 +64,18 @@ export { DOC_PROCESSING_STAGES } from './document.js';
 export type { GeneratedUseCase, GeneratorWsMessage, GeneratorClientMessage } from './generator.js';
 
 export type {
+	Diagram,
+	DiagramListItem,
+	DiagramCreate,
+	DiagramUpdate,
+	DiagramContent,
+	DiagramSystem,
+	DiagramConnection,
+	DiagramSettings,
+	ComponentLibraryItem,
+} from './diagram.js';
+
+export type {
 	LlmModel,
 	Workflow,
 	EntityItem,

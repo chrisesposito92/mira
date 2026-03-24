@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     # File storage
     upload_dir: str = "uploads"
 
+    # Logo.dev API token (for logo proxy and seed script)
+    logo_dev_token: str = ""
+
 
 settings = Settings()
 
