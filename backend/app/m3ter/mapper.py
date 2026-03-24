@@ -60,10 +60,15 @@ def map_entity_to_m3ter_payload(entity_type: EntityType, data: dict[str, Any]) -
     # m3ter API requires segments when segmentedFields is present
     if entity_type == EntityType.aggregation:
         seg_fields = payload.get("segmentedFields")
-        if seg_fields and not payload.get("segments"):
-            # Auto-generate wildcard segments: m3ter dynamically creates
-            # segments as data arrives, matching any value for each field
-            payload["segments"] = [{field: "*"} for field in seg_fields]
+        if (
+            seg_fields
+            and not payload.get("segments")
+            and isinstance(seg_fields, list)
+            and all(isinstance(f, str) for f in seg_fields)
+        ):
+            # Auto-generate a single wildcard segment combining all fields:
+            # m3ter dynamically creates segments as data arrives
+            payload["segments"] = [{field: "*" for field in seg_fields}]
 
     return payload
 

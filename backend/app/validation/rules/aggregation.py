@@ -139,9 +139,9 @@ def validate(data: dict) -> list[ValidationError]:
                         )
                     )
 
-    # segments: if segmentedFields present, warn if segments missing (auto-generated at push)
+    # segments: validate shape when present, warn when missing
+    segments = data.get("segments")
     if segmented and isinstance(segmented, list) and len(segmented) > 0:
-        segments = data.get("segments")
         if not segments:
             errors.append(
                 ValidationError(
@@ -151,6 +151,23 @@ def validate(data: dict) -> list[ValidationError]:
                         "wildcard segments will be used at push time"
                     ),
                     severity="warning",
+                )
+            )
+    if segments is not None:
+        if not isinstance(segments, list) or len(segments) == 0:
+            errors.append(
+                ValidationError(
+                    field="segments",
+                    message="segments must be a non-empty list",
+                    severity="error",
+                )
+            )
+        elif not all(isinstance(s, dict) for s in segments):
+            errors.append(
+                ValidationError(
+                    field="segments",
+                    message="each segment must be a dict mapping field codes to values",
+                    severity="error",
                 )
             )
 

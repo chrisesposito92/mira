@@ -412,7 +412,7 @@ class TestPayloadMapper:
         assert result["quantityPerUnit"] == 1.0
         assert result["unit"] == "requests"
         assert result["segmentedFields"] == ["region"]
-        # Wildcard segments auto-generated when segmentedFields present
+        # Single wildcard segment auto-generated when segmentedFields present
         assert result["segments"] == [{"region": "*"}]
 
     def test_aggregation_wildcard_segments_auto_generated(self):
@@ -430,7 +430,8 @@ class TestPayloadMapper:
             "segmentedFields": ["model", "tier"],
         }
         result = map_entity_to_m3ter_payload(EntityType.aggregation, data)
-        assert result["segments"] == [{"model": "*"}, {"tier": "*"}]
+        # Single combined wildcard segment for all fields
+        assert result["segments"] == [{"model": "*", "tier": "*"}]
 
     def test_aggregation_explicit_segments_preserved(self):
         from app.m3ter.mapper import map_entity_to_m3ter_payload
