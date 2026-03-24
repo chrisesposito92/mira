@@ -29,7 +29,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The logo proxy endpoint accepts a domain and returns a base64-encoded image from the same origin
   4. The sidebar shows a top-level "Diagrams" navigation link
   5. A diagram can be optionally linked to an existing MIRA Project and deleted from the list view
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — DB migrations (diagrams + component library), Pydantic schemas, config update
+- [ ] 01-02-PLAN.md — Frontend TypeScript types, diagram service factory, diagram store
+- [ ] 01-03-PLAN.md — Backend API routes (diagrams CRUD, component library, logo proxy), service layer, router registration
+- [ ] 01-04-PLAN.md — Frontend UI (sidebar nav, diagram list page, DiagramCard, CreateDiagramDialog, DeleteDiagramDialog)
+- [ ] 01-05-PLAN.md — Backend unit tests, logo seed script
 
 ### Phase 2: Rendering Engine
 **Goal**: A live, m3ter-branded SVG diagram renders correctly from diagram data with logos and color-coded connections
@@ -76,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Foundation | 0/? | Not started | - |
+| 1. Data Foundation | 0/5 | Planning complete | - |
 | 2. Rendering Engine | 0/? | Not started | - |
 | 3. Configurator UI | 0/? | Not started | - |
 | 4. Export Pipeline | 0/? | Not started | - |
