@@ -32,9 +32,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — DB migrations (diagrams + component library), Pydantic schemas, config update
-- [ ] 01-02-PLAN.md — Frontend TypeScript types, diagram service factory, diagram store
-- [ ] 01-03-PLAN.md — Backend API routes (diagrams CRUD, component library, logo proxy), service layer, router registration
+- [x] 01-01-PLAN.md — DB migrations (diagrams + component library), Pydantic schemas, config update
+- [x] 01-02-PLAN.md — Frontend TypeScript types, diagram service factory, diagram store
+- [x] 01-03-PLAN.md — Backend API routes (diagrams CRUD, component library, logo proxy), service layer, router registration
 - [ ] 01-04-PLAN.md — Frontend UI (sidebar nav, diagram list page, DiagramCard, CreateDiagramDialog, DeleteDiagramDialog)
 - [ ] 01-05-PLAN.md — Backend unit tests, logo seed script
 

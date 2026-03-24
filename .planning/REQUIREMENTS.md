@@ -7,12 +7,12 @@
 
 ### Component Library
 
-- [ ] **COMP-01**: Pre-populated system nodes for all m3ter native connectors with company logos
+- [x] **COMP-01**: Pre-populated system nodes for all m3ter native connectors with company logos
 - [ ] **COMP-02**: User can create custom system nodes with a name and optional logo (fetched via Logo.dev)
-- [ ] **COMP-03**: Systems organized into grouped categories (Front Office Stack, Finance Stack, Analytics Stack, etc.)
+- [x] **COMP-03**: Systems organized into grouped categories (Front Office Stack, Finance Stack, Analytics Stack, etc.)
 - [ ] **COMP-04**: Customizable "Your Product/Platform" prospect node with editable name
 - [ ] **COMP-05**: m3ter hub node always present and centered, displaying internal capability labels (Usage, Pricing, Rating, Credits, Alerts, Limits)
-- [ ] **COMP-06**: Backend logo proxy endpoint to convert external logos to base64 (avoids CORS/canvas taint on export)
+- [x] **COMP-06**: Backend logo proxy endpoint to convert external logos to base64 (avoids CORS/canvas taint on export)
 
 ### Connections & Data Flows
 
@@ -40,19 +40,19 @@
 
 ### Persistence
 
-- [ ] **PERS-01**: User can save a diagram to Supabase with a customer name
+- [x] **PERS-01**: User can save a diagram to Supabase with a customer name
 - [ ] **PERS-02**: Diagram list view showing customer name, last edited date
 - [ ] **PERS-03**: User can load and continue editing a saved diagram
 - [ ] **PERS-04**: Auto-save with debounced 500ms idle trigger
 - [ ] **PERS-05**: Thumbnail preview generated and displayed in diagram list view
-- [ ] **PERS-07**: Diagram data model includes schema_version field for future migration safety
+- [x] **PERS-07**: Diagram data model includes schema_version field for future migration safety
 
 ### Navigation & Organization
 
 - [ ] **NAV-01**: Top-level "Diagrams" section in the sidebar navigation
-- [ ] **NAV-02**: Diagram optionally linked to an existing MIRA Project
-- [ ] **NAV-03**: User can create a new diagram from the Diagrams section
-- [ ] **NAV-04**: User can delete a diagram
+- [x] **NAV-02**: Diagram optionally linked to an existing MIRA Project
+- [x] **NAV-03**: User can create a new diagram from the Diagrams section
+- [x] **NAV-04**: User can delete a diagram
 
 ## v2 Requirements
 
@@ -89,12 +89,12 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | Phase 1 | Pending |
+| COMP-01 | Phase 1 | Complete |
 | COMP-02 | Phase 2 | Pending |
-| COMP-03 | Phase 1 | Pending |
+| COMP-03 | Phase 1 | Complete |
 | COMP-04 | Phase 2 | Pending |
 | COMP-05 | Phase 2 | Pending |
-| COMP-06 | Phase 1 | Pending |
+| COMP-06 | Phase 1 | Complete |
 | CONN-01 | Phase 3 | Pending |
 | CONN-02 | Phase 3 | Pending |
 | CONN-03 | Phase 3 | Pending |
@@ -110,17 +110,17 @@
 | EXPO-02 | Phase 4 | Pending |
 | EXPO-03 | Phase 4 | Pending |
 | EXPO-04 | Phase 4 | Pending |
-| PERS-01 | Phase 1 | Pending |
+| PERS-01 | Phase 1 | Complete |
 | PERS-02 | Phase 3 | Pending |
 | PERS-03 | Phase 3 | Pending |
 | PERS-04 | Phase 3 | Pending |
 | PERS-05 | Phase 3 | Pending |
 | PERS-06 | v2 | Deferred |
-| PERS-07 | Phase 1 | Pending |
+| PERS-07 | Phase 1 | Complete |
 | NAV-01 | Phase 1 | Pending |
-| NAV-02 | Phase 1 | Pending |
-| NAV-03 | Phase 1 | Pending |
-| NAV-04 | Phase 1 | Pending |
+| NAV-02 | Phase 1 | Complete |
+| NAV-03 | Phase 1 | Complete |
+| NAV-04 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 31 active (PERS-06 deferred to v2 — conflicts with PROJECT.md Out of Scope)
