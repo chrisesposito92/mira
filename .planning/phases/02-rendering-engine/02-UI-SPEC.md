@@ -84,9 +84,11 @@ Exceptions: Touch targets for the "Add Custom System" button follow 44px minimum
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.5 |
-| Label | 14px | 500 (medium) | 1.4 |
+| Label | 14px | 400 (regular) | 1.4 |
 | Heading | 20px | 600 (semibold) | 1.2 |
 | Page title | 24px | 600 (semibold) | 1.2 |
+
+Labels are distinguished from body text by their shorter line height (1.4 vs 1.5) and contextual placement adjacent to form fields, not by font weight.
 
 ### SVG Canvas Typography (Inter, inline font-family)
 
@@ -152,13 +154,17 @@ Accent reserved for: "Add Custom System" primary CTA button, dialog "Add" submit
 | custom_build | #FF9800 | #FF9800 |
 | api | #90A4AE | #90A4AE |
 
+### Visual Hierarchy
+
+**Primary focal point:** m3ter hub node (center position at HUB_CENTER_X/HUB_CENTER_Y, unique green accent border via HUB_ACCENT_BORDER, largest text element via 18px bold hub title). The hub draws the eye first through its central placement, distinctive green stroke, and surrounding white space before the viewer follows connection lines outward to system nodes.
+
 ---
 
 ## Copywriting Contract
 
 | Element | Copy |
 |---------|------|
-| Primary CTA | "Add Custom System" (on "+" button in diagram editor toolbar) |
+| Primary CTA | "Add Custom System" (on "+" button with `aria-label="Add Custom System"` in diagram editor toolbar) |
 | Dialog title | "Add Custom System" |
 | Dialog domain field label | "Company domain" |
 | Dialog domain field placeholder | "e.g. stripe.com" |
@@ -172,7 +178,7 @@ Accent reserved for: "Add Custom System" primary CTA button, dialog "Add" submit
 | Logo preview error | "Could not fetch logo. A monogram will be used." |
 | Empty diagram state | Not applicable this phase -- diagrams always have m3ter hub + prospect node |
 | Error: diagram load failed heading | "Failed to load diagram" |
-| Error: diagram load failed body | "Something went wrong loading this diagram. Go back and try again." |
+| Error: diagram load failed body | "This diagram could not be loaded. Go back and try again." |
 | Error: logo fetch failed | Silently falls back to monogram -- no user-facing error |
 | m3ter hub title | "m3ter" |
 | m3ter hub capabilities | "Usage", "Pricing", "Rating", "Credits", "Alerts", "Limits" |
@@ -247,7 +253,7 @@ Layout algorithm is a pure function: `layoutDiagram(content: DiagramContent, com
 
 ### Custom System Dialog (COMP-02, D-10/D-11)
 
-1. User clicks "Add Custom System" button (visible on the diagram editor page)
+1. User clicks "Add Custom System" button (icon-only "+" button with `aria-label="Add Custom System"`, visible on the diagram editor page toolbar)
 2. Dialog opens with name and domain fields
 3. On domain field blur: call `GET /api/logo-proxy?domain={value}` asynchronously
 4. Show Skeleton placeholder while loading, then show fetched logo or monogram fallback
