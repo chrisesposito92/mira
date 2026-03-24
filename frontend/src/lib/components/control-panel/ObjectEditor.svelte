@@ -140,12 +140,12 @@
 			<Button size="sm" disabled={!jsonValid || saving || !parsedData} onclick={handleSave}>
 				{saving ? 'Saving...' : 'Save'}
 			</Button>
-			{#if object.status !== 'approved'}
+			{#if object.status !== 'approved' && object.status !== 'pushed'}
 				<Button size="sm" variant="outline" disabled={saving} onclick={handleApprove}>
 					Approve
 				</Button>
 			{/if}
-			{#if object.status !== 'rejected'}
+			{#if object.status !== 'rejected' && object.status !== 'pushed'}
 				<Button size="sm" variant="outline" disabled={saving} onclick={handleReject}>Reject</Button>
 			{/if}
 			{#if isPushable}

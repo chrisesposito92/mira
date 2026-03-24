@@ -251,9 +251,17 @@ async def push_entities_ordered(
 
             # Update DB
             now = datetime.now(UTC).isoformat()
-            supabase.table("generated_objects").update(
-                {"status": "pushed", "m3ter_id": m3ter_id, "updated_at": now}
-            ).eq("id", entity_id).execute()
+            db_result = (
+                supabase.table("generated_objects")
+                .update({"status": "pushed", "m3ter_id": m3ter_id, "updated_at": now})
+                .eq("id", entity_id)
+                .execute()
+            )
+            if not db_result.data:
+                logger.error(
+                    "DB update returned no rows for entity %s — status may not be 'pushed'",
+                    entity_id,
+                )
 
             # Register in resolver
             if m3ter_id:

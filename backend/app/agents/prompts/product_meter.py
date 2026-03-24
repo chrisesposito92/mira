@@ -240,6 +240,8 @@ Use the meter's "id" from the approved meters below.
 - **unit** (str): User-defined unit label (e.g., "requests", "GB")
 - **rounding** (str, optional): One of "UP", "DOWN", "NEAREST", "NONE"
 - **segmentedFields** (list[str], optional): dataField codes to segment/group by
+- **segments** (list[dict], optional): Required by m3ter when segmentedFields is used. \
+Each dict maps a segmentedField code to a value. Use "*" as wildcard for dynamic segmentation.
 
 Example:
 {{
@@ -251,7 +253,8 @@ Example:
   "quantityPerUnit": 1.0,
   "unit": "requests",
   "rounding": "UP",
-  "segmentedFields": ["region"]
+  "segmentedFields": ["region"],
+  "segments": [{{"region": "*"}}]
 }}
 
 ## Meters Generated
@@ -296,7 +299,8 @@ Respond with a JSON array of aggregation objects:
     "quantityPerUnit": 1.0,
     "unit": "<unit label>",
     "rounding": "<UP|DOWN|NEAREST|NONE>",
-    "segmentedFields": ["<field_code>", ...]
+    "segmentedFields": ["<field_code>", ...],
+    "segments": [{{"<field_code>": "*"}}, ...]
   }},
   ...
 ]

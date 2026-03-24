@@ -167,6 +167,15 @@ AGGREGATION_SCHEMA = {
         "required": False,
         "description": "Data field codes to segment aggregation by",
     },
+    "segments": {
+        "type": "list[dict[str, str]]",
+        "required": False,
+        "description": (
+            "Segment values for segmentedFields. Each dict maps field codes to values. "
+            "Use '*' as wildcard for dynamic segmentation. "
+            "Required by m3ter API when segmentedFields is non-empty."
+        ),
+    },
 }
 
 # PlanTemplate schema

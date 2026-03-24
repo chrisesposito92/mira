@@ -176,7 +176,37 @@ class TestAggregationValidation:
         data = self._valid_aggregation()
         data["segmentedFields"] = ["region", "tier"]
         errors = validate_entity(EntityType.aggregation, data)
+        # Only warnings expected (missing segments), no actual errors
+        assert len(errors) > 0
+        assert all(e.severity == "warning" for e in errors)
+
+    def test_segmented_fields_with_segments_no_warnings(self):
+        data = self._valid_aggregation()
+        data["segmentedFields"] = ["region", "tier"]
+        data["segments"] = [{"region": "*", "tier": "*"}]
+        errors = validate_entity(EntityType.aggregation, data)
         assert len(errors) == 0
+
+    def test_segments_invalid_type_fails(self):
+        data = self._valid_aggregation()
+        data["segmentedFields"] = ["region"]
+        data["segments"] = "not-a-list"
+        errors = validate_entity(EntityType.aggregation, data)
+        assert any(e.field == "segments" and e.severity == "error" for e in errors)
+
+    def test_segments_empty_list_fails(self):
+        data = self._valid_aggregation()
+        data["segmentedFields"] = ["region"]
+        data["segments"] = []
+        errors = validate_entity(EntityType.aggregation, data)
+        assert any(e.field == "segments" and e.severity == "error" for e in errors)
+
+    def test_segments_non_dict_entries_fails(self):
+        data = self._valid_aggregation()
+        data["segmentedFields"] = ["region"]
+        data["segments"] = ["not-a-dict"]
+        errors = validate_entity(EntityType.aggregation, data)
+        assert any(e.field == "segments" and e.severity == "error" for e in errors)
 
     def test_missing_name_fails(self):
         data = self._valid_aggregation()
