@@ -73,6 +73,10 @@ export type {
 	DiagramConnection,
 	DiagramSettings,
 	ComponentLibraryItem,
+	PositionedSystem,
+	PositionedGroup,
+	LayoutResult,
+	NodePositionMap,
 } from './diagram.js';
 
 export type {

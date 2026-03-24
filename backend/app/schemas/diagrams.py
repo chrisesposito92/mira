@@ -17,6 +17,7 @@ class DiagramSystem(BaseModel):
     x: float = 0.0
     y: float = 0.0
     category: str | None = None
+    role: Literal["prospect", "hub", "system"] | None = None
 
 
 class DiagramConnection(BaseModel):
