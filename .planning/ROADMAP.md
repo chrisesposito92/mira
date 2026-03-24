@@ -12,7 +12,7 @@ Four phases that build the diagrammer from the ground up: database and backend A
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Data Foundation** - DB schema, backend CRUD, component library seed with schema_version
+- [x] **Phase 1: Data Foundation** - DB schema, backend CRUD, component library seed with schema_version (completed 2026-03-24)
 - [ ] **Phase 2: Rendering Engine** - SVG renderer, DiagramStore, logo proxy, inline-style color conventions
 - [ ] **Phase 3: Configurator UI** - Builder layout, system picker, connection form, diagram list, auto-save
 - [ ] **Phase 4: Export Pipeline** - PNG/SVG export with font inlining, 2x HiDPI, pre-fetch logo base64
@@ -35,8 +35,8 @@ Plans:
 - [x] 01-01-PLAN.md — DB migrations (diagrams + component library), Pydantic schemas, config update
 - [x] 01-02-PLAN.md — Frontend TypeScript types, diagram service factory, diagram store
 - [x] 01-03-PLAN.md — Backend API routes (diagrams CRUD, component library, logo proxy), service layer, router registration
-- [ ] 01-04-PLAN.md — Frontend UI (sidebar nav, diagram list page, DiagramCard, CreateDiagramDialog, DeleteDiagramDialog)
-- [ ] 01-05-PLAN.md — Backend unit tests, logo seed script
+- [x] 01-04-PLAN.md — Frontend UI (sidebar nav, diagram list page, DiagramCard, CreateDiagramDialog, DeleteDiagramDialog)
+- [x] 01-05-PLAN.md — Backend unit tests, logo seed script
 
 ### Phase 2: Rendering Engine
 **Goal**: A live, m3ter-branded SVG diagram renders correctly from diagram data with logos and color-coded connections
