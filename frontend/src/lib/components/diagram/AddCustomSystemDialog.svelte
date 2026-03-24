@@ -1,11 +1,11 @@
 <script lang="ts">
-	import * as Dialog from "$lib/components/ui/dialog";
-	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import LogoPreview from "./LogoPreview.svelte";
-	import type { DiagramSystem } from "$lib/types";
-	import { createApiClient } from "$lib/services";
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import LogoPreview from './LogoPreview.svelte';
+	import type { DiagramSystem } from '$lib/types';
+	import { createApiClient } from '$lib/services';
 
 	let {
 		open = $bindable(false),
@@ -15,12 +15,12 @@
 	}: {
 		open: boolean;
 		onsubmit: (system: DiagramSystem) => void;
-		supabase: import("@supabase/supabase-js").SupabaseClient;
+		supabase: import('@supabase/supabase-js').SupabaseClient;
 		accessToken?: string;
 	} = $props();
 
-	let name = $state("");
-	let domain = $state("");
+	let name = $state('');
+	let domain = $state('');
 	let logoBase64 = $state<string | null>(null);
 	let logoLoading = $state(false);
 	let logoError = $state<string | null>(null);
@@ -43,7 +43,7 @@
 			const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
 			return Math.round(255 * color)
 				.toString(16)
-				.padStart(2, "0");
+				.padStart(2, '0');
 		};
 		return `#${f(0)}${f(8)}${f(4)}`;
 	}
@@ -68,11 +68,11 @@
 		try {
 			const client = createApiClient(supabase, accessToken);
 			const result = await client.get<{ logo_base64: string; domain: string }>(
-				`/api/logos/proxy?domain=${encodeURIComponent(trimmed)}`
+				`/api/logos/proxy?domain=${encodeURIComponent(trimmed)}`,
 			);
 			logoBase64 = result.logo_base64;
 		} catch {
-			logoError = "Could not fetch logo. A monogram will be used.";
+			logoError = 'Could not fetch logo. A monogram will be used.';
 			logoBase64 = null;
 		} finally {
 			logoLoading = false;
@@ -92,7 +92,7 @@
 			x: 0,
 			y: 0,
 			category: null,
-			role: "system",
+			role: 'system',
 		};
 
 		onsubmit(system);
@@ -100,8 +100,8 @@
 	}
 
 	function reset() {
-		name = "";
-		domain = "";
+		name = '';
+		domain = '';
 		logoBase64 = null;
 		logoLoading = false;
 		logoError = null;
@@ -117,19 +117,12 @@
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title>Add Custom System</Dialog.Title>
-			<Dialog.Description>
-				Add a system to the architecture diagram.
-			</Dialog.Description>
+			<Dialog.Description>Add a system to the architecture diagram.</Dialog.Description>
 		</Dialog.Header>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div class="space-y-2">
 				<Label for="system-name">System name</Label>
-				<Input
-					id="system-name"
-					bind:value={name}
-					placeholder="e.g. Stripe"
-					required
-				/>
+				<Input id="system-name" bind:value={name} placeholder="e.g. Stripe" required />
 			</div>
 			<div class="space-y-2">
 				<Label for="system-domain">Company domain</Label>
@@ -140,18 +133,10 @@
 					onblur={fetchLogo}
 				/>
 			</div>
-			<LogoPreview
-				logoBase64={logoBase64}
-				loading={logoLoading}
-				error={logoError}
-			/>
+			<LogoPreview {logoBase64} loading={logoLoading} error={logoError} />
 			<Dialog.Footer>
-				<Button variant="outline" type="button" onclick={() => (open = false)}>
-					Cancel
-				</Button>
-				<Button type="submit" disabled={!name.trim()}>
-					Add System
-				</Button>
+				<Button variant="outline" type="button" onclick={() => (open = false)}>Cancel</Button>
+				<Button type="submit" disabled={!name.trim()}>Add System</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>

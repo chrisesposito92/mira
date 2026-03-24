@@ -1,14 +1,10 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import type { DiagramConnection, NodePositionMap } from "$types/diagram.js";
-	import {
-		CONNECTION_COLORS,
-		CONNECTION_STROKE_WIDTH,
-		CONNECTION_DASH,
-	} from "../constants.js";
-	import { computeEdgeAnchor, getConnectionMidpoint } from "$lib/utils/diagram-layout.js";
-	import ConnectionPill from "./ConnectionPill.svelte";
+	import type { DiagramConnection, NodePositionMap } from '$types/diagram.js';
+	import { CONNECTION_COLORS, CONNECTION_STROKE_WIDTH, CONNECTION_DASH } from '../constants.js';
+	import { computeEdgeAnchor, getConnectionMidpoint } from '$lib/utils/diagram-layout.js';
+	import ConnectionPill from './ConnectionPill.svelte';
 
 	let {
 		connection,
@@ -31,17 +27,11 @@
 	const tCy = $derived(targetRect ? targetRect.y + targetRect.height / 2 : 0);
 
 	// Edge-anchored endpoints (not center-to-center)
-	const sourceAnchor = $derived(
-		sourceRect ? computeEdgeAnchor(sourceRect, tCx, tCy) : null,
-	);
-	const targetAnchor = $derived(
-		targetRect ? computeEdgeAnchor(targetRect, sCx, sCy) : null,
-	);
+	const sourceAnchor = $derived(sourceRect ? computeEdgeAnchor(sourceRect, tCx, tCy) : null);
+	const targetAnchor = $derived(targetRect ? computeEdgeAnchor(targetRect, sCx, sCy) : null);
 
 	// Color from connection type with fallback
-	const color = $derived(
-		CONNECTION_COLORS[connection.connection_type] ?? CONNECTION_COLORS.api,
-	);
+	const color = $derived(CONNECTION_COLORS[connection.connection_type] ?? CONNECTION_COLORS.api);
 
 	// Midpoint for pill placement
 	const midpoint = $derived(
@@ -52,9 +42,9 @@
 
 	// Marker references
 	const markerStart = $derived(
-		connection.direction === "bidirectional" ? "url(#arrowhead)" : "url(#source-dot)",
+		connection.direction === 'bidirectional' ? 'url(#arrowhead)' : 'url(#source-dot)',
 	);
-	const markerEnd = "url(#arrowhead)";
+	const markerEnd = 'url(#arrowhead)';
 </script>
 
 {#if sourceRect && targetRect && sourceAnchor && targetAnchor}
@@ -69,12 +59,7 @@
 			style="stroke: {color}; stroke-width: {CONNECTION_STROKE_WIDTH}; stroke-dasharray: {CONNECTION_DASH};"
 		/>
 		{#if showLabels && connection.label && midpoint}
-			<ConnectionPill
-				x={midpoint.x}
-				y={midpoint.y}
-				label={connection.label}
-				{color}
-			/>
+			<ConnectionPill x={midpoint.x} y={midpoint.y} label={connection.label} {color} />
 		{/if}
 	</g>
 {/if}

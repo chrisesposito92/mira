@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { Button } from "$lib/components/ui/button";
-	import { DiagramRenderer, AddCustomSystemDialog } from "$lib/components/diagram";
-	import { diagramStore } from "$lib/stores";
-	import { createApiClient, createDiagramService } from "$lib/services";
-	import { Plus, ArrowLeft } from "lucide-svelte";
-	import { toast } from "svelte-sonner";
-	import type { DiagramSystem } from "$lib/types";
+	import { goto } from '$app/navigation';
+	import { Button } from '$lib/components/ui/button';
+	import { DiagramRenderer, AddCustomSystemDialog } from '$lib/components/diagram';
+	import { diagramStore } from '$lib/stores';
+	import { createApiClient, createDiagramService } from '$lib/services';
+	import { Plus, ArrowLeft } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
+	import type { DiagramSystem } from '$lib/types';
 
 	let { data } = $props();
 
@@ -32,7 +32,7 @@
 		if (diagramStore.currentDiagram) {
 			await diagramStore.updateContent(service, diagramStore.currentDiagram.content);
 			if (diagramStore.error) {
-				toast.error("Failed to save diagram");
+				toast.error('Failed to save diagram');
 			}
 		}
 	}
@@ -41,12 +41,12 @@
 <div class="space-y-4">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<Button variant="ghost" size="icon" onclick={() => goto("/diagrams")}>
+			<Button variant="ghost" size="icon" onclick={() => goto('/diagrams')}>
 				<ArrowLeft class="size-4" />
 			</Button>
 			<div>
 				<h1 class="text-xl font-semibold">
-					{diagramStore.currentDiagram?.customer_name ?? "Diagram"}
+					{diagramStore.currentDiagram?.customer_name ?? 'Diagram'}
 				</h1>
 				{#if diagramStore.currentDiagram?.title}
 					<p class="text-muted-foreground text-sm">{diagramStore.currentDiagram.title}</p>

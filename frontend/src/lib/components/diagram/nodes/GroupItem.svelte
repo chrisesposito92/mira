@@ -6,7 +6,11 @@
 	import MonogramSvg from './MonogramSvg.svelte';
 	import type { DiagramSystem } from '$lib/types';
 
-	let { system, x, y }: {
+	let {
+		system,
+		x,
+		y,
+	}: {
 		system: DiagramSystem;
 		x: number;
 		y: number;
@@ -14,21 +18,14 @@
 
 	const monogram = $derived(parseMonogram(system.logo_base64));
 	const isBase64Image = $derived(
-		system.logo_base64 !== null &&
-		!system.logo_base64.startsWith('monogram:')
+		system.logo_base64 !== null && !system.logo_base64.startsWith('monogram:'),
 	);
 	const truncatedName = $derived(truncateSvgText(system.name, MAX_SYSTEM_NAME_CHARS));
 </script>
 
 <g>
 	{#if monogram}
-		<MonogramSvg
-			initials={monogram.initials}
-			color={monogram.color}
-			{x}
-			{y}
-			size={LOGO_SIZE}
-		/>
+		<MonogramSvg initials={monogram.initials} color={monogram.color} {x} {y} size={LOGO_SIZE} />
 	{:else if isBase64Image}
 		<image
 			href={system.logo_base64}

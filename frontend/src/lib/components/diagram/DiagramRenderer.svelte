@@ -1,14 +1,18 @@
 <script lang="ts">
-	import type { DiagramContent, ComponentLibraryItem, LayoutResult } from "$types/diagram.js";
-	import { layoutDiagram, computeEdgeAnchor, getConnectionMidpoint } from "$lib/utils/diagram-layout.js";
-	import SvgDefs from "./SvgDefs.svelte";
-	import HubNode from "./nodes/HubNode.svelte";
-	import ProspectNode from "./nodes/ProspectNode.svelte";
-	import GroupCard from "./nodes/GroupCard.svelte";
-	import SystemCard from "./nodes/SystemCard.svelte";
-	import ConnectionLine from "./connections/ConnectionLine.svelte";
-	import ConnectionPill from "./connections/ConnectionPill.svelte";
-	import { CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_BG, CONNECTION_COLORS } from "./constants.js";
+	import type { DiagramContent, ComponentLibraryItem, LayoutResult } from '$types/diagram.js';
+	import {
+		layoutDiagram,
+		computeEdgeAnchor,
+		getConnectionMidpoint,
+	} from '$lib/utils/diagram-layout.js';
+	import SvgDefs from './SvgDefs.svelte';
+	import HubNode from './nodes/HubNode.svelte';
+	import ProspectNode from './nodes/ProspectNode.svelte';
+	import GroupCard from './nodes/GroupCard.svelte';
+	import SystemCard from './nodes/SystemCard.svelte';
+	import ConnectionLine from './connections/ConnectionLine.svelte';
+	import ConnectionPill from './connections/ConnectionPill.svelte';
+	import { CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_BG, CONNECTION_COLORS } from './constants.js';
 
 	let {
 		content,
@@ -31,21 +35,11 @@
 	<SvgDefs />
 
 	<!-- Layer 0: Background rect (NOT CSS background -- required for SVG export) -->
-	<rect
-		x="0"
-		y="0"
-		width={CANVAS_WIDTH}
-		height={CANVAS_HEIGHT}
-		style="fill: {CANVAS_BG};"
-	/>
+	<rect x="0" y="0" width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style="fill: {CANVAS_BG};" />
 
 	<!-- Layer 1: Connection lines (bottom -- behind nodes) -->
 	{#each content.connections as conn (conn.id)}
-		<ConnectionLine
-			connection={conn}
-			nodePositions={layout.nodePositions}
-			showLabels={false}
-		/>
+		<ConnectionLine connection={conn} nodePositions={layout.nodePositions} showLabels={false} />
 	{/each}
 
 	<!-- Layer 2: Nodes (middle) -->

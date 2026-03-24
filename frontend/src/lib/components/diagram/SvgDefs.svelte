@@ -12,14 +12,29 @@
 	</filter>
 
 	<!-- Arrowhead marker (inherits line color via context-stroke) -->
-	<marker id="arrowhead" viewBox="0 0 10 10" refX="10" refY="5"
-		markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+	<marker
+		id="arrowhead"
+		viewBox="0 0 10 10"
+		refX="10"
+		refY="5"
+		markerWidth="8"
+		markerHeight="8"
+		orient="auto-start-reverse"
+		markerUnits="userSpaceOnUse"
+	>
 		<path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
 	</marker>
 
 	<!-- Source dot marker (inherits line color via context-stroke) -->
-	<marker id="source-dot" viewBox="0 0 10 10" refX="5" refY="5"
-		markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse">
+	<marker
+		id="source-dot"
+		viewBox="0 0 10 10"
+		refX="5"
+		refY="5"
+		markerWidth="8"
+		markerHeight="8"
+		markerUnits="userSpaceOnUse"
+	>
 		<circle cx="5" cy="5" r="4" fill="context-stroke" />
 	</marker>
 </defs>

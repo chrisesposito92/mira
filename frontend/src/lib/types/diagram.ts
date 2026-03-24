@@ -8,7 +8,7 @@ export interface DiagramSystem {
 	x: number;
 	y: number;
 	category: string | null;
-	role?: "prospect" | "hub" | "system" | null;
+	role?: 'prospect' | 'hub' | 'system' | null;
 }
 
 export interface DiagramConnection {

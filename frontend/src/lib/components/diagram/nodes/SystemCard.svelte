@@ -14,14 +14,16 @@
 	import MonogramSvg from './MonogramSvg.svelte';
 	import type { PositionedSystem } from '$lib/types';
 
-	let { positioned }: {
+	let {
+		positioned,
+	}: {
 		positioned: PositionedSystem;
 	} = $props();
 
 	const monogram = $derived(parseMonogram(positioned.system.logo_base64));
 	const isBase64Image = $derived(
 		positioned.system.logo_base64 !== null &&
-		!positioned.system.logo_base64.startsWith('monogram:')
+			!positioned.system.logo_base64.startsWith('monogram:'),
 	);
 	const truncatedName = $derived(truncateSvgText(positioned.system.name, MAX_SYSTEM_NAME_CHARS));
 

@@ -13,7 +13,10 @@
 		HUB_CAPABILITIES,
 	} from '../constants.js';
 
-	let { x, y }: {
+	let {
+		x,
+		y,
+	}: {
 		x: number;
 		y: number;
 	} = $props();
@@ -33,7 +36,7 @@
 
 	<!-- Hub title -->
 	<text
-		x={x}
+		{x}
 		y={y - 50}
 		text-anchor="middle"
 		dominant-baseline="central"

@@ -7,8 +7,8 @@
 		PILL_TEXT,
 		SVG_FONT_FAMILY,
 		MAX_PILL_LABEL_CHARS,
-	} from "../constants.js";
-	import { estimatePillWidth, truncateSvgText } from "$lib/utils/diagram-layout.js";
+	} from '../constants.js';
+	import { estimatePillWidth, truncateSvgText } from '$lib/utils/diagram-layout.js';
 
 	let {
 		x,
@@ -39,7 +39,7 @@
 	/>
 	<text
 		{x}
-		y={y}
+		{y}
 		text-anchor="middle"
 		dominant-baseline="central"
 		style="font-family: {SVG_FONT_FAMILY}; font-size: {fontSize}px; font-weight: 500; fill: {PILL_TEXT};"

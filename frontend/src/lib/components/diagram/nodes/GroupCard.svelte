@@ -17,7 +17,9 @@
 	import GroupItem from './GroupItem.svelte';
 	import type { PositionedGroup } from '$lib/types';
 
-	let { group }: {
+	let {
+		group,
+	}: {
 		group: PositionedGroup;
 	} = $props();
 
@@ -50,7 +52,10 @@
 		<GroupItem
 			system={sys.system}
 			x={group.x + GROUP_CARD_PADDING + (i % LOGO_GRID_COLS) * (LOGO_SIZE + GROUP_CARD_GAP)}
-			y={group.y + GROUP_CARD_PADDING + 24 + Math.floor(i / LOGO_GRID_COLS) * (LOGO_SIZE + GROUP_CARD_GAP + 14)}
+			y={group.y +
+				GROUP_CARD_PADDING +
+				24 +
+				Math.floor(i / LOGO_GRID_COLS) * (LOGO_SIZE + GROUP_CARD_GAP + 14)}
 		/>
 	{/each}
 </g>

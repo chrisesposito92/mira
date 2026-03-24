@@ -35,44 +35,43 @@ export const PILL_BORDER_RADIUS = 10;
 export const CONNECTION_DOT_RADIUS = 4;
 export const ARROWHEAD_SIZE = 8;
 export const CONNECTION_STROKE_WIDTH = 2;
-export const CONNECTION_DASH = "6,4";
+export const CONNECTION_DASH = '6,4';
 
 // SVG Colors (inline hex -- never Tailwind)
-export const CANVAS_BG = "#1a1f36";
-export const CARD_BG = "#FFFFFF";
-export const CARD_SHADOW = "rgba(0,0,0,0.15)";
-export const CARD_BORDER = "#E2E8F0";
-export const HUB_BG = "#FFFFFF";
-export const HUB_ACCENT_BORDER = "#00C853";
+export const CANVAS_BG = '#1a1f36';
+export const CARD_BG = '#FFFFFF';
+export const CARD_SHADOW = 'rgba(0,0,0,0.15)';
+export const CARD_BORDER = '#E2E8F0';
+export const HUB_BG = '#FFFFFF';
+export const HUB_ACCENT_BORDER = '#00C853';
 export const HUB_ACCENT_BORDER_WIDTH = 3;
-export const PROSPECT_BG = "#FFFFFF";
-export const PROSPECT_BORDER = "#94A3B8";
-export const TEXT_PRIMARY = "#1E293B";
-export const TEXT_SECONDARY = "#64748B";
-export const TEXT_ON_DARK = "#FFFFFF";
-export const PILL_TEXT = "#FFFFFF";
-export const MONOGRAM_TEXT = "#FFFFFF";
+export const PROSPECT_BG = '#FFFFFF';
+export const PROSPECT_BORDER = '#94A3B8';
+export const TEXT_PRIMARY = '#1E293B';
+export const TEXT_SECONDARY = '#64748B';
+export const TEXT_ON_DARK = '#FFFFFF';
+export const PILL_TEXT = '#FFFFFF';
+export const MONOGRAM_TEXT = '#FFFFFF';
 
 // Connection type color map (CONN-04)
 export const CONNECTION_COLORS: Record<string, string> = {
-	native_connector: "#00C853",
-	webhook_api: "#2196F3",
-	custom_build: "#FF9800",
-	api: "#90A4AE",
+	native_connector: '#00C853',
+	webhook_api: '#2196F3',
+	custom_build: '#FF9800',
+	api: '#90A4AE',
 };
 
 // SVG font family
-export const SVG_FONT_FAMILY =
-	"'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
+export const SVG_FONT_FAMILY = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
 
 // m3ter hub capabilities
 export const HUB_CAPABILITIES = [
-	"Usage",
-	"Pricing",
-	"Rating",
-	"Credits",
-	"Alerts",
-	"Limits",
+	'Usage',
+	'Pricing',
+	'Rating',
+	'Credits',
+	'Alerts',
+	'Limits',
 ] as const;
 
 // Text truncation defaults

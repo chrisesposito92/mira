@@ -13,7 +13,7 @@ import type {
 	PositionedGroup,
 	LayoutResult,
 	NodePositionMap,
-} from "$types/diagram.js";
+} from '$types/diagram.js';
 
 import {
 	CANVAS_WIDTH,
@@ -29,7 +29,7 @@ import {
 	GROUP_CARD_GAP,
 	LOGO_SIZE,
 	LOGO_GRID_COLS,
-} from "$components/diagram/constants.js";
+} from '$components/diagram/constants.js';
 
 // ─── Monogram parsing ─────────────────────────────────────────────
 
@@ -56,7 +56,7 @@ export function parseMonogram(
  */
 export function truncateSvgText(text: string, maxChars: number): string {
 	if (text.length <= maxChars) return text;
-	return text.slice(0, maxChars) + "...";
+	return text.slice(0, maxChars) + '...';
 }
 
 /**
@@ -158,7 +158,7 @@ function identifyProspect(systems: DiagramSystem[]): {
 	remaining: DiagramSystem[];
 } {
 	// Priority 1: explicit role
-	const byRole = systems.find((s) => s.role === "prospect");
+	const byRole = systems.find((s) => s.role === 'prospect');
 	if (byRole) {
 		return {
 			prospect: byRole,
@@ -167,9 +167,7 @@ function identifyProspect(systems: DiagramSystem[]): {
 	}
 
 	// Priority 2: heuristic fallback
-	const heuristic = systems.find(
-		(s) => s.component_library_id === null && s.category === null,
-	);
+	const heuristic = systems.find((s) => s.component_library_id === null && s.category === null);
 	if (heuristic) {
 		return {
 			prospect: heuristic,
@@ -179,14 +177,14 @@ function identifyProspect(systems: DiagramSystem[]): {
 
 	// Priority 3: synthetic prospect
 	const synthetic: DiagramSystem = {
-		id: "__prospect__",
+		id: '__prospect__',
 		component_library_id: null,
-		name: "Your Product/Platform",
+		name: 'Your Product/Platform',
 		logo_base64: null,
 		x: 0,
 		y: 0,
 		category: null,
-		role: "prospect",
+		role: 'prospect',
 	};
 	return { prospect: synthetic, remaining: systems };
 }
@@ -236,9 +234,7 @@ function groupByCategory(
 
 	// Re-build the map in sorted order
 	const sortedEntries = [...categorized.entries()].sort(
-		(a, b) =>
-			(categoryOrder.get(a[0]) ?? 999) -
-			(categoryOrder.get(b[0]) ?? 999),
+		(a, b) => (categoryOrder.get(a[0]) ?? 999) - (categoryOrder.get(b[0]) ?? 999),
 	);
 	const sortedMap = new Map<string, DiagramSystem[]>(sortedEntries);
 
@@ -264,10 +260,7 @@ function computeGroupDimensions(
 	const cols = Math.min(systemCount, LOGO_GRID_COLS);
 	const rows = Math.ceil(systemCount / LOGO_GRID_COLS);
 
-	const width =
-		cols * scaledLogoSize +
-		(cols - 1) * GROUP_CARD_GAP +
-		GROUP_CARD_PADDING * 2;
+	const width = cols * scaledLogoSize + (cols - 1) * GROUP_CARD_GAP + GROUP_CARD_PADDING * 2;
 	const headerHeight = 20 * scale; // category header
 	const height =
 		headerHeight +
@@ -287,7 +280,7 @@ function clamp(value: number, min: number, max: number): number {
 
 /** Zone item for layout placement. */
 interface ZoneItem {
-	type: "group" | "standalone";
+	type: 'group' | 'standalone';
 	category?: string;
 	systems: DiagramSystem[];
 }
@@ -332,17 +325,14 @@ export function layoutDiagram(
 	};
 
 	// Group remaining systems by category
-	const { categorized, uncategorized } = groupByCategory(
-		remaining,
-		componentLibrary,
-	);
+	const { categorized, uncategorized } = groupByCategory(remaining, componentLibrary);
 
 	const groups: PositionedGroup[] = [];
 	const standalone: PositionedSystem[] = [];
 	const nodePositions: NodePositionMap = {};
 
 	// Register hub in nodePositions
-	nodePositions["hub"] = {
+	nodePositions['hub'] = {
 		x: HUB_CENTER_X - hubWidth / 2,
 		y: HUB_CENTER_Y - hubHeight / 2,
 		width: hubWidth,
@@ -362,14 +352,14 @@ export function layoutDiagram(
 
 	for (const [category, systems] of categorized) {
 		if (systems.length >= 2) {
-			zoneItems.push({ type: "group", category, systems });
+			zoneItems.push({ type: 'group', category, systems });
 		} else {
-			zoneItems.push({ type: "standalone", systems });
+			zoneItems.push({ type: 'standalone', systems });
 		}
 	}
 
 	for (const sys of uncategorized) {
-		zoneItems.push({ type: "standalone", systems: [sys] });
+		zoneItems.push({ type: 'standalone', systems: [sys] });
 	}
 
 	// Assign items to zones
@@ -377,22 +367,18 @@ export function layoutDiagram(
 		const item = zoneItems[i];
 		const zoneAngle = ZONE_ANGLES[i % ZONE_ANGLES.length];
 
-		if (item.type === "group" && item.category) {
+		if (item.type === 'group' && item.category) {
 			const systemCount = item.systems.length;
 			const dims = computeGroupDimensions(systemCount, scale);
 
 			// BBox buffering: push further from hub for large groups
 			let radialDist = BASE_RADIAL_DISTANCE;
 			if (systemCount > BBOX_BUFFER_THRESHOLD) {
-				radialDist +=
-					(systemCount - BBOX_BUFFER_THRESHOLD) *
-					BBOX_BUFFER_PER_EXTRA;
+				radialDist += (systemCount - BBOX_BUFFER_THRESHOLD) * BBOX_BUFFER_PER_EXTRA;
 			}
 
-			const centerX =
-				HUB_CENTER_X + Math.cos(zoneAngle) * radialDist;
-			const centerY =
-				HUB_CENTER_Y + Math.sin(zoneAngle) * radialDist;
+			const centerX = HUB_CENTER_X + Math.cos(zoneAngle) * radialDist;
+			const centerY = HUB_CENTER_Y + Math.sin(zoneAngle) * radialDist;
 
 			// Clamp group to canvas bounds
 			const groupX = clamp(
@@ -415,15 +401,9 @@ export function layoutDiagram(
 				const row = Math.floor(j / LOGO_GRID_COLS);
 				const headerHeight = 20 * scale;
 
-				const sysX =
-					groupX +
-					GROUP_CARD_PADDING +
-					col * (scaledLogoSize + GROUP_CARD_GAP);
+				const sysX = groupX + GROUP_CARD_PADDING + col * (scaledLogoSize + GROUP_CARD_GAP);
 				const sysY =
-					groupY +
-					GROUP_CARD_PADDING +
-					headerHeight +
-					row * (scaledLogoSize + GROUP_CARD_GAP);
+					groupY + GROUP_CARD_PADDING + headerHeight + row * (scaledLogoSize + GROUP_CARD_GAP);
 
 				const ps: PositionedSystem = {
 					system: sys,
@@ -454,10 +434,8 @@ export function layoutDiagram(
 			// Standalone system
 			const sys = item.systems[0];
 			const radialDist = BASE_RADIAL_DISTANCE;
-			const centerX =
-				HUB_CENTER_X + Math.cos(zoneAngle) * radialDist;
-			const centerY =
-				HUB_CENTER_Y + Math.sin(zoneAngle) * radialDist;
+			const centerX = HUB_CENTER_X + Math.cos(zoneAngle) * radialDist;
+			const centerY = HUB_CENTER_Y + Math.sin(zoneAngle) * radialDist;
 
 			const cardX = clamp(
 				centerX - scaledCardWidth / 2,

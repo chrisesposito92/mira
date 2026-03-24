@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
 	layoutDiagram,
 	parseMonogram,
@@ -6,7 +6,7 @@ import {
 	estimatePillWidth,
 	truncateSvgText,
 	computeEdgeAnchor,
-} from "./diagram-layout.js";
+} from './diagram-layout.js';
 import {
 	CANVAS_WIDTH,
 	CANVAS_HEIGHT,
@@ -15,29 +15,23 @@ import {
 	PROSPECT_Y,
 	SYSTEM_CARD_WIDTH,
 	SYSTEM_CARD_HEIGHT,
-} from "$components/diagram/constants.js";
-import type {
-	DiagramContent,
-	DiagramSystem,
-	ComponentLibraryItem,
-} from "$types/diagram.js";
+} from '$components/diagram/constants.js';
+import type { DiagramContent, DiagramSystem, ComponentLibraryItem } from '$types/diagram.js';
 
 /** Helper: make a minimal DiagramContent. */
 function makeContent(
 	systems: DiagramSystem[] = [],
-	connections: DiagramContent["connections"] = [],
+	connections: DiagramContent['connections'] = [],
 ): DiagramContent {
 	return {
 		systems,
 		connections,
-		settings: { background_color: "#1a1f36", show_labels: true },
+		settings: { background_color: '#1a1f36', show_labels: true },
 	};
 }
 
 /** Helper: make a minimal system. */
-function makeSys(
-	overrides: Partial<DiagramSystem> & { id: string; name: string },
-): DiagramSystem {
+function makeSys(overrides: Partial<DiagramSystem> & { id: string; name: string }): DiagramSystem {
 	return {
 		component_library_id: null,
 		logo_base64: null,
@@ -57,18 +51,18 @@ function makeLibItem(
 	},
 ): ComponentLibraryItem {
 	return {
-		slug: overrides.name.toLowerCase().replace(/\s/g, "-"),
-		domain: "example.com",
+		slug: overrides.name.toLowerCase().replace(/\s/g, '-'),
+		domain: 'example.com',
 		logo_base64: null,
 		is_native_connector: false,
 		display_order: 0,
-		created_at: "2026-01-01T00:00:00Z",
+		created_at: '2026-01-01T00:00:00Z',
 		...overrides,
 	};
 }
 
-describe("layoutDiagram", () => {
-	it("Test 1: empty systems returns hub at center and prospect at top", () => {
+describe('layoutDiagram', () => {
+	it('Test 1: empty systems returns hub at center and prospect at top', () => {
 		const content = makeContent();
 		const result = layoutDiagram(content, []);
 
@@ -78,17 +72,17 @@ describe("layoutDiagram", () => {
 		expect(result.prospect.y).toBe(PROSPECT_Y);
 	});
 
-	it("Test 2: single system in CRM category placed in first zone, not overlapping hub or prospect", () => {
+	it('Test 2: single system in CRM category placed in first zone, not overlapping hub or prospect', () => {
 		const sys = makeSys({
-			id: "s1",
-			name: "Salesforce",
-			category: "CRM",
-			component_library_id: "lib1",
+			id: 's1',
+			name: 'Salesforce',
+			category: 'CRM',
+			component_library_id: 'lib1',
 		});
 		const lib = makeLibItem({
-			id: "lib1",
-			name: "Salesforce",
-			category: "CRM",
+			id: 'lib1',
+			name: 'Salesforce',
+			category: 'CRM',
 			display_order: 1,
 		});
 		const result = layoutDiagram(makeContent([sys]), [lib]);
@@ -96,10 +90,8 @@ describe("layoutDiagram", () => {
 		// Should not overlap hub
 		const hubBounds = result.hub;
 		const sysNode =
-			result.standalone.find((s) => s.system.id === "s1") ||
-			result.groups
-				.flatMap((g) => g.systems)
-				.find((s) => s.system.id === "s1");
+			result.standalone.find((s) => s.system.id === 's1') ||
+			result.groups.flatMap((g) => g.systems).find((s) => s.system.id === 's1');
 		expect(sysNode).toBeDefined();
 
 		// Check no overlap with hub center area
@@ -112,106 +104,103 @@ describe("layoutDiagram", () => {
 		expect(prospectDy).toBeGreaterThan(30);
 	});
 
-	it("Test 3: systems with same category are grouped into a PositionedGroup", () => {
+	it('Test 3: systems with same category are grouped into a PositionedGroup', () => {
 		const systems = [
 			makeSys({
-				id: "s1",
-				name: "Salesforce",
-				category: "CRM",
-				component_library_id: "lib1",
+				id: 's1',
+				name: 'Salesforce',
+				category: 'CRM',
+				component_library_id: 'lib1',
 			}),
 			makeSys({
-				id: "s2",
-				name: "HubSpot",
-				category: "CRM",
-				component_library_id: "lib2",
+				id: 's2',
+				name: 'HubSpot',
+				category: 'CRM',
+				component_library_id: 'lib2',
 			}),
 		];
 		const lib = [
 			makeLibItem({
-				id: "lib1",
-				name: "Salesforce",
-				category: "CRM",
+				id: 'lib1',
+				name: 'Salesforce',
+				category: 'CRM',
 				display_order: 1,
 			}),
 			makeLibItem({
-				id: "lib2",
-				name: "HubSpot",
-				category: "CRM",
+				id: 'lib2',
+				name: 'HubSpot',
+				category: 'CRM',
 				display_order: 1,
 			}),
 		];
 		const result = layoutDiagram(makeContent(systems), lib);
 
 		expect(result.groups.length).toBeGreaterThanOrEqual(1);
-		const crmGroup = result.groups.find((g) => g.category === "CRM");
+		const crmGroup = result.groups.find((g) => g.category === 'CRM');
 		expect(crmGroup).toBeDefined();
 		expect(crmGroup!.systems.length).toBe(2);
 	});
 
-	it("Test 4: systems with null category and no role are placed as standalone", () => {
-		const sys = makeSys({ id: "s1", name: "Custom Tool", category: null });
+	it('Test 4: systems with null category and no role are placed as standalone', () => {
+		const sys = makeSys({ id: 's1', name: 'Custom Tool', category: null });
 		layoutDiagram(makeContent([sys]), []);
 
 		// With no category and no role, could be detected as prospect fallback
 		// or standalone. Let's add a prospect explicitly to avoid fallback.
 		const systems = [
-			makeSys({ id: "prospect", name: "My Platform", role: "prospect" }),
-			makeSys({ id: "s1", name: "Custom Tool", category: null }),
+			makeSys({ id: 'prospect', name: 'My Platform', role: 'prospect' }),
+			makeSys({ id: 's1', name: 'Custom Tool', category: null }),
 		];
 		const result2 = layoutDiagram(makeContent(systems), []);
 		expect(result2.standalone.length).toBeGreaterThanOrEqual(1);
-		expect(result2.standalone.some((s) => s.system.id === "s1")).toBe(true);
+		expect(result2.standalone.some((s) => s.system.id === 's1')).toBe(true);
 	});
 
-	it("Test 5: multiple categories distribute across zones in order of display_order", () => {
+	it('Test 5: multiple categories distribute across zones in order of display_order', () => {
 		const systems = [
 			makeSys({
-				id: "s1",
-				name: "Salesforce",
-				category: "CRM",
-				component_library_id: "lib1",
+				id: 's1',
+				name: 'Salesforce',
+				category: 'CRM',
+				component_library_id: 'lib1',
 			}),
 			makeSys({
-				id: "s2",
-				name: "Stripe",
-				category: "Payments",
-				component_library_id: "lib2",
+				id: 's2',
+				name: 'Stripe',
+				category: 'Payments',
+				component_library_id: 'lib2',
 			}),
 			makeSys({
-				id: "s3",
-				name: "Snowflake",
-				category: "Analytics",
-				component_library_id: "lib3",
+				id: 's3',
+				name: 'Snowflake',
+				category: 'Analytics',
+				component_library_id: 'lib3',
 			}),
 		];
 		const lib = [
 			makeLibItem({
-				id: "lib1",
-				name: "Salesforce",
-				category: "CRM",
+				id: 'lib1',
+				name: 'Salesforce',
+				category: 'CRM',
 				display_order: 1,
 			}),
 			makeLibItem({
-				id: "lib2",
-				name: "Stripe",
-				category: "Payments",
+				id: 'lib2',
+				name: 'Stripe',
+				category: 'Payments',
 				display_order: 2,
 			}),
 			makeLibItem({
-				id: "lib3",
-				name: "Snowflake",
-				category: "Analytics",
+				id: 'lib3',
+				name: 'Snowflake',
+				category: 'Analytics',
 				display_order: 3,
 			}),
 		];
 		const result = layoutDiagram(makeContent(systems), lib);
 
 		// All three should appear either as standalone or groups
-		const allSystems = [
-			...result.standalone,
-			...result.groups.flatMap((g) => g.systems),
-		];
+		const allSystems = [...result.standalone, ...result.groups.flatMap((g) => g.systems)];
 		expect(allSystems.length).toBe(3);
 
 		// Each should have distinct x positions (different zones)
@@ -223,62 +212,62 @@ describe("layoutDiagram", () => {
 	it("Test 6: prospect identified by role === 'prospect' is positioned at top", () => {
 		const systems = [
 			makeSys({
-				id: "p1",
-				name: "Customer Platform",
-				role: "prospect",
+				id: 'p1',
+				name: 'Customer Platform',
+				role: 'prospect',
 			}),
 			makeSys({
-				id: "s1",
-				name: "Salesforce",
-				category: "CRM",
-				component_library_id: "lib1",
+				id: 's1',
+				name: 'Salesforce',
+				category: 'CRM',
+				component_library_id: 'lib1',
 			}),
 		];
 		const lib = [
 			makeLibItem({
-				id: "lib1",
-				name: "Salesforce",
-				category: "CRM",
+				id: 'lib1',
+				name: 'Salesforce',
+				category: 'CRM',
 				display_order: 1,
 			}),
 		];
 		const result = layoutDiagram(makeContent(systems), lib);
 
-		expect(result.prospect.system.id).toBe("p1");
+		expect(result.prospect.system.id).toBe('p1');
 		expect(result.prospect.y).toBe(PROSPECT_Y);
 		expect(result.prospect.x).toBe(HUB_CENTER_X);
 	});
 
-	it("Test 7: prospect fallback -- system with null component_library_id and null category", () => {
+	it('Test 7: prospect fallback -- system with null component_library_id and null category', () => {
 		const systems = [
 			makeSys({
-				id: "p1",
-				name: "My Custom App",
+				id: 'p1',
+				name: 'My Custom App',
 				component_library_id: null,
 				category: null,
 			}),
 			makeSys({
-				id: "s1",
-				name: "Stripe",
-				category: "Payments",
-				component_library_id: "lib1",
+				id: 's1',
+				name: 'Stripe',
+				category: 'Payments',
+				component_library_id: 'lib1',
 			}),
 		];
 		const lib = [
 			makeLibItem({
-				id: "lib1",
-				name: "Stripe",
-				category: "Payments",
+				id: 'lib1',
+				name: 'Stripe',
+				category: 'Payments',
 				display_order: 1,
 			}),
 		];
 		const result = layoutDiagram(makeContent(systems), lib);
 
-		expect(result.prospect.system.id).toBe("p1");
+		expect(result.prospect.system.id).toBe('p1');
 		expect(result.prospect.y).toBe(PROSPECT_Y);
 	});
 
-	it("Test 8: all positioned nodes have x and y within canvas bounds", () => {
+	it('Test 8: all positioned nodes have x and y within canvas bounds', () => {
 		const systems = Array.from({ length: 10 }, (_, i) =>
 			makeSys({
 				id: `s${i}`,
@@ -292,7 +281,7 @@ describe("layoutDiagram", () => {
 				id: s.component_library_id!,
 				name: s.name,
 				category: s.category!,
-				display_order: parseInt(s.category!.replace("Cat", "")),
+				display_order: parseInt(s.category!.replace('Cat', '')),
 			}),
 		);
 		const result = layoutDiagram(makeContent(systems), lib);
@@ -310,32 +299,32 @@ describe("layoutDiagram", () => {
 		}
 	});
 
-	it("Test 9: function is deterministic -- same input produces identical output", () => {
+	it('Test 9: function is deterministic -- same input produces identical output', () => {
 		const systems = [
 			makeSys({
-				id: "s1",
-				name: "Salesforce",
-				category: "CRM",
-				component_library_id: "lib1",
+				id: 's1',
+				name: 'Salesforce',
+				category: 'CRM',
+				component_library_id: 'lib1',
 			}),
 			makeSys({
-				id: "s2",
-				name: "Stripe",
-				category: "Payments",
-				component_library_id: "lib2",
+				id: 's2',
+				name: 'Stripe',
+				category: 'Payments',
+				component_library_id: 'lib2',
 			}),
 		];
 		const lib = [
 			makeLibItem({
-				id: "lib1",
-				name: "Salesforce",
-				category: "CRM",
+				id: 'lib1',
+				name: 'Salesforce',
+				category: 'CRM',
 				display_order: 1,
 			}),
 			makeLibItem({
-				id: "lib2",
-				name: "Stripe",
-				category: "Payments",
+				id: 'lib2',
+				name: 'Stripe',
+				category: 'Payments',
 				display_order: 2,
 			}),
 		];
@@ -346,7 +335,7 @@ describe("layoutDiagram", () => {
 		expect(result1).toEqual(result2);
 	});
 
-	it("Test 10: with many systems (15+), card sizes scale down proportionally", () => {
+	it('Test 10: with many systems (15+), card sizes scale down proportionally', () => {
 		const systems = Array.from({ length: 18 }, (_, i) =>
 			makeSys({
 				id: `s${i}`,
@@ -360,77 +349,73 @@ describe("layoutDiagram", () => {
 				id: s.component_library_id!,
 				name: s.name,
 				category: s.category!,
-				display_order: parseInt(s.category!.replace("Cat", "")),
+				display_order: parseInt(s.category!.replace('Cat', '')),
 			}),
 		);
 		const result = layoutDiagram(makeContent(systems), lib);
 
 		// At least some nodes should have smaller dimensions than default
-		const allNodes = [
-			...result.standalone,
-			...result.groups.flatMap((g) => g.systems),
-		];
+		const allNodes = [...result.standalone, ...result.groups.flatMap((g) => g.systems)];
 		const hasScaledDown = allNodes.some(
-			(n) =>
-				n.width < SYSTEM_CARD_WIDTH || n.height < SYSTEM_CARD_HEIGHT,
+			(n) => n.width < SYSTEM_CARD_WIDTH || n.height < SYSTEM_CARD_HEIGHT,
 		);
 		expect(hasScaledDown).toBe(true);
 	});
 
-	it("Test 17: nodePositions contains entries for hub and all system IDs", () => {
+	it('Test 17: nodePositions contains entries for hub and all system IDs', () => {
 		const systems = [
-			makeSys({ id: "p1", name: "Prospect", role: "prospect" }),
+			makeSys({ id: 'p1', name: 'Prospect', role: 'prospect' }),
 			makeSys({
-				id: "s1",
-				name: "Salesforce",
-				category: "CRM",
-				component_library_id: "lib1",
+				id: 's1',
+				name: 'Salesforce',
+				category: 'CRM',
+				component_library_id: 'lib1',
 			}),
 			makeSys({
-				id: "s2",
-				name: "Custom",
+				id: 's2',
+				name: 'Custom',
 				category: null,
 			}),
 		];
 		const lib = [
 			makeLibItem({
-				id: "lib1",
-				name: "Salesforce",
-				category: "CRM",
+				id: 'lib1',
+				name: 'Salesforce',
+				category: 'CRM',
 				display_order: 1,
 			}),
 		];
 		const result = layoutDiagram(makeContent(systems), lib);
 
-		expect(result.nodePositions["hub"]).toBeDefined();
-		expect(result.nodePositions["p1"]).toBeDefined();
-		expect(result.nodePositions["s1"]).toBeDefined();
-		expect(result.nodePositions["s2"]).toBeDefined();
+		expect(result.nodePositions['hub']).toBeDefined();
+		expect(result.nodePositions['p1']).toBeDefined();
+		expect(result.nodePositions['s1']).toBeDefined();
+		expect(result.nodePositions['s2']).toBeDefined();
 	});
 
-	it("Test 18: group with 6+ systems has its zone center pushed further from hub", () => {
+	it('Test 18: group with 6+ systems has its zone center pushed further from hub', () => {
 		// Create a group with 6 systems in same category
 		const largeSystems = Array.from({ length: 6 }, (_, i) =>
 			makeSys({
 				id: `big${i}`,
 				name: `System ${i}`,
-				category: "BigGroup",
+				category: 'BigGroup',
 				component_library_id: `biglib${i}`,
 			}),
 		);
 		// Create a group with 2 systems in different category
 		const smallSystems = [
 			makeSys({
-				id: "sm1",
-				name: "Small 1",
-				category: "SmallGroup",
-				component_library_id: "smlib1",
+				id: 'sm1',
+				name: 'Small 1',
+				category: 'SmallGroup',
+				component_library_id: 'smlib1',
 			}),
 			makeSys({
-				id: "sm2",
-				name: "Small 2",
-				category: "SmallGroup",
-				component_library_id: "smlib2",
+				id: 'sm2',
+				name: 'Small 2',
+				category: 'SmallGroup',
+				component_library_id: 'smlib2',
 			}),
 		];
 		const allSystems = [...largeSystems, ...smallSystems];
@@ -439,16 +424,14 @@ describe("layoutDiagram", () => {
 				id: s.component_library_id!,
 				name: s.name,
 				category: s.category!,
-				display_order: s.category === "BigGroup" ? 1 : 2,
+				display_order: s.category === 'BigGroup' ? 1 : 2,
 			}),
 		);
 
 		const result = layoutDiagram(makeContent(allSystems), lib);
 
-		const bigGroup = result.groups.find((g) => g.category === "BigGroup");
-		const smallGroup = result.groups.find(
-			(g) => g.category === "SmallGroup",
-		);
+		const bigGroup = result.groups.find((g) => g.category === 'BigGroup');
+		const smallGroup = result.groups.find((g) => g.category === 'SmallGroup');
 		expect(bigGroup).toBeDefined();
 		expect(smallGroup).toBeDefined();
 
@@ -465,53 +448,50 @@ describe("layoutDiagram", () => {
 	});
 });
 
-describe("parseMonogram", () => {
-	it("Test 11: returns initials and color for valid monogram format", () => {
-		const result = parseMonogram("monogram:AB:#FF5722");
-		expect(result).toEqual({ initials: "AB", color: "#FF5722" });
+describe('parseMonogram', () => {
+	it('Test 11: returns initials and color for valid monogram format', () => {
+		const result = parseMonogram('monogram:AB:#FF5722');
+		expect(result).toEqual({ initials: 'AB', color: '#FF5722' });
 	});
 
-	it("Test 12: returns null for non-monogram strings", () => {
+	it('Test 12: returns null for non-monogram strings', () => {
 		expect(parseMonogram(null)).toBeNull();
-		expect(parseMonogram("")).toBeNull();
-		expect(parseMonogram("data:image/png;base64,iVBOR...")).toBeNull();
-		expect(parseMonogram("monogram:toolong:#FF5722")).toBeNull();
+		expect(parseMonogram('')).toBeNull();
+		expect(parseMonogram('data:image/png;base64,iVBOR...')).toBeNull();
+		expect(parseMonogram('monogram:toolong:#FF5722')).toBeNull();
 	});
 });
 
-describe("getConnectionMidpoint", () => {
-	it("Test 13: returns midpoint of two coordinates", () => {
+describe('getConnectionMidpoint', () => {
+	it('Test 13: returns midpoint of two coordinates', () => {
 		const mid = getConnectionMidpoint(0, 0, 100, 200);
 		expect(mid).toEqual({ x: 50, y: 100 });
 	});
 });
 
-describe("estimatePillWidth", () => {
-	it("Test 14: returns positive number proportional to text length", () => {
-		const short = estimatePillWidth("API", 10);
-		const long = estimatePillWidth("User Authentication Flow", 10);
+describe('estimatePillWidth', () => {
+	it('Test 14: returns positive number proportional to text length', () => {
+		const short = estimatePillWidth('API', 10);
+		const long = estimatePillWidth('User Authentication Flow', 10);
 		expect(short).toBeGreaterThan(0);
 		expect(long).toBeGreaterThan(short);
 	});
 });
 
-describe("truncateSvgText", () => {
-	it("Test 15: truncates long text with ellipsis", () => {
-		const result = truncateSvgText(
-			"Enterprise Resource Planning Connector",
-			16,
-		);
-		expect(result).toBe("Enterprise Resou...");
+describe('truncateSvgText', () => {
+	it('Test 15: truncates long text with ellipsis', () => {
+		const result = truncateSvgText('Enterprise Resource Planning Connector', 16);
+		expect(result).toBe('Enterprise Resou...');
 		expect(result.length).toBeLessThanOrEqual(19); // 16 chars + "..."
 	});
 
-	it("Test 16: returns short text unchanged", () => {
-		expect(truncateSvgText("Short", 16)).toBe("Short");
+	it('Test 16: returns short text unchanged', () => {
+		expect(truncateSvgText('Short', 16)).toBe('Short');
 	});
 });
 
-describe("computeEdgeAnchor", () => {
-	it("Test 19: returns a point on the edge of a rect, not the center", () => {
+describe('computeEdgeAnchor', () => {
+	it('Test 19: returns a point on the edge of a rect, not the center', () => {
 		const rect = { x: 100, y: 100, width: 200, height: 100 };
 		const centerX = rect.x + rect.width / 2;
 		const centerY = rect.y + rect.height / 2;
