@@ -62,26 +62,28 @@ Exceptions:
 
 ## Typography
 
-All typography uses the project's existing Tailwind/shadcn text scale. Specific declarations for Phase 3 builder UI:
+All typography uses the project's existing Tailwind/shadcn text scale. Two weights only: 400 (regular) and 600 (semibold).
 
 | Role | Size | Weight | Line Height | Tailwind class |
 |------|------|--------|-------------|----------------|
 | Body | 14px | 400 (regular) | 1.5 | `text-sm` |
-| Label | 12px | 500 (medium) | 1.33 | `text-xs font-medium` |
+| Label | 12px | 400 (regular) | 1.33 | `text-xs` |
 | Heading | 18px | 600 (semibold) | 1.33 | `text-lg font-semibold` |
 | Subheading | 14px | 600 (semibold) | 1.5 | `text-sm font-semibold` |
+
+Note: 12px (Label) and 14px (Body) are only 2px apart. This is a tight gap but acceptable because they map to standard Tailwind `text-xs` and `text-sm` and serve distinct roles -- Labels differentiate through smaller size alone without needing a separate weight.
 
 ### Typography Inventory for Phase 3
 
 | Element | Role | Specifics |
 |---------|------|-----------|
 | Editor page title (customer name) | Heading | `text-lg font-semibold` -- matches existing Phase 2 pattern |
-| Sidebar tab labels | Label | `text-xs font-medium` (inside Tabs.Trigger) |
+| Sidebar tab labels | Label | `text-xs` (inside Tabs.Trigger) |
 | Category accordion headers | Subheading | `text-sm font-semibold` |
 | System item name in picker | Body | `text-sm` |
 | Connection list item labels | Body | `text-sm` |
-| Connection type badge | Label | `text-xs font-medium` |
-| Save status indicator | Label | `text-xs font-medium text-muted-foreground` |
+| Connection type badge | Label | `text-xs` |
+| Save status indicator | Label | `text-xs text-muted-foreground` |
 | Search placeholder | Body | `text-sm text-muted-foreground` |
 | DiagramCard customer name | Heading | `text-lg font-semibold` (existing Card.Title) |
 | DiagramCard relative timestamp | Label | `text-xs text-muted-foreground` |
@@ -159,6 +161,8 @@ Accent reserved for: "Add Connection" submit button, active sidebar tab underlin
 ## Layout Contract
 
 ### Editor Page Layout (D-01, D-03)
+
+Focal point: DiagramRenderer live preview (occupies ~70% of viewport width).
 
 ```
 +---------------------------------------------+
@@ -251,8 +255,9 @@ Tabs (value = "systems" | "connections" | "settings")
 | Auto-suggest type | Source or target is m3ter + other has `is_native_connector` | Type auto-selects "Native Connector" | `connection_type = 'native_connector'` (D-11) |
 | Type label | Type in label Input | Suggestion dropdown appears below (D-12) | `label` updates |
 | Select suggestion | Click suggestion item | Input fills with selected label | `label` set to suggestion |
-| Submit connection | Click "Add" button | Form collapses, connection appears in list | `diagramStore.addConnection()` |
-| Cancel form | Click "Cancel" button | Form collapses | Form state resets |
+| Submit new connection | Click "Add Connection" button | Form collapses, connection appears in list | `diagramStore.addConnection()` |
+| Submit edited connection | Click "Update Connection" button | Form collapses, connection updated in list | `diagramStore.updateConnection()` |
+| Discard form | Click "Discard Changes" button | Form collapses | Form state resets |
 | Edit connection | Click edit icon on ConnectionListItem | Inline form re-opens pre-filled | Connection in edit mode |
 | Delete connection | Click delete icon on ConnectionListItem | Connection removed from list | `diagramStore.removeConnection()` |
 
@@ -310,8 +315,9 @@ Suggestions appear as a dropdown list below the label input. Typing narrows the 
 |---------|------|
 | Primary CTA (systems tab) | "Add Custom System" |
 | Primary CTA (connections tab) | "Add Connection" |
-| Connection form submit | "Add" (when creating), "Save" (when editing) |
-| Connection form cancel | "Cancel" |
+| Connection form submit (creating) | "Add Connection" |
+| Connection form submit (editing) | "Update Connection" |
+| Connection form cancel | "Discard Changes" |
 | Empty state: connections heading | "No connections yet" |
 | Empty state: connections body | "Add a connection to define how systems exchange data." |
 | Empty state: connections action | "Add Connection" |
