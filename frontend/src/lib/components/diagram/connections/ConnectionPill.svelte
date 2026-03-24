@@ -2,7 +2,6 @@
 
 <script lang="ts">
 	import {
-		PILL_PADDING_X,
 		PILL_PADDING_Y,
 		PILL_BORDER_RADIUS,
 		PILL_TEXT,

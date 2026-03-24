@@ -20,7 +20,6 @@ import type {
 	DiagramContent,
 	DiagramSystem,
 	ComponentLibraryItem,
-	LayoutResult,
 } from "$types/diagram.js";
 
 /** Helper: make a minimal DiagramContent. */
@@ -152,7 +151,7 @@ describe("layoutDiagram", () => {
 
 	it("Test 4: systems with null category and no role are placed as standalone", () => {
 		const sys = makeSys({ id: "s1", name: "Custom Tool", category: null });
-		const result = layoutDiagram(makeContent([sys]), []);
+		layoutDiagram(makeContent([sys]), []);
 
 		// With no category and no role, could be detected as prospect fallback
 		// or standalone. Let's add a prospect explicitly to avoid fallback.
@@ -435,7 +434,7 @@ describe("layoutDiagram", () => {
 			}),
 		];
 		const allSystems = [...largeSystems, ...smallSystems];
-		const lib = allSystems.map((s, i) =>
+		const lib = allSystems.map((s) =>
 			makeLibItem({
 				id: s.component_library_id!,
 				name: s.name,
