@@ -52,7 +52,7 @@
 					variant="ghost"
 					size="icon"
 					class="text-muted-foreground hover:text-destructive h-8 w-8"
-					aria-label="Delete diagram {diagram.customer_name}"
+					aria-label="Delete diagram {displayName}"
 					onclick={(e) => {
 						e.stopPropagation();
 						ondelete(diagram.id);

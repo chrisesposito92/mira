@@ -30,8 +30,7 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Delete diagram?</AlertDialog.Title>
 			<AlertDialog.Description>
-				This will permanently delete the diagram "{diagramName}". This action cannot be
-				undone.
+				This will permanently delete the diagram "{diagramName}". This action cannot be undone.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

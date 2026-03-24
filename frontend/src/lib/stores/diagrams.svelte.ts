@@ -1,5 +1,5 @@
-import type { DiagramListItem, DiagramCreate } from "$lib/types";
-import type { DiagramService } from "$lib/services/diagrams.js";
+import type { DiagramListItem, DiagramCreate } from '$lib/types';
+import type { DiagramService } from '$lib/services/diagrams.js';
 
 class DiagramStore {
 	diagrams = $state<DiagramListItem[]>([]);
@@ -18,7 +18,7 @@ class DiagramStore {
 		try {
 			this.diagrams = await service.list();
 		} catch (e) {
-			this.error = e instanceof Error ? e.message : "Failed to load diagrams";
+			this.error = e instanceof Error ? e.message : 'Failed to load diagrams';
 		} finally {
 			this.loading = false;
 		}
@@ -44,7 +44,7 @@ class DiagramStore {
 			];
 			return diagram;
 		} catch (e) {
-			this.error = e instanceof Error ? e.message : "Failed to create diagram";
+			this.error = e instanceof Error ? e.message : 'Failed to create diagram';
 			return null;
 		}
 	}
@@ -56,7 +56,7 @@ class DiagramStore {
 			this.diagrams = this.diagrams.filter((d) => d.id !== id);
 			return true;
 		} catch (e) {
-			this.error = e instanceof Error ? e.message : "Failed to delete diagram";
+			this.error = e instanceof Error ? e.message : 'Failed to delete diagram';
 			return false;
 		}
 	}

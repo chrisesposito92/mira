@@ -55,12 +55,27 @@ class TestCreateDiagram:
         pid = str(uuid4())
         row = _diagram_row(project_id=pid)
         mock_supabase._table_data["diagrams"] = [row]
+        # Project must exist and belong to user for ownership check
+        mock_supabase._table_data["projects"] = [
+            {"id": pid, "user_id": str(MOCK_USER_ID)}
+        ]
         resp = authed_client.post(
             "/api/diagrams",
             json={"customer_name": "Acme", "project_id": pid},
         )
         assert resp.status_code == 201
         assert resp.json()["project_id"] == pid
+
+    def test_create_with_foreign_project_id(self, authed_client, mock_supabase):
+        """Creating a diagram with another user's project_id should fail."""
+        pid = str(uuid4())
+        mock_supabase._table_data["diagrams"] = [_diagram_row()]
+        mock_supabase._table_data["projects"] = []  # Project not found for this user
+        resp = authed_client.post(
+            "/api/diagrams",
+            json={"customer_name": "Acme", "project_id": pid},
+        )
+        assert resp.status_code == 404
 
     def test_schema_version(self, authed_client, mock_supabase):
         row = _diagram_row()

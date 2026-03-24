@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		DiagramCard,
-		CreateDiagramDialog,
-		DeleteDiagramDialog,
-	} from '$lib/components/diagram';
+	import { DiagramCard, CreateDiagramDialog, DeleteDiagramDialog } from '$lib/components/diagram';
 	import { EmptyState } from '$lib/components/project';
 	import { diagramStore } from '$lib/stores';
 	import { createApiClient, createDiagramService } from '$lib/services';

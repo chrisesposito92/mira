@@ -109,14 +109,27 @@ async def main():
 
     supabase = get_supabase_client()
 
-    # Fetch all rows where logo_base64 is null (idempotent -- re-runs skip populated rows)
-    result = (
-        supabase.table("component_library")
-        .select("id, slug, name, domain, logo_base64")
-        .is_("logo_base64", "null")
-        .order("display_order")
-        .execute()
-    )
+    # Fetch rows needing logos:
+    # - logo_base64 IS NULL (never processed)
+    # - logo_base64 starts with 'monogram:' AND token is available (upgrade monograms to real logos)
+    if token:
+        # With token: fetch rows that are NULL or have monogram placeholders
+        result = (
+            supabase.table("component_library")
+            .select("id, slug, name, domain, logo_base64")
+            .or_("logo_base64.is.null,logo_base64.like.monogram:*")
+            .order("display_order")
+            .execute()
+        )
+    else:
+        # Without token: only process NULL rows (generate monograms)
+        result = (
+            supabase.table("component_library")
+            .select("id, slug, name, domain, logo_base64")
+            .is_("logo_base64", "null")
+            .order("display_order")
+            .execute()
+        )
     rows = result.data
 
     if not rows:

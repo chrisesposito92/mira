@@ -55,7 +55,7 @@ Existing infrastructure covers all phase requirements. pytest and vitest are alr
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
 | Sidebar "Diagrams" nav link visible | NAV-01 | Visual layout verification | Open app, verify "Diagrams" appears in sidebar with Network icon |
-| Logo proxy returns image from same origin | COMP-06 | Requires Logo.dev API key | Call `GET /api/component-library/logo-proxy?domain=stripe.com`, verify base64 response |
+| Logo proxy returns image from same origin | COMP-06 | Requires Logo.dev API key | Call `GET /api/logos/proxy?domain=stripe.com`, verify base64 response |
 
 ---
 

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS component_library (
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Seed data: ~28 systems across 10 categories
+-- Seed data: 29 systems across 10 categories
 -- Uses ON CONFLICT (slug) DO NOTHING for idempotent re-runs
 INSERT INTO component_library (slug, name, domain, category, is_native_connector, display_order) VALUES
 -- CRM

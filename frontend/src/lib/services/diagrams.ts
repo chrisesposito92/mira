@@ -1,11 +1,11 @@
-import type { ApiClient } from "./api.js";
+import type { ApiClient } from './api.js';
 import type {
 	Diagram,
 	DiagramListItem,
 	DiagramCreate,
 	DiagramUpdate,
 	ComponentLibraryItem,
-} from "$lib/types";
+} from '$lib/types';
 
 export interface DiagramService {
 	list(): Promise<DiagramListItem[]>;
@@ -18,12 +18,11 @@ export interface DiagramService {
 
 export function createDiagramService(client: ApiClient): DiagramService {
 	return {
-		list: () => client.get<DiagramListItem[]>("/api/diagrams"),
+		list: () => client.get<DiagramListItem[]>('/api/diagrams'),
 		get: (id) => client.get<Diagram>(`/api/diagrams/${id}`),
-		create: (data) => client.post<Diagram>("/api/diagrams", data),
+		create: (data) => client.post<Diagram>('/api/diagrams', data),
 		update: (id, data) => client.patch<Diagram>(`/api/diagrams/${id}`, data),
 		delete: (id) => client.delete(`/api/diagrams/${id}`),
-		listComponents: () =>
-			client.get<ComponentLibraryItem[]>("/api/component-library"),
+		listComponents: () => client.get<ComponentLibraryItem[]>('/api/component-library'),
 	};
 }

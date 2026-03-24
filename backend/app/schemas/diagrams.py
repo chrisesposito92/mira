@@ -1,6 +1,7 @@
 """Schemas for diagram endpoints."""
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,8 +26,8 @@ class DiagramConnection(BaseModel):
     source_id: str
     target_id: str
     label: str = ""
-    direction: str = "unidirectional"  # unidirectional | bidirectional
-    connection_type: str = "api"  # native_connector | webhook_api | custom_build
+    direction: Literal["unidirectional", "bidirectional"] = "unidirectional"
+    connection_type: Literal["native_connector", "webhook_api", "custom_build", "api"] = "api"
 
 
 class DiagramSettings(BaseModel):
@@ -49,7 +50,6 @@ class DiagramCreate(BaseModel):
     title: str = ""
     project_id: UUID | None = None
     content: DiagramContent = Field(default_factory=DiagramContent)
-    schema_version: int = 1
 
 
 class DiagramUpdate(BaseModel):
@@ -63,7 +63,6 @@ class DiagramUpdate(BaseModel):
     title: str | None = None
     project_id: UUID | None = None
     content: DiagramContent | None = None
-    schema_version: int | None = None
     thumbnail_base64: str | None = None
 
 

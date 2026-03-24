@@ -15,8 +15,8 @@ export interface DiagramConnection {
 	source_id: string;
 	target_id: string;
 	label: string;
-	direction: "unidirectional" | "bidirectional";
-	connection_type: "native_connector" | "webhook_api" | "custom_build" | "api";
+	direction: 'unidirectional' | 'bidirectional';
+	connection_type: 'native_connector' | 'webhook_api' | 'custom_build' | 'api';
 }
 
 export interface DiagramSettings {

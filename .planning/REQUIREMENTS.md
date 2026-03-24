@@ -117,7 +117,7 @@
 | PERS-05 | Phase 3 | Pending |
 | PERS-06 | v2 | Deferred |
 | PERS-07 | Phase 1 | Complete |
-| NAV-01 | Phase 1 | Pending |
+| NAV-01 | Phase 1 | Complete |
 | NAV-02 | Phase 1 | Complete |
 | NAV-03 | Phase 1 | Complete |
 | NAV-04 | Phase 1 | Complete |

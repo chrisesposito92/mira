@@ -14,14 +14,31 @@ LIST_SELECT_FIELDS = (
 )
 
 
+def _verify_project_ownership(supabase: Client, user_id: UUID, project_id: UUID) -> None:
+    """Verify project exists and belongs to the user before linking."""
+    result = (
+        supabase.table("projects")
+        .select("id")
+        .eq("id", str(project_id))
+        .eq("user_id", str(user_id))
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+
 def create_diagram(supabase: Client, user_id: UUID, data: DiagramCreate) -> dict:
     row = {
         "user_id": str(user_id),
         **data.model_dump(exclude_unset=True, mode="json"),
     }
+    row["schema_version"] = 1
     # Convert UUID fields to strings for Supabase
     if "project_id" in row and row["project_id"] is not None:
         row["project_id"] = str(row["project_id"])
+    # Verify project ownership if linking to a project
+    if data.project_id is not None:
+        _verify_project_ownership(supabase, user_id, data.project_id)
     # Ensure content is a plain dict (not Pydantic model) for JSONB
     if "content" in row and hasattr(row["content"], "model_dump"):
         row["content"] = row["content"].model_dump(mode="json")
@@ -69,6 +86,9 @@ def update_diagram(supabase: Client, user_id: UUID, diagram_id: UUID, data: Diag
     # Convert UUID fields to strings for Supabase
     if "project_id" in updates and updates["project_id"] is not None:
         updates["project_id"] = str(updates["project_id"])
+    # Verify project ownership if linking to a (new) project
+    if "project_id" in updates and updates["project_id"] is not None:
+        _verify_project_ownership(supabase, user_id, UUID(updates["project_id"]))
     # Ensure content is a plain dict for JSONB
     if "content" in updates and hasattr(updates["content"], "model_dump"):
         updates["content"] = updates["content"].model_dump(mode="json")
