@@ -56,9 +56,7 @@ class TestCreateDiagram:
         row = _diagram_row(project_id=pid)
         mock_supabase._table_data["diagrams"] = [row]
         # Project must exist and belong to user for ownership check
-        mock_supabase._table_data["projects"] = [
-            {"id": pid, "user_id": str(MOCK_USER_ID)}
-        ]
+        mock_supabase._table_data["projects"] = [{"id": pid, "user_id": str(MOCK_USER_ID)}]
         resp = authed_client.post(
             "/api/diagrams",
             json={"customer_name": "Acme", "project_id": pid},
