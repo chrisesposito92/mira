@@ -49,16 +49,16 @@ Exceptions: none
 
 ## Typography
 
-All values inherited from existing MIRA conventions. No new type roles introduced.
+All values inherited from existing MIRA conventions. Two font weights enforced across Phase 1: **400 (normal)** for body and label text, **600 (semibold)** for headings and subheadings.
 
 | Role | Size | Weight | Line Height | Phase 1 Usage |
 |------|------|--------|-------------|---------------|
 | Body | 14px (text-sm) | 400 (font-normal) | 1.5 (leading-normal) | Card descriptions, metadata text, dialog descriptions |
-| Label | 14px (text-sm) | 500 (font-medium) | 1.5 (leading-normal) | Form labels, button text |
-| Heading | 24px (text-2xl) | 700 (font-bold) | 1.2 (tracking-tight) | Page title "Diagrams" |
+| Label | 14px (text-sm) | 400 (font-normal) | 1.5 (leading-normal) | Form labels, button text |
+| Heading | 24px (text-2xl) | 600 (font-semibold) | 1.2 (tracking-tight) | Page title "Diagrams" |
 | Subheading | 18px (text-lg) | 600 (font-semibold) | 1.4 | EmptyState heading, Card title |
 
-Source: Measured from existing `dashboard/+page.svelte` (`text-2xl font-bold tracking-tight`), `EmptyState.svelte` (`text-lg font-semibold`), `ProjectCard.svelte` (Card.Title default).
+Source: Adapted from existing `dashboard/+page.svelte` and `EmptyState.svelte` patterns, constrained to 2-weight system (400/600).
 
 ---
 
@@ -131,6 +131,8 @@ Phase 1 uses only existing shadcn-svelte components already installed in MIRA. N
 
 ## Layout Contract
 
+**Focal point:** "New Diagram" primary CTA button (accent color, top-right of page header).
+
 ### Diagrams List Page (`/diagrams/+page.svelte`)
 
 ```
@@ -154,7 +156,7 @@ Phase 1 uses only existing shadcn-svelte components already installed in MIRA. N
 **Structure (matches Dashboard page exactly):**
 - Outer wrapper: `div.space-y-6`
 - Header row: `div.flex.items-center.justify-between`
-  - Left: `h1.text-2xl.font-bold.tracking-tight` + `p.text-muted-foreground.mt-1`
+  - Left: `h1.text-2xl.font-semibold.tracking-tight` + `p.text-muted-foreground.mt-1`
   - Right: Button with Plus icon + "New Diagram" label
 - Grid: `div.grid.gap-4.sm:grid-cols-2.lg:grid-cols-3`
 - Empty state fallback: EmptyState component (when list is empty)
@@ -244,7 +246,7 @@ Uses existing `EmptyState` component with props:
 |  cannot be undone.                        |
 |                                           |
 +-------------------------------------------+
-|              [Cancel] [Delete]            |
+|          [Cancel] [Delete Diagram]        |
 +-------------------------------------------+
 ```
 
@@ -252,7 +254,7 @@ Uses existing `EmptyState` component with props:
 - AlertDialog.Root with `bind:open`
 - AlertDialog.Content
 - AlertDialog.Header: AlertDialog.Title "Delete diagram?" + AlertDialog.Description with diagram name interpolated
-- AlertDialog.Footer: AlertDialog.Cancel "Cancel" + AlertDialog.Action (destructive variant) "Delete"
+- AlertDialog.Footer: AlertDialog.Cancel "Cancel" + AlertDialog.Action (destructive variant) "Delete Diagram"
 
 ---
 
@@ -320,7 +322,7 @@ Uses existing `EmptyState` component with props:
 | Cancel button | "Cancel" | Standard |
 | Delete dialog title | "Delete diagram?" | Standard destructive confirmation |
 | Delete dialog body | "This will permanently delete the diagram \"{name}\". This action cannot be undone." | Standard destructive warning with entity name interpolated |
-| Delete confirm button | "Delete" | Destructive variant |
+| Delete confirm button | "Delete Diagram" | Destructive variant, verb + noun pattern |
 | Success toast (create) | "Diagram created" | Matches "Project created" toast |
 | Success toast (delete) | "Diagram deleted" | Standard |
 | Error toast (create) | "Failed to create diagram" | Matches error pattern |
