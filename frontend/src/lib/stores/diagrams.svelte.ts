@@ -1,10 +1,22 @@
-import type { DiagramListItem, DiagramCreate } from '$lib/types';
+import type {
+	Diagram,
+	DiagramListItem,
+	DiagramCreate,
+	DiagramContent,
+	DiagramSystem,
+	ComponentLibraryItem,
+} from '$lib/types';
 import type { DiagramService } from '$lib/services/diagrams.js';
 
 class DiagramStore {
 	diagrams = $state<DiagramListItem[]>([]);
 	loading = $state(false);
 	error = $state<string | null>(null);
+
+	// Editor state
+	currentDiagram = $state<Diagram | null>(null);
+	componentLibrary = $state<ComponentLibraryItem[]>([]);
+	saving = $state(false);
 
 	sortedDiagrams = $derived(
 		[...this.diagrams].sort(
@@ -61,10 +73,62 @@ class DiagramStore {
 		}
 	}
 
+	async loadDiagram(service: DiagramService, id: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			this.currentDiagram = await service.get(id);
+		} catch (e) {
+			this.error = e instanceof Error ? e.message : 'Failed to load diagram';
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async loadComponentLibrary(service: DiagramService) {
+		try {
+			this.componentLibrary = await service.listComponents();
+		} catch (e) {
+			this.error = e instanceof Error ? e.message : 'Failed to load component library';
+		}
+	}
+
+	async updateContent(service: DiagramService, content: DiagramContent) {
+		if (!this.currentDiagram) return;
+		this.saving = true;
+		this.error = null;
+		try {
+			const updated = await service.update(this.currentDiagram.id, { content });
+			this.currentDiagram = updated;
+		} catch (e) {
+			this.error = e instanceof Error ? e.message : 'Failed to save diagram';
+		} finally {
+			this.saving = false;
+		}
+	}
+
+	addSystem(system: DiagramSystem) {
+		if (!this.currentDiagram) return;
+		this.currentDiagram = {
+			...this.currentDiagram,
+			content: {
+				...this.currentDiagram.content,
+				systems: [...this.currentDiagram.content.systems, system],
+			},
+		};
+	}
+
+	clearEditor() {
+		this.currentDiagram = null;
+		this.componentLibrary = [];
+		this.saving = false;
+	}
+
 	clear() {
 		this.diagrams = [];
 		this.loading = false;
 		this.error = null;
+		this.clearEditor();
 	}
 }
 
