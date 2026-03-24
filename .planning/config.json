@@ -1,8 +1,7 @@
 {
   "model_profile": "balanced",
   "commit_docs": true,
-  "parallelization": true,
-  "search_gitignored": false,
+  "search_gitignored": true,
   "brave_search": false,
   "firecrawl": true,
   "exa_search": false,
@@ -11,6 +10,14 @@
     "phase_branch_template": "gsd/phase-{phase}-{slug}",
     "milestone_branch_template": "gsd/{milestone}-{slug}",
     "quick_branch_template": null
+  },
+  "parallelization": {
+    "enabled": true,
+    "plan_level": true,
+    "task_level": false,
+    "skip_checkpoints": true,
+    "max_concurrent_agents": 3,
+    "min_plans_for_parallel": 2
   },
   "workflow": {
     "research": true,
@@ -29,6 +36,16 @@
   },
   "hooks": {
     "context_warnings": true
+  },
+  "gates": {
+    "confirm_project": true,
+    "confirm_phases": true,
+    "confirm_roadmap": true,
+    "confirm_breakdown": true,
+    "confirm_plan": true,
+    "execute_next_plan": true,
+    "issues_review": true,
+    "confirm_transition": true
   },
   "mode": "interactive",
   "granularity": "standard",
