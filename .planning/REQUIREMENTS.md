@@ -45,7 +45,6 @@
 - [ ] **PERS-03**: User can load and continue editing a saved diagram
 - [ ] **PERS-04**: Auto-save with debounced 500ms idle trigger
 - [ ] **PERS-05**: Thumbnail preview generated and displayed in diagram list view
-- [ ] **PERS-06**: User can save multiple versions of a diagram with a changelog of what changed
 - [ ] **PERS-07**: Diagram data model includes schema_version field for future migration safety
 
 ### Navigation & Organization
@@ -74,6 +73,7 @@
 - **EDIT-02**: Annotations and callout boxes with notes
 - **EDIT-03**: Complexity scoring sidebar (count custom integrations, flag pain points)
 - **EDIT-04**: Duplicate an existing diagram as a starting point
+- **PERS-06**: User can save multiple versions of a diagram with a changelog of what changed (deferred — conflicts with PROJECT.md Out of Scope; versioning/changelog explicitly listed as out of scope for v1)
 
 ## Out of Scope
 
@@ -83,49 +83,50 @@
 | Mobile-responsive canvas | SEs work on desktop; diagram canvas is inherently desktop-sized |
 | Server-side rendering (CairoSVG) | Client-side html-to-image is sufficient for v1 |
 | Integration with external tools (Figma, Slides) | Export to image covers the workflow; direct integrations add complexity |
+| Versioning and changelog (PERS-06) | PROJECT.md explicitly defers to v2; moved to v2 requirements |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | — | Pending |
-| COMP-02 | — | Pending |
-| COMP-03 | — | Pending |
-| COMP-04 | — | Pending |
-| COMP-05 | — | Pending |
-| COMP-06 | — | Pending |
-| CONN-01 | — | Pending |
-| CONN-02 | — | Pending |
-| CONN-03 | — | Pending |
-| CONN-04 | — | Pending |
-| CONN-05 | — | Pending |
-| CONN-06 | — | Pending |
-| REND-01 | — | Pending |
-| REND-02 | — | Pending |
-| REND-03 | — | Pending |
-| REND-04 | — | Pending |
-| REND-05 | — | Pending |
-| EXPO-01 | — | Pending |
-| EXPO-02 | — | Pending |
-| EXPO-03 | — | Pending |
-| EXPO-04 | — | Pending |
-| PERS-01 | — | Pending |
-| PERS-02 | — | Pending |
-| PERS-03 | — | Pending |
-| PERS-04 | — | Pending |
-| PERS-05 | — | Pending |
-| PERS-06 | — | Pending |
-| PERS-07 | — | Pending |
-| NAV-01 | — | Pending |
-| NAV-02 | — | Pending |
-| NAV-03 | — | Pending |
-| NAV-04 | — | Pending |
+| COMP-01 | Phase 1 | Pending |
+| COMP-02 | Phase 2 | Pending |
+| COMP-03 | Phase 1 | Pending |
+| COMP-04 | Phase 2 | Pending |
+| COMP-05 | Phase 2 | Pending |
+| COMP-06 | Phase 1 | Pending |
+| CONN-01 | Phase 3 | Pending |
+| CONN-02 | Phase 3 | Pending |
+| CONN-03 | Phase 3 | Pending |
+| CONN-04 | Phase 2 | Pending |
+| CONN-05 | Phase 3 | Pending |
+| CONN-06 | Phase 3 | Pending |
+| REND-01 | Phase 2 | Pending |
+| REND-02 | Phase 2 | Pending |
+| REND-03 | Phase 2 | Pending |
+| REND-04 | Phase 2 | Pending |
+| REND-05 | Phase 2 | Pending |
+| EXPO-01 | Phase 4 | Pending |
+| EXPO-02 | Phase 4 | Pending |
+| EXPO-03 | Phase 4 | Pending |
+| EXPO-04 | Phase 4 | Pending |
+| PERS-01 | Phase 1 | Pending |
+| PERS-02 | Phase 3 | Pending |
+| PERS-03 | Phase 3 | Pending |
+| PERS-04 | Phase 3 | Pending |
+| PERS-05 | Phase 3 | Pending |
+| PERS-06 | v2 | Deferred |
+| PERS-07 | Phase 1 | Pending |
+| NAV-01 | Phase 1 | Pending |
+| NAV-02 | Phase 1 | Pending |
+| NAV-03 | Phase 1 | Pending |
+| NAV-04 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 32 total
-- Mapped to phases: 0
-- Unmapped: 32
+- v1 requirements: 31 active (PERS-06 deferred to v2 — conflicts with PROJECT.md Out of Scope)
+- Mapped to phases: 31
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-23*
-*Last updated: 2026-03-23 after initial definition*
+*Last updated: 2026-03-23 after roadmap creation — traceability complete, PERS-06 moved to v2*
