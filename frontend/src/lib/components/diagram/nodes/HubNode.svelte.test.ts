@@ -33,9 +33,10 @@ describe("HubNode", () => {
 	it("has a rect with green accent border stroke #00C853", () => {
 		const { container } = render(HubNode, { props: { x: 600, y: 400 } });
 		const rects = container.querySelectorAll("rect");
+		// jsdom normalizes hex #00C853 to rgb(0, 200, 83) in inline styles
 		const hubRect = Array.from(rects).find((r) => {
 			const style = r.getAttribute("style") || "";
-			return style.includes("#00C853");
+			return style.includes("#00C853") || style.includes("rgb(0, 200, 83)");
 		});
 		expect(hubRect).toBeTruthy();
 	});

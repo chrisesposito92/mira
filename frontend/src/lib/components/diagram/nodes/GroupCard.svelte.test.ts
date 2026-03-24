@@ -66,9 +66,10 @@ describe("GroupCard", () => {
 			props: { group: baseGroup },
 		});
 		const rects = container.querySelectorAll("rect");
+		// jsdom normalizes hex #FFFFFF to rgb(255, 255, 255) in inline styles
 		const bgRect = Array.from(rects).find((r) => {
 			const style = r.getAttribute("style") || "";
-			return style.includes("#FFFFFF");
+			return style.includes("#FFFFFF") || style.includes("rgb(255, 255, 255)");
 		});
 		expect(bgRect).toBeTruthy();
 	});

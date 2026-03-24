@@ -26,7 +26,8 @@ describe("ProspectNode", () => {
 			props: { system: baseSystem },
 		});
 		const allText = container.textContent || "";
-		expect(allText).toContain("Your Product/Platfo");
+		// "Your Product/Platform" (21 chars) truncated at 16 = "Your Product/Pla..."
+		expect(allText).toContain("Your Product/Pla...");
 	});
 
 	it("has a rect with prospect border stroke #94A3B8", () => {
@@ -34,9 +35,10 @@ describe("ProspectNode", () => {
 			props: { system: baseSystem },
 		});
 		const rects = container.querySelectorAll("rect");
+		// jsdom normalizes hex #94A3B8 to rgb(148, 163, 184) in inline styles
 		const prospectRect = Array.from(rects).find((r) => {
 			const style = r.getAttribute("style") || "";
-			return style.includes("#94A3B8");
+			return style.includes("#94A3B8") || style.includes("rgb(148, 163, 184)");
 		});
 		expect(prospectRect).toBeTruthy();
 	});
