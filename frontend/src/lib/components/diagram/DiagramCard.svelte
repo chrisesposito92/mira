@@ -23,6 +23,7 @@
 	);
 </script>
 
+<a href="/diagrams/{diagram.id}" class="block" data-sveltekit-preload-data="hover">
 <Card.Root class="hover:border-primary/50 h-full transition-colors">
 	<Card.Header>
 		<Card.Title class="line-clamp-1">{displayName}</Card.Title>
@@ -64,3 +65,4 @@
 		</div>
 	</Card.Footer>
 </Card.Root>
+</a>
