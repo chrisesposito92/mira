@@ -48,8 +48,14 @@ Plans:
   3. Grouped system categories render as containing cards with sub-items and logos visible
   4. Connection type colors (Native Connector green, Webhook/API blue, Custom Build orange) are applied via inline hex styles — not dynamic Tailwind classes
   5. A custom system node can be created with a name and logo resolved through the backend proxy with a monogram fallback
-**Plans**: TBD
-**UI hint**: yes
+**Plans:** 5 plans
+
+Plans:
+- [x] 02-01-PLAN.md — SVG constants, layout types, hub-and-spoke layout algorithm (TDD)
+- [x] 02-02-PLAN.md — DiagramStore extension (currentDiagram, componentLibrary, updateContent)
+- [x] 02-03-PLAN.md — SVG node components (SvgDefs, HubNode, ProspectNode, SystemCard, GroupCard, MonogramSvg)
+- [x] 02-04-PLAN.md — Connection components (ConnectionLine, ConnectionPill)
+- [x] 02-05-PLAN.md — DiagramRenderer, editor route, AddCustomSystemDialog, visual verification
 
 ### Phase 3: Configurator UI
 **Goal**: An SE can assemble a complete diagram through form-driven panels, see live preview, and have it persist automatically
@@ -84,6 +90,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Foundation | 5/5 | Completed | 2026-03-24 |
-| 2. Rendering Engine | 0/? | Not started | - |
+| 2. Rendering Engine | 0/5 | Planned | - |
 | 3. Configurator UI | 0/? | Not started | - |
 | 4. Export Pipeline | 0/? | Not started | - |

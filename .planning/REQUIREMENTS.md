@@ -10,8 +10,8 @@
 - [x] **COMP-01**: Pre-populated system nodes for all m3ter native connectors with company logos
 - [ ] **COMP-02**: User can create custom system nodes with a name and optional logo (fetched via Logo.dev)
 - [x] **COMP-03**: Systems organized into grouped categories (Front Office Stack, Finance Stack, Analytics Stack, etc.)
-- [ ] **COMP-04**: Customizable "Your Product/Platform" prospect node with editable name
-- [ ] **COMP-05**: m3ter hub node always present and centered, displaying internal capability labels (Usage, Pricing, Rating, Credits, Alerts, Limits)
+- [x] **COMP-04**: Customizable "Your Product/Platform" prospect node with editable name
+- [x] **COMP-05**: m3ter hub node always present and centered, displaying internal capability labels (Usage, Pricing, Rating, Credits, Alerts, Limits)
 - [x] **COMP-06**: Backend logo proxy endpoint to convert external logos to base64 (avoids CORS/canvas taint on export)
 
 ### Connections & Data Flows
@@ -19,17 +19,17 @@
 - [ ] **CONN-01**: User can define connections between any two system nodes
 - [ ] **CONN-02**: Each connection has a direction (unidirectional or bidirectional)
 - [ ] **CONN-03**: Each connection has a text label describing the data flow (e.g., "Usage Events via REST API")
-- [ ] **CONN-04**: Connections are color-coded by integration type: Native Connector (green), Webhook/API (blue), Custom Build (orange)
+- [x] **CONN-04**: Connections are color-coded by integration type: Native Connector (green), Webhook/API (blue), Custom Build (orange)
 - [ ] **CONN-05**: When connecting two nodes, the tool suggests common data flows based on system types
 - [ ] **CONN-06**: When connecting m3ter to a known native connector system, the tool auto-tags it as "Native Connector"
 
 ### Rendering & Visual Output
 
-- [ ] **REND-01**: Live preview updates in real-time as the user configures the diagram
-- [ ] **REND-02**: Diagram renders in m3ter branded style: navy background, white rounded card containers, company logos, green m3ter accent border, colored data flow pill labels, dashed connection lines with dot endpoints
-- [ ] **REND-03**: Pure SVG rendering with inline styles (no foreignObject, no dynamic Tailwind classes)
-- [ ] **REND-04**: Hub-and-spoke auto-layout algorithm with m3ter centered
-- [ ] **REND-05**: Grouped system categories render as containing cards with sub-items and multiple logos
+- [x] **REND-01**: Live preview updates in real-time as the user configures the diagram
+- [x] **REND-02**: Diagram renders in m3ter branded style: navy background, white rounded card containers, company logos, green m3ter accent border, colored data flow pill labels, dashed connection lines with dot endpoints
+- [x] **REND-03**: Pure SVG rendering with inline styles (no foreignObject, no dynamic Tailwind classes)
+- [x] **REND-04**: Hub-and-spoke auto-layout algorithm with m3ter centered
+- [x] **REND-05**: Grouped system categories render as containing cards with sub-items and multiple logos
 
 ### Export
 
@@ -92,20 +92,20 @@
 | COMP-01 | Phase 1 | Complete |
 | COMP-02 | Phase 2 | Pending |
 | COMP-03 | Phase 1 | Complete |
-| COMP-04 | Phase 2 | Pending |
-| COMP-05 | Phase 2 | Pending |
+| COMP-04 | Phase 2 | Complete |
+| COMP-05 | Phase 2 | Complete |
 | COMP-06 | Phase 1 | Complete |
 | CONN-01 | Phase 3 | Pending |
 | CONN-02 | Phase 3 | Pending |
 | CONN-03 | Phase 3 | Pending |
-| CONN-04 | Phase 2 | Pending |
+| CONN-04 | Phase 2 | Complete |
 | CONN-05 | Phase 3 | Pending |
 | CONN-06 | Phase 3 | Pending |
-| REND-01 | Phase 2 | Pending |
-| REND-02 | Phase 2 | Pending |
-| REND-03 | Phase 2 | Pending |
-| REND-04 | Phase 2 | Pending |
-| REND-05 | Phase 2 | Pending |
+| REND-01 | Phase 2 | Complete |
+| REND-02 | Phase 2 | Complete |
+| REND-03 | Phase 2 | Complete |
+| REND-04 | Phase 2 | Complete |
+| REND-05 | Phase 2 | Complete |
 | EXPO-01 | Phase 4 | Pending |
 | EXPO-02 | Phase 4 | Pending |
 | EXPO-03 | Phase 4 | Pending |
