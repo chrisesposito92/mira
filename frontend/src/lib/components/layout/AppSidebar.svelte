@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar';
-	import { LayoutDashboard, FolderKanban, Building2 } from 'lucide-svelte';
+	import { LayoutDashboard, FolderKanban, Network, Building2 } from 'lucide-svelte';
 	import { authStore } from '$lib/stores';
 
 	const navItems = [
 		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
 		{ title: 'Projects', url: '/projects', icon: FolderKanban },
+		{ title: 'Diagrams', url: '/diagrams', icon: Network },
 		{ title: 'Org Connections', url: '/orgs', icon: Building2 },
 	];
 
