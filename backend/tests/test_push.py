@@ -412,6 +412,61 @@ class TestPayloadMapper:
         assert result["quantityPerUnit"] == 1.0
         assert result["unit"] == "requests"
         assert result["segmentedFields"] == ["region"]
+        # Wildcard segments auto-generated when segmentedFields present
+        assert result["segments"] == [{"region": "*"}]
+
+    def test_aggregation_wildcard_segments_auto_generated(self):
+        from app.m3ter.mapper import map_entity_to_m3ter_payload
+        from app.schemas.common import EntityType
+
+        data = {
+            "name": "Token Usage by Model",
+            "code": "token_usage_by_model",
+            "meterId": "meter-uuid",
+            "aggregation": "SUM",
+            "targetField": "tokens",
+            "quantityPerUnit": 1.0,
+            "unit": "tokens",
+            "segmentedFields": ["model", "tier"],
+        }
+        result = map_entity_to_m3ter_payload(EntityType.aggregation, data)
+        assert result["segments"] == [{"model": "*"}, {"tier": "*"}]
+
+    def test_aggregation_explicit_segments_preserved(self):
+        from app.m3ter.mapper import map_entity_to_m3ter_payload
+        from app.schemas.common import EntityType
+
+        data = {
+            "name": "Usage by Region",
+            "code": "usage_by_region",
+            "meterId": "meter-uuid",
+            "aggregation": "SUM",
+            "targetField": "requests",
+            "quantityPerUnit": 1.0,
+            "unit": "requests",
+            "segmentedFields": ["region"],
+            "segments": [{"region": "us-east"}, {"region": "eu-west"}],
+        }
+        result = map_entity_to_m3ter_payload(EntityType.aggregation, data)
+        # Explicit segments should be preserved, not overwritten with wildcards
+        assert result["segments"] == [{"region": "us-east"}, {"region": "eu-west"}]
+
+    def test_aggregation_no_segments_without_segmented_fields(self):
+        from app.m3ter.mapper import map_entity_to_m3ter_payload
+        from app.schemas.common import EntityType
+
+        data = {
+            "name": "Total Requests",
+            "code": "total_requests",
+            "meterId": "meter-uuid",
+            "aggregation": "SUM",
+            "targetField": "requests",
+            "quantityPerUnit": 1.0,
+            "unit": "requests",
+        }
+        result = map_entity_to_m3ter_payload(EntityType.aggregation, data)
+        # No segmentedFields means no segments should be added
+        assert "segments" not in result
 
     def test_pricing_maps_correctly(self):
         from app.m3ter.mapper import map_entity_to_m3ter_payload

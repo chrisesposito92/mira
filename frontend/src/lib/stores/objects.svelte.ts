@@ -208,11 +208,19 @@ class ObjectsStore {
 		try {
 			const result = await service.pushObject(objectId);
 			if (result.success) {
-				this.objects = this.objects.map((o) =>
-					o.id === objectId
-						? { ...o, status: 'pushed' as const, m3ter_id: result.m3ter_id ?? null }
-						: o,
-				);
+				// Re-fetch from server to get authoritative DB state
+				// (prevents stale data from concurrent effects overwriting the status)
+				try {
+					const refreshed = await service.getObject(objectId);
+					this.objects = this.objects.map((o) => (o.id === objectId ? refreshed : o));
+				} catch {
+					// Fallback to local update if re-fetch fails
+					this.objects = this.objects.map((o) =>
+						o.id === objectId
+							? { ...o, status: 'pushed' as const, m3ter_id: result.m3ter_id ?? null }
+							: o,
+					);
+				}
 				return { ok: true, m3terId: result.m3ter_id ?? '' };
 			} else {
 				this.objects = this.objects.map((o) =>

@@ -139,4 +139,19 @@ def validate(data: dict) -> list[ValidationError]:
                         )
                     )
 
+    # segments: if segmentedFields present, warn if segments missing (auto-generated at push)
+    if segmented and isinstance(segmented, list) and len(segmented) > 0:
+        segments = data.get("segments")
+        if not segments:
+            errors.append(
+                ValidationError(
+                    field="segments",
+                    message=(
+                        "segmentedFields defined without explicit segments; "
+                        "wildcard segments will be used at push time"
+                    ),
+                    severity="warning",
+                )
+            )
+
     return errors

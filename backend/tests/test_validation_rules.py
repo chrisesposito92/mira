@@ -176,6 +176,14 @@ class TestAggregationValidation:
         data = self._valid_aggregation()
         data["segmentedFields"] = ["region", "tier"]
         errors = validate_entity(EntityType.aggregation, data)
+        # Only warnings expected (missing segments), no actual errors
+        assert all(e.severity == "warning" for e in errors)
+
+    def test_segmented_fields_with_segments_no_warnings(self):
+        data = self._valid_aggregation()
+        data["segmentedFields"] = ["region", "tier"]
+        data["segments"] = [{"region": "*", "tier": "*"}]
+        errors = validate_entity(EntityType.aggregation, data)
         assert len(errors) == 0
 
     def test_missing_name_fails(self):
