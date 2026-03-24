@@ -68,8 +68,9 @@ describe('layoutDiagram', () => {
 
 		expect(result.hub.x).toBe(HUB_CENTER_X);
 		expect(result.hub.y).toBe(HUB_CENTER_Y);
-		expect(result.prospect.x).toBe(HUB_CENTER_X);
-		expect(result.prospect.y).toBe(PROSPECT_Y);
+		// prospect x/y are top-left corner, centered on HUB_CENTER_X
+		expect(result.prospect.x).toBe(HUB_CENTER_X - SYSTEM_CARD_WIDTH / 2);
+		expect(result.prospect.y).toBe(PROSPECT_Y - SYSTEM_CARD_HEIGHT / 2);
 	});
 
 	it('Test 2: single system in CRM category placed in first zone, not overlapping hub or prospect', () => {
@@ -234,8 +235,8 @@ describe('layoutDiagram', () => {
 		const result = layoutDiagram(makeContent(systems), lib);
 
 		expect(result.prospect.system.id).toBe('p1');
-		expect(result.prospect.y).toBe(PROSPECT_Y);
-		expect(result.prospect.x).toBe(HUB_CENTER_X);
+		expect(result.prospect.y).toBe(PROSPECT_Y - SYSTEM_CARD_HEIGHT / 2);
+		expect(result.prospect.x).toBe(HUB_CENTER_X - SYSTEM_CARD_WIDTH / 2);
 	});
 
 	it('Test 7: prospect fallback -- system with null component_library_id and null category', () => {
@@ -264,7 +265,7 @@ describe('layoutDiagram', () => {
 		const result = layoutDiagram(makeContent(systems), lib);
 
 		expect(result.prospect.system.id).toBe('p1');
-		expect(result.prospect.y).toBe(PROSPECT_Y);
+		expect(result.prospect.y).toBe(PROSPECT_Y - SYSTEM_CARD_HEIGHT / 2);
 	});
 
 	it('Test 8: all positioned nodes have x and y within canvas bounds', () => {

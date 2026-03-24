@@ -141,6 +141,7 @@ const ZONE_ANGLES = [
 ];
 
 const BASE_RADIAL_DISTANCE = 250;
+const RING_OFFSET = 80;
 const BBOX_BUFFER_PER_EXTRA = 15;
 const BBOX_BUFFER_THRESHOLD = 4;
 const SCALE_THRESHOLD = 15;
@@ -315,11 +316,11 @@ export function layoutDiagram(
 		height: hubHeight,
 	};
 
-	// Prospect position (always top-center)
+	// Prospect position (always top-center, x/y = top-left corner)
 	const prospectPositioned: PositionedSystem = {
 		system: prospect,
-		x: HUB_CENTER_X,
-		y: PROSPECT_Y,
+		x: HUB_CENTER_X - scaledCardWidth / 2,
+		y: PROSPECT_Y - scaledCardHeight / 2,
 		width: scaledCardWidth,
 		height: scaledCardHeight,
 	};
@@ -366,13 +367,14 @@ export function layoutDiagram(
 	for (let i = 0; i < zoneItems.length; i++) {
 		const item = zoneItems[i];
 		const zoneAngle = ZONE_ANGLES[i % ZONE_ANGLES.length];
+		const ring = Math.floor(i / ZONE_ANGLES.length);
 
 		if (item.type === 'group' && item.category) {
 			const systemCount = item.systems.length;
 			const dims = computeGroupDimensions(systemCount, scale);
 
-			// BBox buffering: push further from hub for large groups
-			let radialDist = BASE_RADIAL_DISTANCE;
+			// BBox buffering: push further from hub for large groups + ring offset
+			let radialDist = BASE_RADIAL_DISTANCE + ring * RING_OFFSET;
 			if (systemCount > BBOX_BUFFER_THRESHOLD) {
 				radialDist += (systemCount - BBOX_BUFFER_THRESHOLD) * BBOX_BUFFER_PER_EXTRA;
 			}
@@ -433,7 +435,7 @@ export function layoutDiagram(
 		} else {
 			// Standalone system
 			const sys = item.systems[0];
-			const radialDist = BASE_RADIAL_DISTANCE;
+			const radialDist = BASE_RADIAL_DISTANCE + ring * RING_OFFSET;
 			const centerX = HUB_CENTER_X + Math.cos(zoneAngle) * radialDist;
 			const centerY = HUB_CENTER_Y + Math.sin(zoneAngle) * radialDist;
 

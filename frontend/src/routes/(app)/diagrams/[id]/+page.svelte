@@ -25,13 +25,20 @@
 	});
 
 	async function handleAddSystem(system: DiagramSystem) {
+		const previousContent = diagramStore.currentDiagram?.content;
 		diagramStore.addSystem(system);
 		addSystemOpen = false;
 		toast.success(`Added ${system.name}`);
-		// Persist through store's updateContent (not bypassing the store)
 		if (diagramStore.currentDiagram) {
 			await diagramStore.updateContent(service, diagramStore.currentDiagram.content);
 			if (diagramStore.error) {
+				// Rollback optimistic update on persist failure
+				if (previousContent) {
+					diagramStore.currentDiagram = {
+						...diagramStore.currentDiagram,
+						content: previousContent,
+					};
+				}
 				toast.error('Failed to save diagram');
 			}
 		}

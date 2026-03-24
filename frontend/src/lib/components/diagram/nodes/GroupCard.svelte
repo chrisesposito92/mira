@@ -6,9 +6,6 @@
 		CARD_BORDER,
 		CARD_BORDER_RADIUS,
 		GROUP_CARD_PADDING,
-		GROUP_CARD_GAP,
-		LOGO_SIZE,
-		LOGO_GRID_COLS,
 		TEXT_SECONDARY,
 		SVG_FONT_FAMILY,
 		MAX_CATEGORY_NAME_CHARS,
@@ -47,15 +44,8 @@
 		{truncatedCategory}
 	</text>
 
-	<!-- Compact logo grid using GroupItem (NOT SystemCard) -->
-	{#each group.systems as sys, i}
-		<GroupItem
-			system={sys.system}
-			x={group.x + GROUP_CARD_PADDING + (i % LOGO_GRID_COLS) * (LOGO_SIZE + GROUP_CARD_GAP)}
-			y={group.y +
-				GROUP_CARD_PADDING +
-				24 +
-				Math.floor(i / LOGO_GRID_COLS) * (LOGO_SIZE + GROUP_CARD_GAP + 14)}
-		/>
+	<!-- Compact logo grid using GroupItem — uses pre-computed layout coords -->
+	{#each group.systems as sys}
+		<GroupItem system={sys.system} x={sys.x} y={sys.y} />
 	{/each}
 </g>

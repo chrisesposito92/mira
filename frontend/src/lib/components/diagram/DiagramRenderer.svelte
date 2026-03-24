@@ -35,7 +35,13 @@
 	<SvgDefs />
 
 	<!-- Layer 0: Background rect (NOT CSS background -- required for SVG export) -->
-	<rect x="0" y="0" width={CANVAS_WIDTH} height={CANVAS_HEIGHT} style="fill: {CANVAS_BG};" />
+	<rect
+		x="0"
+		y="0"
+		width={CANVAS_WIDTH}
+		height={CANVAS_HEIGHT}
+		style="fill: {content.settings.background_color || CANVAS_BG};"
+	/>
 
 	<!-- Layer 1: Connection lines (bottom -- behind nodes) -->
 	{#each content.connections as conn (conn.id)}
