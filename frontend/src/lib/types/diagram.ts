@@ -8,6 +8,7 @@ export interface DiagramSystem {
 	x: number;
 	y: number;
 	category: string | null;
+	role?: "prospect" | "hub" | "system" | null;
 }
 
 export interface DiagramConnection {
@@ -84,4 +85,38 @@ export interface ComponentLibraryItem {
 	is_native_connector: boolean;
 	display_order: number;
 	created_at: string;
+}
+
+/** Positioned system with computed layout coordinates. */
+export interface PositionedSystem {
+	system: DiagramSystem;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+/** Category group card containing multiple positioned systems. */
+export interface PositionedGroup {
+	category: string;
+	systems: PositionedSystem[];
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+/** Node-level position data for connection anchor lookup. */
+export interface NodePositionMap {
+	[systemId: string]: { x: number; y: number; width: number; height: number };
+}
+
+/** Complete layout result from the layout algorithm. */
+export interface LayoutResult {
+	hub: { x: number; y: number; width: number; height: number };
+	prospect: PositionedSystem;
+	groups: PositionedGroup[];
+	standalone: PositionedSystem[];
+	/** Flat lookup of all node bounding boxes by system ID plus 'hub' key. */
+	nodePositions: NodePositionMap;
 }
