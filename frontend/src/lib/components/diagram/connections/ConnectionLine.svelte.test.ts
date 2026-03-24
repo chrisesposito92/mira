@@ -53,37 +53,37 @@ describe("ConnectionLine", () => {
 		expect(style).toContain("stroke-dasharray: 6,4");
 	});
 
-	it("uses CONNECTION_COLORS[connection_type] -- native_connector renders #00C853", () => {
+	it("uses CONNECTION_COLORS[connection_type] -- native_connector renders green stroke", () => {
 		const container = renderInSvg({
 			connection: makeConnection({ connection_type: "native_connector" }),
 			nodePositions: mockPositions,
 			showLabels: true,
 		});
-		const line = container.querySelector("line");
-		const style = line!.getAttribute("style") || "";
-		expect(style).toContain("#00C853");
+		const line = container.querySelector("line") as SVGLineElement;
+		// jsdom normalizes hex to rgb(); #00C853 = rgb(0, 200, 83)
+		expect(line.style.stroke).toBe("rgb(0, 200, 83)");
 	});
 
-	it("webhook_api connection renders with stroke #2196F3", () => {
+	it("webhook_api connection renders with blue stroke", () => {
 		const container = renderInSvg({
 			connection: makeConnection({ connection_type: "webhook_api" }),
 			nodePositions: mockPositions,
 			showLabels: true,
 		});
-		const line = container.querySelector("line");
-		const style = line!.getAttribute("style") || "";
-		expect(style).toContain("#2196F3");
+		const line = container.querySelector("line") as SVGLineElement;
+		// #2196F3 = rgb(33, 150, 243)
+		expect(line.style.stroke).toBe("rgb(33, 150, 243)");
 	});
 
-	it("custom_build connection renders with stroke #FF9800", () => {
+	it("custom_build connection renders with orange stroke", () => {
 		const container = renderInSvg({
 			connection: makeConnection({ connection_type: "custom_build" }),
 			nodePositions: mockPositions,
 			showLabels: true,
 		});
-		const line = container.querySelector("line");
-		const style = line!.getAttribute("style") || "";
-		expect(style).toContain("#FF9800");
+		const line = container.querySelector("line") as SVGLineElement;
+		// #FF9800 = rgb(255, 152, 0)
+		expect(line.style.stroke).toBe("rgb(255, 152, 0)");
 	});
 
 	it("unidirectional connection has marker-start source-dot and marker-end arrowhead", () => {
