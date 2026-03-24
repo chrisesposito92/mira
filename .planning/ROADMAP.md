@@ -53,9 +53,9 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — SVG constants, layout types, hub-and-spoke layout algorithm (TDD)
 - [x] 02-02-PLAN.md — DiagramStore extension (currentDiagram, componentLibrary, updateContent)
-- [ ] 02-03-PLAN.md — SVG node components (SvgDefs, HubNode, ProspectNode, SystemCard, GroupCard, MonogramSvg)
-- [ ] 02-04-PLAN.md — Connection components (ConnectionLine, ConnectionPill)
-- [ ] 02-05-PLAN.md — DiagramRenderer, editor route, AddCustomSystemDialog, visual verification
+- [x] 02-03-PLAN.md — SVG node components (SvgDefs, HubNode, ProspectNode, SystemCard, GroupCard, MonogramSvg)
+- [x] 02-04-PLAN.md — Connection components (ConnectionLine, ConnectionPill)
+- [x] 02-05-PLAN.md — DiagramRenderer, editor route, AddCustomSystemDialog, visual verification
 
 ### Phase 3: Configurator UI
 **Goal**: An SE can assemble a complete diagram through form-driven panels, see live preview, and have it persist automatically
