@@ -25,10 +25,10 @@
 
 ### Rendering & Visual Output
 
-- [ ] **REND-01**: Live preview updates in real-time as the user configures the diagram
+- [x] **REND-01**: Live preview updates in real-time as the user configures the diagram
 - [ ] **REND-02**: Diagram renders in m3ter branded style: navy background, white rounded card containers, company logos, green m3ter accent border, colored data flow pill labels, dashed connection lines with dot endpoints
-- [ ] **REND-03**: Pure SVG rendering with inline styles (no foreignObject, no dynamic Tailwind classes)
-- [ ] **REND-04**: Hub-and-spoke auto-layout algorithm with m3ter centered
+- [x] **REND-03**: Pure SVG rendering with inline styles (no foreignObject, no dynamic Tailwind classes)
+- [x] **REND-04**: Hub-and-spoke auto-layout algorithm with m3ter centered
 - [ ] **REND-05**: Grouped system categories render as containing cards with sub-items and multiple logos
 
 ### Export
@@ -101,10 +101,10 @@
 | CONN-04 | Phase 2 | Pending |
 | CONN-05 | Phase 3 | Pending |
 | CONN-06 | Phase 3 | Pending |
-| REND-01 | Phase 2 | Pending |
+| REND-01 | Phase 2 | Complete |
 | REND-02 | Phase 2 | Pending |
-| REND-03 | Phase 2 | Pending |
-| REND-04 | Phase 2 | Pending |
+| REND-03 | Phase 2 | Complete |
+| REND-04 | Phase 2 | Complete |
 | REND-05 | Phase 2 | Pending |
 | EXPO-01 | Phase 4 | Pending |
 | EXPO-02 | Phase 4 | Pending |

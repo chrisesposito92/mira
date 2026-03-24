@@ -51,7 +51,7 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — SVG constants, layout types, hub-and-spoke layout algorithm (TDD)
+- [x] 02-01-PLAN.md — SVG constants, layout types, hub-and-spoke layout algorithm (TDD)
 - [ ] 02-02-PLAN.md — DiagramStore extension (currentDiagram, componentLibrary, updateContent)
 - [ ] 02-03-PLAN.md — SVG node components (SvgDefs, HubNode, ProspectNode, SystemCard, GroupCard, MonogramSvg)
 - [ ] 02-04-PLAN.md — Connection components (ConnectionLine, ConnectionPill)
