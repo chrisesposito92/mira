@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Switch } from '$lib/components/ui/switch';
@@ -40,9 +41,17 @@
 		diagramStore.currentDiagram?.content.settings.show_labels ?? true,
 	);
 
-	// Sync showLabels toggle with store
+	// Sync showLabels toggle with store — untrack store reads to prevent infinite loop
+	let showLabelsInit = false;
 	$effect(() => {
-		updateSettings({ show_labels: showLabels });
+		const val = showLabels;
+		if (!showLabelsInit) {
+			showLabelsInit = true;
+			return;
+		}
+		untrack(() => {
+			updateSettings({ show_labels: val });
+		});
 	});
 </script>
 
