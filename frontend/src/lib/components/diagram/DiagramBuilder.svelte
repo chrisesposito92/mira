@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { beforeNavigate } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { DiagramRenderer, AddCustomSystemDialog } from '$lib/components/diagram';
 	import BuilderSidebar from './builder/BuilderSidebar.svelte';
@@ -7,11 +8,8 @@
 	import { diagramStore } from '$lib/stores';
 	import { createApiClient, createDiagramService } from '$lib/services';
 	import { ArrowLeft } from 'lucide-svelte';
-	import type {
-		Diagram,
-		DiagramSystem,
-		ComponentLibraryItem,
-	} from '$lib/types';
+	import { toast } from 'svelte-sonner';
+	import type { Diagram, DiagramSystem, ComponentLibraryItem } from '$lib/types';
 
 	let {
 		data,
@@ -26,6 +24,10 @@
 
 	let addSystemOpen = $state(false);
 	let saveStatus = $state<'idle' | 'dirty' | 'saving' | 'saved' | 'error'>('idle');
+	let isInitialLoad = $state(true);
+	let saveTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	let saveVersion = 0;
+	let lastThumbnailTime = 0;
 
 	const service = $derived.by(() => {
 		const client = createApiClient(data.supabase, data.session?.access_token);
@@ -37,6 +39,106 @@
 		diagramStore.componentLibrary = data.components;
 		return () => diagramStore.clearEditor();
 	});
+
+	const contentSnapshot = $derived(
+		diagramStore.currentDiagram ? JSON.stringify(diagramStore.currentDiagram.content) : null,
+	);
+
+	async function performSave(): Promise<void> {
+		if (!diagramStore.currentDiagram) return;
+
+		const thisVersion = ++saveVersion;
+		saveStatus = 'saving';
+
+		await diagramStore.updateContent(service, diagramStore.currentDiagram.content);
+
+		if (thisVersion !== saveVersion) return;
+
+		if (!diagramStore.error) {
+			saveStatus = 'saved';
+			const now = Date.now();
+			if (now - lastThumbnailTime > 10_000) {
+				lastThumbnailTime = now;
+				await generateAndPersistThumbnail();
+			}
+		} else {
+			saveStatus = 'error';
+			toast.error('Changes could not be saved. Check your connection and try again.');
+		}
+	}
+
+	// Auto-save $effect: triggers on content changes with 500ms debounce
+	$effect(() => {
+		const _snapshot = contentSnapshot;
+
+		if (isInitialLoad) {
+			isInitialLoad = false;
+			return;
+		}
+
+		saveStatus = 'dirty';
+
+		if (saveTimeoutId) clearTimeout(saveTimeoutId);
+
+		saveTimeoutId = setTimeout(() => {
+			performSave();
+		}, 500);
+
+		return () => {
+			if (saveTimeoutId) clearTimeout(saveTimeoutId);
+		};
+	});
+
+	// Flush pending save on navigation away
+	beforeNavigate(() => {
+		if (saveTimeoutId) {
+			clearTimeout(saveTimeoutId);
+			saveTimeoutId = null;
+			performSave();
+		}
+		if (diagramStore.currentDiagram) {
+			generateAndPersistThumbnail();
+		}
+	});
+
+	async function generateAndPersistThumbnail(): Promise<void> {
+		if (!diagramStore.currentDiagram) return;
+
+		try {
+			const svgElement = document.querySelector('svg[role="img"]');
+			if (!svgElement) return;
+
+			const svgData = new XMLSerializer().serializeToString(svgElement);
+			const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+			const url = URL.createObjectURL(blob);
+
+			const thumbnail = await new Promise<string | null>((resolve) => {
+				const img = new Image();
+				img.onload = () => {
+					const canvas = document.createElement('canvas');
+					canvas.width = 300;
+					canvas.height = 200;
+					const ctx = canvas.getContext('2d')!;
+					ctx.drawImage(img, 0, 0, 300, 200);
+					URL.revokeObjectURL(url);
+					resolve(canvas.toDataURL('image/png', 0.8));
+				};
+				img.onerror = () => {
+					URL.revokeObjectURL(url);
+					resolve(null);
+				};
+				img.src = url;
+			});
+
+			if (thumbnail) {
+				await service.update(diagramStore.currentDiagram.id, {
+					thumbnail_base64: thumbnail,
+				});
+			}
+		} catch {
+			console.warn('Thumbnail generation failed');
+		}
+	}
 
 	async function handleAddSystem(system: DiagramSystem) {
 		diagramStore.addSystem(system);
