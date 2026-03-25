@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { Diagram, DiagramContent, DiagramSystem, ComponentLibraryItem } from '$lib/types';
+import type {
+	Diagram,
+	DiagramContent,
+	DiagramConnection,
+	DiagramSystem,
+	ComponentLibraryItem,
+} from '$lib/types';
 
 // Fresh state per test via singleton reset
 let store: any;
@@ -225,6 +231,124 @@ describe('DiagramStore - editor extension', () => {
 
 		expect(service.update).not.toHaveBeenCalled();
 		expect(store.saving).toBe(false);
+	});
+});
+
+function makeConnection(overrides: Partial<DiagramConnection> = {}): DiagramConnection {
+	return {
+		id: 'conn-1',
+		source_id: 'sys-1',
+		target_id: 'sys-2',
+		label: 'Usage Events',
+		direction: 'unidirectional',
+		connection_type: 'api',
+		...overrides,
+	};
+}
+
+describe('DiagramStore - connection CRUD', () => {
+	it('removeSystem filters out the system from content.systems', () => {
+		const sys1 = makeSystem({ id: 'sys-1' });
+		const sys2 = makeSystem({ id: 'sys-2', name: 'Stripe' });
+		store.currentDiagram = makeDiagram({
+			content: makeDiagramContent({ systems: [sys1, sys2] }),
+		});
+
+		store.removeSystem('sys-1');
+
+		expect(store.currentDiagram.content.systems).toHaveLength(1);
+		expect(store.currentDiagram.content.systems[0].id).toBe('sys-2');
+	});
+
+	it('removeSystem also removes connections referencing the removed system (cascade)', () => {
+		const sys1 = makeSystem({ id: 'sys-1' });
+		const sys2 = makeSystem({ id: 'sys-2', name: 'Stripe' });
+		const conn1 = makeConnection({ id: 'conn-1', source_id: 'sys-1', target_id: 'sys-2' });
+		const conn2 = makeConnection({ id: 'conn-2', source_id: 'sys-2', target_id: 'sys-3' });
+		store.currentDiagram = makeDiagram({
+			content: makeDiagramContent({ systems: [sys1, sys2], connections: [conn1, conn2] }),
+		});
+
+		store.removeSystem('sys-1');
+
+		expect(store.currentDiagram.content.systems).toHaveLength(1);
+		expect(store.currentDiagram.content.connections).toHaveLength(1);
+		expect(store.currentDiagram.content.connections[0].id).toBe('conn-2');
+	});
+
+	it('removeSystem is a no-op when currentDiagram is null', () => {
+		store.currentDiagram = null;
+		expect(() => store.removeSystem('sys-1')).not.toThrow();
+		expect(store.currentDiagram).toBeNull();
+	});
+
+	it('addConnection appends a connection to content.connections', () => {
+		store.currentDiagram = makeDiagram();
+		expect(store.currentDiagram.content.connections).toHaveLength(0);
+
+		const conn = makeConnection();
+		store.addConnection(conn);
+
+		expect(store.currentDiagram.content.connections).toHaveLength(1);
+		expect(store.currentDiagram.content.connections[0].label).toBe('Usage Events');
+	});
+
+	it('addConnection is a no-op when currentDiagram is null', () => {
+		store.currentDiagram = null;
+		expect(() => store.addConnection(makeConnection())).not.toThrow();
+		expect(store.currentDiagram).toBeNull();
+	});
+
+	it('removeConnection filters out the connection by id', () => {
+		const conn1 = makeConnection({ id: 'conn-1' });
+		const conn2 = makeConnection({ id: 'conn-2', label: 'Billing Data' });
+		store.currentDiagram = makeDiagram({
+			content: makeDiagramContent({ connections: [conn1, conn2] }),
+		});
+
+		store.removeConnection('conn-1');
+
+		expect(store.currentDiagram.content.connections).toHaveLength(1);
+		expect(store.currentDiagram.content.connections[0].id).toBe('conn-2');
+	});
+
+	it('removeConnection is a no-op when currentDiagram is null', () => {
+		store.currentDiagram = null;
+		expect(() => store.removeConnection('conn-1')).not.toThrow();
+		expect(store.currentDiagram).toBeNull();
+	});
+
+	it('updateConnection merges partial updates into matching connection', () => {
+		const conn = makeConnection({ id: 'conn-1', label: 'Old Label' });
+		store.currentDiagram = makeDiagram({
+			content: makeDiagramContent({ connections: [conn] }),
+		});
+
+		store.updateConnection('conn-1', { label: 'New Label', direction: 'bidirectional' });
+
+		const updated = store.currentDiagram.content.connections[0];
+		expect(updated.label).toBe('New Label');
+		expect(updated.direction).toBe('bidirectional');
+		expect(updated.source_id).toBe('sys-1'); // unchanged
+	});
+
+	it('updateConnection preserves other connections untouched', () => {
+		const conn1 = makeConnection({ id: 'conn-1', label: 'First' });
+		const conn2 = makeConnection({ id: 'conn-2', label: 'Second' });
+		store.currentDiagram = makeDiagram({
+			content: makeDiagramContent({ connections: [conn1, conn2] }),
+		});
+
+		store.updateConnection('conn-1', { label: 'Updated' });
+
+		expect(store.currentDiagram.content.connections[0].label).toBe('Updated');
+		expect(store.currentDiagram.content.connections[1].label).toBe('Second');
+	});
+
+	it('updateConnection is a no-op when currentDiagram is null', () => {
+		store.currentDiagram = null;
+		expect(() => store.updateConnection('conn-1', { label: 'X' })).not.toThrow();
+		expect(store.currentDiagram).toBeNull();
 	});
 });
 

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { Calendar, Building2, FolderKanban, Trash2 } from 'lucide-svelte';
+	import { Building2, FolderKanban, Trash2, Network } from 'lucide-svelte';
+	import { formatRelativeTime } from '$lib/utils.js';
 	import type { DiagramListItem } from '$lib/types';
 
 	let {
@@ -14,17 +15,20 @@
 
 	const displayName = $derived(diagram.customer_name || diagram.title || 'Untitled');
 
-	const formattedDate = $derived(
-		new Date(diagram.updated_at).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric',
-		}),
-	);
+	const relativeTime = $derived(formatRelativeTime(diagram.updated_at));
 </script>
 
 <a href="/diagrams/{diagram.id}" class="block" data-sveltekit-preload-data="hover">
-	<Card.Root class="hover:border-primary/50 h-full transition-colors">
+	<Card.Root class="hover:border-primary/50 h-full overflow-hidden transition-colors">
+		<div class="bg-muted relative aspect-video w-full overflow-hidden rounded-t-xl">
+			{#if diagram.thumbnail_base64}
+				<img src={diagram.thumbnail_base64} alt="" class="h-full w-full object-cover" />
+			{:else}
+				<div class="flex h-full w-full items-center justify-center">
+					<Network class="text-muted-foreground size-8" aria-hidden="true" />
+				</div>
+			{/if}
+		</div>
 		<Card.Header>
 			<Card.Title class="line-clamp-1">{displayName}</Card.Title>
 			{#if diagram.customer_name && diagram.title}
@@ -44,10 +48,7 @@
 		</Card.Content>
 		<Card.Footer>
 			<div class="flex w-full items-center justify-between">
-				<div class="text-muted-foreground flex items-center gap-1 text-xs">
-					<Calendar class="size-3" />
-					{formattedDate}
-				</div>
+				<span class="text-muted-foreground text-xs">{relativeTime}</span>
 				{#if ondelete}
 					<Button
 						variant="ghost"

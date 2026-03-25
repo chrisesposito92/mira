@@ -4,3 +4,4 @@ export { default as DeleteDiagramDialog } from './DeleteDiagramDialog.svelte';
 export { default as DiagramRenderer } from './DiagramRenderer.svelte';
 export { default as AddCustomSystemDialog } from './AddCustomSystemDialog.svelte';
 export { default as LogoPreview } from './LogoPreview.svelte';
+export { default as DiagramBuilder } from './DiagramBuilder.svelte';

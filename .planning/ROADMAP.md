@@ -67,8 +67,14 @@ Plans:
   3. When connecting m3ter to a known native connector system, the type is auto-suggested as "Native Connector"
   4. The diagram list shows customer name and last-edited timestamp; SE can open a saved diagram and continue editing
   5. Changes are auto-saved within 500ms of the SE stopping; a thumbnail is generated and shown in the list view
-**Plans**: TBD
+**Plans:** 4 plans
 **UI hint**: yes
+
+Plans:
+- [x] 03-01-PLAN.md — Backend thumbnail in list response, DiagramStore connection CRUD + removeSystem, utility functions (debounce, formatRelativeTime)
+- [x] 03-02-PLAN.md — Install shadcn components, DiagramBuilder layout + SystemPicker + SaveStatusIndicator
+- [x] 03-03-PLAN.md — ConnectionForm with auto-suggest, ConnectionList, SettingsPanel
+- [x] 03-04-PLAN.md — Auto-save with thumbnail generation, DiagramCard enhancement, visual verification
 
 ### Phase 4: Export Pipeline
 **Goal**: An SE can export a finished diagram as a high-quality PNG or SVG suitable for slides and proposals
@@ -91,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Data Foundation | 5/5 | Completed | 2026-03-24 |
 | 2. Rendering Engine | 0/5 | Planned | - |
-| 3. Configurator UI | 0/? | Not started | - |
+| 3. Configurator UI | 0/4 | Planned | - |
 | 4. Export Pipeline | 0/? | Not started | - |

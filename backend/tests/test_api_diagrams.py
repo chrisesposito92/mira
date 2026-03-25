@@ -24,7 +24,7 @@ def _diagram_row(**overrides):
 
 
 def _diagram_list_row(**overrides):
-    """Row for list queries -- excludes content and thumbnail_base64."""
+    """Row for list queries -- excludes content but includes thumbnail_base64."""
     defaults = {
         "id": str(uuid4()),
         "user_id": str(MOCK_USER_ID),
@@ -32,6 +32,7 @@ def _diagram_list_row(**overrides):
         "title": "",
         "project_id": None,
         "schema_version": 1,
+        "thumbnail_base64": None,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat(),
     }
@@ -100,14 +101,22 @@ class TestListDiagrams:
         assert len(resp.json()) == 2
 
     def test_list_excludes_content(self, authed_client, mock_supabase):
-        """List response should NOT contain content or thumbnail_base64.
-        Addresses Codex review concern about list payload size."""
+        """List response should NOT contain content but SHOULD include thumbnail_base64."""
         mock_supabase._table_data["diagrams"] = [_diagram_list_row()]
         resp = authed_client.get("/api/diagrams")
         assert resp.status_code == 200
         item = resp.json()[0]
         assert "content" not in item
-        assert "thumbnail_base64" not in item
+        assert item.get("thumbnail_base64") is None
+
+    def test_list_includes_thumbnail(self, authed_client, mock_supabase):
+        """List response should include thumbnail_base64 when present."""
+        mock_supabase._table_data["diagrams"] = [
+            _diagram_list_row(thumbnail_base64="data:image/png;base64,AAAA")
+        ]
+        resp = authed_client.get("/api/diagrams")
+        assert resp.status_code == 200
+        assert resp.json()[0]["thumbnail_base64"] == "data:image/png;base64,AAAA"
 
 
 class TestGetDiagram:

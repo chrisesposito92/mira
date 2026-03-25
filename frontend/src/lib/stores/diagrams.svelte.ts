@@ -3,6 +3,7 @@ import type {
 	DiagramListItem,
 	DiagramCreate,
 	DiagramContent,
+	DiagramConnection,
 	DiagramSystem,
 	ComponentLibraryItem,
 } from '$lib/types';
@@ -40,7 +41,7 @@ class DiagramStore {
 		this.error = null;
 		try {
 			const diagram = await service.create(data);
-			// Append to list as a DiagramListItem (omit content/thumbnail)
+			// Append to list as a DiagramListItem (omit content)
 			this.diagrams = [
 				...this.diagrams,
 				{
@@ -50,6 +51,7 @@ class DiagramStore {
 					title: diagram.title,
 					project_id: diagram.project_id,
 					schema_version: diagram.schema_version,
+					thumbnail_base64: null,
 					created_at: diagram.created_at,
 					updated_at: diagram.updated_at,
 				},
@@ -105,6 +107,55 @@ class DiagramStore {
 		} finally {
 			this.saving = false;
 		}
+	}
+
+	removeSystem(systemId: string) {
+		if (!this.currentDiagram) return;
+		this.currentDiagram = {
+			...this.currentDiagram,
+			content: {
+				...this.currentDiagram.content,
+				systems: this.currentDiagram.content.systems.filter((s) => s.id !== systemId),
+				connections: this.currentDiagram.content.connections.filter(
+					(c) => c.source_id !== systemId && c.target_id !== systemId,
+				),
+			},
+		};
+	}
+
+	addConnection(connection: DiagramConnection) {
+		if (!this.currentDiagram) return;
+		this.currentDiagram = {
+			...this.currentDiagram,
+			content: {
+				...this.currentDiagram.content,
+				connections: [...this.currentDiagram.content.connections, connection],
+			},
+		};
+	}
+
+	removeConnection(connectionId: string) {
+		if (!this.currentDiagram) return;
+		this.currentDiagram = {
+			...this.currentDiagram,
+			content: {
+				...this.currentDiagram.content,
+				connections: this.currentDiagram.content.connections.filter((c) => c.id !== connectionId),
+			},
+		};
+	}
+
+	updateConnection(connectionId: string, updates: Partial<DiagramConnection>) {
+		if (!this.currentDiagram) return;
+		this.currentDiagram = {
+			...this.currentDiagram,
+			content: {
+				...this.currentDiagram.content,
+				connections: this.currentDiagram.content.connections.map((c) =>
+					c.id === connectionId ? { ...c, ...updates } : c,
+				),
+			},
+		};
 	}
 
 	addSystem(system: DiagramSystem) {

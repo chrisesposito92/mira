@@ -37,3 +37,36 @@ export function formatDate(dateStr: string): string {
 export function formatDateTime(dateStr: string): string {
 	return new Date(dateStr).toLocaleString();
 }
+
+/** Debounce a function call by `delay` milliseconds. Repeated calls reset the timer. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function debounce<T extends (...args: any[]) => any>(
+	fn: T,
+	delay: number,
+): (...args: Parameters<T>) => void {
+	let timeoutId: ReturnType<typeof setTimeout> | null = null;
+	return (...args: Parameters<T>) => {
+		if (timeoutId) clearTimeout(timeoutId);
+		timeoutId = setTimeout(() => fn(...args), delay);
+	};
+}
+
+/** Format a date string as a relative time (e.g., "2 hours ago", "just now").
+ *  Handles future timestamps gracefully by returning "just now". */
+export function formatRelativeTime(dateStr: string): string {
+	const date = new Date(dateStr);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+
+	if (diffMs < 0) return 'just now';
+
+	const diffSec = Math.floor(diffMs / 1000);
+	const diffMin = Math.floor(diffSec / 60);
+	const diffHour = Math.floor(diffMin / 60);
+	const diffDay = Math.floor(diffHour / 24);
+
+	if (diffSec < 60) return 'just now';
+	if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+	if (diffHour < 24) return `${diffHour} hour${diffHour === 1 ? '' : 's'} ago`;
+	return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+}
