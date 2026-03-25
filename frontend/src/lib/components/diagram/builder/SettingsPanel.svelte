@@ -36,9 +36,14 @@
 		updateSettings({ background_color: bgColor });
 	}
 
-	const showLabels = $derived(
+	let showLabels = $state(
 		diagramStore.currentDiagram?.content.settings.show_labels ?? true,
 	);
+
+	// Sync showLabels toggle with store
+	$effect(() => {
+		updateSettings({ show_labels: showLabels });
+	});
 </script>
 
 <div class="space-y-6">
@@ -60,9 +65,6 @@
 	<!-- Show Connection Labels -->
 	<div class="flex items-center justify-between">
 		<Label class="text-sm font-semibold">Show Connection Labels</Label>
-		<Switch
-			checked={showLabels}
-			onCheckedChange={(checked) => updateSettings({ show_labels: checked })}
-		/>
+		<Switch bind:checked={showLabels} />
 	</div>
 </div>

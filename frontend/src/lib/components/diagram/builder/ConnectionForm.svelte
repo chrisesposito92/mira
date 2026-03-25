@@ -32,8 +32,14 @@
 		editingConnection?.connection_type ?? 'api',
 	);
 	let label = $state<string>(editingConnection?.label ?? '');
+	let isBidirectional = $state(direction === 'bidirectional');
 	let userHasChangedType = $state(false);
 	let errors = $state<Record<string, string>>({});
+
+	// Sync direction toggle with direction state
+	$effect(() => {
+		direction = isBidirectional ? 'bidirectional' : 'unidirectional';
+	});
 
 	// Build connectable endpoints: hub + all systems from content.systems
 	const connectableEndpoints = $derived.by(() => {
@@ -51,6 +57,7 @@
 			sourceId = editingConnection.source_id;
 			targetId = editingConnection.target_id;
 			direction = editingConnection.direction;
+			isBidirectional = editingConnection.direction === 'bidirectional';
 			connectionType = editingConnection.connection_type;
 			label = editingConnection.label;
 			userHasChangedType = true;
@@ -178,13 +185,8 @@
 
 	<!-- Direction -->
 	<div class="flex items-center justify-between">
-		<Label>{direction === 'bidirectional' ? 'Two-way' : 'One-way'}</Label>
-		<Switch
-			checked={direction === 'bidirectional'}
-			onCheckedChange={(checked) => {
-				direction = checked ? 'bidirectional' : 'unidirectional';
-			}}
-		/>
+		<Label>{isBidirectional ? 'Two-way' : 'One-way'}</Label>
+		<Switch bind:checked={isBidirectional} />
 	</div>
 
 	<!-- Integration Type -->
