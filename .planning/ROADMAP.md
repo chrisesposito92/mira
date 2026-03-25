@@ -71,7 +71,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 03-01-PLAN.md — Backend thumbnail in list response, DiagramStore connection CRUD + removeSystem, utility functions (debounce, formatRelativeTime)
+- [x] 03-01-PLAN.md — Backend thumbnail in list response, DiagramStore connection CRUD + removeSystem, utility functions (debounce, formatRelativeTime)
 - [ ] 03-02-PLAN.md — Install shadcn components, DiagramBuilder layout + SystemPicker + SaveStatusIndicator
 - [ ] 03-03-PLAN.md — ConnectionForm with auto-suggest, ConnectionList, SettingsPanel
 - [ ] 03-04-PLAN.md — Auto-save with thumbnail generation, DiagramCard enhancement, visual verification

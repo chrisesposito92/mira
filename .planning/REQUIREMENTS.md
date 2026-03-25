@@ -16,9 +16,9 @@
 
 ### Connections & Data Flows
 
-- [ ] **CONN-01**: User can define connections between any two system nodes
-- [ ] **CONN-02**: Each connection has a direction (unidirectional or bidirectional)
-- [ ] **CONN-03**: Each connection has a text label describing the data flow (e.g., "Usage Events via REST API")
+- [x] **CONN-01**: User can define connections between any two system nodes
+- [x] **CONN-02**: Each connection has a direction (unidirectional or bidirectional)
+- [x] **CONN-03**: Each connection has a text label describing the data flow (e.g., "Usage Events via REST API")
 - [x] **CONN-04**: Connections are color-coded by integration type: Native Connector (green), Webhook/API (blue), Custom Build (orange)
 - [ ] **CONN-05**: When connecting two nodes, the tool suggests common data flows based on system types
 - [ ] **CONN-06**: When connecting m3ter to a known native connector system, the tool auto-tags it as "Native Connector"
@@ -41,9 +41,9 @@
 ### Persistence
 
 - [x] **PERS-01**: User can save a diagram to Supabase with a customer name
-- [ ] **PERS-02**: Diagram list view showing customer name, last edited date
+- [x] **PERS-02**: Diagram list view showing customer name, last edited date
 - [ ] **PERS-03**: User can load and continue editing a saved diagram
-- [ ] **PERS-04**: Auto-save with debounced 500ms idle trigger
+- [x] **PERS-04**: Auto-save with debounced 500ms idle trigger
 - [ ] **PERS-05**: Thumbnail preview generated and displayed in diagram list view
 - [x] **PERS-07**: Diagram data model includes schema_version field for future migration safety
 
@@ -95,9 +95,9 @@
 | COMP-04 | Phase 2 | Complete |
 | COMP-05 | Phase 2 | Complete |
 | COMP-06 | Phase 1 | Complete |
-| CONN-01 | Phase 3 | Pending |
-| CONN-02 | Phase 3 | Pending |
-| CONN-03 | Phase 3 | Pending |
+| CONN-01 | Phase 3 | Complete |
+| CONN-02 | Phase 3 | Complete |
+| CONN-03 | Phase 3 | Complete |
 | CONN-04 | Phase 2 | Complete |
 | CONN-05 | Phase 3 | Pending |
 | CONN-06 | Phase 3 | Pending |
@@ -111,9 +111,9 @@
 | EXPO-03 | Phase 4 | Pending |
 | EXPO-04 | Phase 4 | Pending |
 | PERS-01 | Phase 1 | Complete |
-| PERS-02 | Phase 3 | Pending |
+| PERS-02 | Phase 3 | Complete |
 | PERS-03 | Phase 3 | Pending |
-| PERS-04 | Phase 3 | Pending |
+| PERS-04 | Phase 3 | Complete |
 | PERS-05 | Phase 3 | Pending |
 | PERS-06 | v2 | Deferred |
 | PERS-07 | Phase 1 | Complete |
