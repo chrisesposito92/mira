@@ -33,10 +33,10 @@
 
 ### Export
 
-- [ ] **EXPO-01**: User can export diagram as PNG at 2x resolution (HiDPI for presentations)
-- [ ] **EXPO-02**: User can export diagram as SVG
-- [ ] **EXPO-03**: All logos pre-fetched to data URLs before export (prevents canvas taint)
-- [ ] **EXPO-04**: Fonts inlined into export output for consistent rendering
+- [x] **EXPO-01**: User can export diagram as PNG at 2x resolution (HiDPI for presentations)
+- [x] **EXPO-02**: User can export diagram as SVG
+- [x] **EXPO-03**: All logos pre-fetched to data URLs before export (prevents canvas taint)
+- [x] **EXPO-04**: Fonts inlined into export output for consistent rendering
 
 ### Persistence
 
@@ -106,10 +106,10 @@
 | REND-03 | Phase 2 | Complete |
 | REND-04 | Phase 2 | Complete |
 | REND-05 | Phase 2 | Complete |
-| EXPO-01 | Phase 4 | Pending |
-| EXPO-02 | Phase 4 | Pending |
-| EXPO-03 | Phase 4 | Pending |
-| EXPO-04 | Phase 4 | Pending |
+| EXPO-01 | Phase 4 | Complete |
+| EXPO-02 | Phase 4 | Complete |
+| EXPO-03 | Phase 4 | Complete |
+| EXPO-04 | Phase 4 | Complete |
 | PERS-01 | Phase 1 | Complete |
 | PERS-02 | Phase 3 | Complete |
 | PERS-03 | Phase 3 | Complete |
