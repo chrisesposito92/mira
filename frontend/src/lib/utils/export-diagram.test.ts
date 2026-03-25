@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
 	slugify,
 	generateFilename,
@@ -8,6 +8,7 @@ import {
 	ensureSvgDimensions,
 	svgToDataUrl,
 	validateImageDataUrls,
+	warmFontCache,
 } from './export-diagram.js';
 
 // Uses inline style for stroke (matches real ConnectionLine.svelte output)
@@ -194,5 +195,194 @@ describe('validateImageDataUrls', () => {
 	it('returns true when SVG has no image elements', () => {
 		const doc = parseSvg(`<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>`);
 		expect(validateImageDataUrls(doc)).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Gap 1: SVG XML declaration (EXPO-02)
+// ---------------------------------------------------------------------------
+
+describe('SVG XML declaration (EXPO-02)', () => {
+	it('downloadSvg prepends XML declaration to SVG content via exportDiagram', async () => {
+		// Since downloadSvg is private, we test through exportDiagram with format: 'svg'.
+		// We need to: mock fetch (for font loading), intercept the Blob from triggerDownload.
+		const { exportDiagram } = await import('./export-diagram.js');
+
+		// Mock fetch for font loading (returns a small ArrayBuffer)
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: true,
+			arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+		});
+		vi.stubGlobal('fetch', mockFetch);
+
+		// Capture the Blob passed to URL.createObjectURL
+		let capturedBlob: Blob | null = null;
+		const originalCreateObjectURL = URL.createObjectURL;
+		URL.createObjectURL = vi.fn((blob: Blob) => {
+			capturedBlob = blob;
+			return 'blob:test';
+		});
+		const originalRevokeObjectURL = URL.revokeObjectURL;
+		URL.revokeObjectURL = vi.fn();
+
+		// Mock the <a> element for download triggering
+		const mockAnchor = {
+			href: '',
+			download: '',
+			click: vi.fn(),
+		};
+		const originalCreateElement = document.createElement.bind(document);
+		vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+			if (tag === 'a') return mockAnchor as unknown as HTMLAnchorElement;
+			return originalCreateElement(tag);
+		});
+		vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
+		vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
+
+		// Create a minimal SVG element via DOMParser, then extract the element
+		const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" width="1200" height="800"><rect/></svg>`;
+		const tempDoc = new DOMParser().parseFromString(svgString, 'image/svg+xml');
+		const svgEl = tempDoc.documentElement as unknown as SVGSVGElement;
+
+		await exportDiagram(svgEl, {
+			format: 'svg',
+			customerName: 'Test',
+			title: 'Diagram',
+		});
+
+		// Read the Blob content and verify XML declaration
+		expect(capturedBlob).not.toBeNull();
+		const blobText = await capturedBlob!.text();
+		expect(blobText).toMatch(/^<\?xml version="1\.0" encoding="UTF-8"\?>\n/);
+
+		// Cleanup
+		URL.createObjectURL = originalCreateObjectURL;
+		URL.revokeObjectURL = originalRevokeObjectURL;
+		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Gap 2: SVG export integration pipeline (EXPO-02)
+// ---------------------------------------------------------------------------
+
+describe('SVG export integration pipeline (EXPO-02)', () => {
+	it('full pipeline produces SVG with font injected, markers fixed, and dimensions set', () => {
+		// Start with an SVG that has: context-stroke markers, images, missing width/height, no font
+		const inputSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" style="width: 100%"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/></marker><marker id="source-dot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse"><circle cx="5" cy="5" r="4" fill="context-stroke"/></marker></defs><image href="data:image/png;base64,abc"/><line x1="100" y1="200" x2="300" y2="400" stroke="#00C853" stroke-width="2" marker-start="url(#source-dot)" marker-end="url(#arrowhead)"/></svg>`;
+
+		// Step 1: Parse (clone via serialization, simulating exportDiagram's clone step)
+		const svgDoc = parseSvg(inputSvg);
+
+		// Step 2: Validate images
+		const imagesValid = validateImageDataUrls(svgDoc);
+		expect(imagesValid).toBe(true);
+
+		// Step 3: Ensure dimensions
+		ensureSvgDimensions(svgDoc);
+
+		// Step 4: Inject font
+		injectFont(svgDoc, 'TESTFONTBASE64');
+
+		// Step 5: Fix context-stroke markers
+		fixContextStroke(svgDoc);
+
+		// Step 6: Serialize back to string
+		const finalSvg = new XMLSerializer().serializeToString(svgDoc.documentElement);
+
+		// Verify all pipeline steps produced their effects:
+
+		// Font was injected (style element with @font-face)
+		expect(finalSvg).toContain("font-family: 'Inter'");
+		expect(finalSvg).toContain('TESTFONTBASE64');
+		expect(finalSvg).toContain("format('woff2')");
+
+		// Markers were fixed (color-specific marker created)
+		expect(finalSvg).toContain('arrowhead-00C853');
+		expect(finalSvg).toContain('source-dot-00C853');
+
+		// Line references were rewritten to color-specific markers
+		expect(finalSvg).toContain('url(#arrowhead-00C853)');
+		expect(finalSvg).toContain('url(#source-dot-00C853)');
+
+		// Dimensions were set (width/height attributes present)
+		expect(svgDoc.documentElement.getAttribute('width')).toBe('1200');
+		expect(svgDoc.documentElement.getAttribute('height')).toBe('800');
+
+		// Percentage-based style was removed
+		expect(svgDoc.documentElement.getAttribute('style')).toBeNull();
+	});
+
+	it('pipeline handles SVG with no markers or images gracefully', () => {
+		const minimalSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect x="0" y="0" width="100" height="100"/></svg>`;
+		const svgDoc = parseSvg(minimalSvg);
+
+		// All steps run without error on minimal SVG
+		const imagesValid = validateImageDataUrls(svgDoc);
+		expect(imagesValid).toBe(true);
+
+		ensureSvgDimensions(svgDoc);
+		injectFont(svgDoc, 'EMPTYFONT');
+		fixContextStroke(svgDoc);
+
+		const finalSvg = new XMLSerializer().serializeToString(svgDoc.documentElement);
+		expect(finalSvg).toContain("font-family: 'Inter'");
+		expect(svgDoc.documentElement.getAttribute('width')).toBe('1200');
+		expect(svgDoc.documentElement.getAttribute('height')).toBe('800');
+		expect(svgDoc.querySelector('rect')).not.toBeNull();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Gap 3: warmFontCache() caching and error behavior (EXPO-04)
+// ---------------------------------------------------------------------------
+
+describe('warmFontCache (EXPO-04)', () => {
+	let originalFetch: typeof globalThis.fetch;
+
+	beforeEach(() => {
+		originalFetch = globalThis.fetch;
+	});
+
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
+		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+	});
+
+	it('does not throw when fetch fails (silent error handling)', async () => {
+		// warmFontCache wraps loadFontBase64 in try/catch and silently swallows errors
+		vi.stubGlobal(
+			'fetch',
+			vi.fn().mockRejectedValue(new Error('Network failure')),
+		);
+
+		// This must resolve without throwing
+		await expect(warmFontCache()).resolves.toBeUndefined();
+	});
+
+	it('does not throw when fetch returns non-ok response', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn().mockResolvedValue({
+				ok: false,
+				status: 500,
+			}),
+		);
+
+		await expect(warmFontCache()).resolves.toBeUndefined();
+	});
+
+	it('resolves successfully when fetch succeeds', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn().mockResolvedValue({
+				ok: true,
+				arrayBuffer: () => Promise.resolve(new ArrayBuffer(16)),
+			}),
+		);
+
+		await expect(warmFontCache()).resolves.toBeUndefined();
 	});
 });
