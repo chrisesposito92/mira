@@ -20,8 +20,8 @@
 - [x] **CONN-02**: Each connection has a direction (unidirectional or bidirectional)
 - [x] **CONN-03**: Each connection has a text label describing the data flow (e.g., "Usage Events via REST API")
 - [x] **CONN-04**: Connections are color-coded by integration type: Native Connector (green), Webhook/API (blue), Custom Build (orange)
-- [ ] **CONN-05**: When connecting two nodes, the tool suggests common data flows based on system types
-- [ ] **CONN-06**: When connecting m3ter to a known native connector system, the tool auto-tags it as "Native Connector"
+- [x] **CONN-05**: When connecting two nodes, the tool suggests common data flows based on system types
+- [x] **CONN-06**: When connecting m3ter to a known native connector system, the tool auto-tags it as "Native Connector"
 
 ### Rendering & Visual Output
 
@@ -99,8 +99,8 @@
 | CONN-02 | Phase 3 | Complete |
 | CONN-03 | Phase 3 | Complete |
 | CONN-04 | Phase 2 | Complete |
-| CONN-05 | Phase 3 | Pending |
-| CONN-06 | Phase 3 | Pending |
+| CONN-05 | Phase 3 | Complete |
+| CONN-06 | Phase 3 | Complete |
 | REND-01 | Phase 2 | Complete |
 | REND-02 | Phase 2 | Complete |
 | REND-03 | Phase 2 | Complete |
