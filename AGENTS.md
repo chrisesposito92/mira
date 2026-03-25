@@ -73,6 +73,9 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `scraper/` | m3ter docs crawler (httpx + llms.txt manifest) |
 | `services/` | Business logic layer |
 | `validation/` | Per-entity validators + cross-entity checks |
+| `api/diagrams.py` | Diagram CRUD endpoints, component library, logo proxy with SSRF protection |
+| `schemas/diagrams.py` | Pydantic models: DiagramCreate, DiagramUpdate, DiagramContent, DiagramListResponse |
+| `services/diagram_service.py` | Diagram business logic, component library queries, logo proxy fetching |
 
 ### Agent Structure (`backend/app/agents/`)
 
@@ -121,6 +124,10 @@ Full architecture: `docs/ARCHITECTURE.md`
 | `lib/components/ui/` | shadcn-svelte base components |
 | `lib/components/chat/` | Chat UI (ChatContainer, EntityCard, ClarificationCard, WorkflowLauncher, etc.) |
 | `lib/components/control-panel/` | ObjectTree, ObjectTreeNode, ObjectEditor, JsonEditor (CodeMirror 6), BulkActions, PushProgressPanel, PushConfirmDialog |
+| `lib/components/diagram/` | Diagram builder: DiagramRenderer, DiagramBuilder, DiagramCard, SVG node components (HubNode, ProspectNode, SystemCard, GroupCard, MonogramSvg), connection components (ConnectionLine, ConnectionPill), SvgDefs |
+| `lib/components/diagram/builder/` | Builder UI: SystemPicker, ConnectionForm, ConnectionList, SettingsPanel, ExportDropdown, SaveStatusIndicator, BuilderSidebar |
+| `lib/utils/diagram-layout.ts` | Hub-and-spoke SVG layout algorithm with position calculations |
+| `lib/utils/export-diagram.ts` | DOM-based SVG export with font injection, 2x PNG rendering, base64 logo validation |
 | `lib/components/project/` | Project/use case cards, FileUpload (drag-drop + progress), UploadProgressBar |
 | `lib/components/layout/` | Sidebar, header, breadcrumbs |
 | `lib/stores/` | Svelte 5 runes ($state-based) |
@@ -226,6 +233,19 @@ Full architecture: `docs/ARCHITECTURE.md`
 - **Processing stages**: `extracting` → `chunking` → `embedding` (with chunk count detail) → `storing`. Progress callback (`on_progress`) in `process_document()` is forwarded to `ingest_document()` which calls it at each stage.
 - **Frontend upload flow**: FileUpload drop zone → XHR upload with progress (`uploadWithProgress()`) → DocWebSocketClient (passive, lightweight) → UploadProgressBar (two-phase: upload % → stage indicators). ProjectStore manages `uploadProgress` state and WS message handling.
 - **XHR for upload progress**: `DocumentService.uploadWithProgress()` uses XMLHttpRequest (not Fetch) for `upload.onprogress` events. `ApiClient.baseUrl` and `getAuthHeaders()` exposed as public.
+
+### Diagram Builder
+
+- **DiagramStore**: Class-based Svelte 5 runes singleton (`stores/diagrams.svelte.ts`) — manages diagram list, currentDiagram, componentLibrary, saving state, connection CRUD with cascade removal, system add/remove.
+- **DiagramService**: Factory function `createDiagramService(client)` in `services/diagrams.ts` — REST calls for list, get, create, update, delete diagrams, component library, logo proxy.
+- **SVG Rendering**: Pure SVG with inline styles (no foreignObject, no dynamic Tailwind). Components: DiagramRenderer (orchestrator), HubNode (m3ter with 6 capabilities), ProspectNode (customizable), SystemCard, GroupCard (compact logo grid), ConnectionLine (edge-anchored, color-coded), ConnectionPill (data flow labels).
+- **Layout Algorithm**: Hub-and-spoke in `utils/diagram-layout.ts` — m3ter centered, prospect at top, systems distributed radially. NodePositionMap keyed by system ID for O(1) connection anchor lookup.
+- **Builder UI**: DiagramBuilder.svelte with 360px sidebar (BuilderSidebar with three tabs: Systems, Connections, Settings). SystemPicker with category accordion and search. ConnectionForm with direction selector and native connector auto-suggest. SettingsPanel for colors and label toggles.
+- **Auto-save**: 500ms debounced save via `utils/debounce.ts`, version-based staleness protection, flush-on-navigate. Thumbnail generation throttled separately.
+- **Export**: `utils/export-diagram.ts` — DOM-based SVG manipulation via DOMParser, Inter variable font injection (wght 100-900), context-stroke marker fix, 2x HiDPI PNG canvas rendering, Unicode-safe data URL encoding. ExportDropdown component with PNG/SVG menu.
+- **Logo proxy**: `GET /api/diagrams/logo-proxy?domain={domain}` — multi-layer SSRF protection (FQDN regex, IP rejection, hostname blocklist, content-type validation, size cap). Returns base64-encoded image. Monogram fallback format: `monogram:<INITIALS>:<COLOR>`.
+- **Component library**: `GET /api/diagrams/component-library` — 29 seeded native connector systems across 10 categories. Seeded via `scripts/seed_component_library.py` with slug-based upsert.
+- **Routes**: `/diagrams` (list view with DiagramCard grid), `/diagrams/[id]` (editor with DiagramBuilder + DiagramRenderer).
 
 ### Frontend Auth (Supabase SSR)
 
@@ -388,3 +408,8 @@ Results are saved to `evals/golden/latest_results.json` after each CLI run.
 - LangGraph 1.x `graph.ainvoke()` returns normally on `interrupt()` (no exception). Always check `graph.aget_state()` for pending interrupts after `ainvoke()` — never rely solely on catching `GraphInterrupt`. The `except GraphInterrupt: pass` pattern is kept for backward compatibility but the state check is the authoritative source. See `_invoke_and_send_result` in `ws.py` for the canonical pattern.
 - Use `from datetime import UTC` (not `timezone.utc`) — ruff UP017 rule enforces this
 - Mock Supabase rows for ownership checks must include join data (e.g., `use_cases.projects.user_id`) or queries return 404
+- SVG inline styles use hex colors, but jsdom normalizes to rgb() — tests must assert both formats
+- DiagramBuilder service is built in-component (not from +page.ts load) due to Supabase client dependency
+- Three-layer SVG rendering order matters: rect bg → nodes → connection pills (ensures clean export)
+- Export uses DOMParser for SVG manipulation — never regex string surgery on SVG
+- Inter variable font (wght 100-900) covers all SVG font-weights (500, 600, 700) in a single file
