@@ -6,7 +6,11 @@
  * SVGSVGElement parameter instead of querying the DOM internally.
  */
 
-export type ExportFormat = "png" | "svg";
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '$components/diagram/constants.js';
+
+const EXPORT_SCALE = 2;
+
+export type ExportFormat = 'png' | 'svg';
 
 export interface ExportOptions {
 	format: ExportFormat;
@@ -21,11 +25,11 @@ export interface ExportOptions {
 export function slugify(text: string): string {
 	return text
 		.toLowerCase()
-		.replace(/&/g, "")
-		.replace(/[/\\:]/g, "")
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^-|-$/g, "");
+		.replace(/&/g, '')
+		.replace(/[/\\:]/g, '')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/-+/g, '-')
+		.replace(/^-|-$/g, '');
 }
 
 export function generateFilename(
@@ -33,8 +37,8 @@ export function generateFilename(
 	title: string,
 	format: ExportFormat,
 ): string {
-	const base = customerName.trim() || title.trim() || "integration-diagram";
-	return `${slugify(base)}.${format}`;
+	const slug = slugify(customerName.trim()) || slugify(title.trim()) || 'integration-diagram';
+	return `${slug}.${format}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -43,7 +47,7 @@ export function generateFilename(
 
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 	const bytes = new Uint8Array(buffer);
-	let binary = "";
+	let binary = '';
 	for (let i = 0; i < bytes.byteLength; i++) {
 		binary += String.fromCharCode(bytes[i]);
 	}
@@ -56,7 +60,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export function svgToDataUrl(svgString: string): string {
 	const bytes = new TextEncoder().encode(svgString);
-	let binary = "";
+	let binary = '';
 	for (const byte of bytes) {
 		binary += String.fromCharCode(byte);
 	}
@@ -72,9 +76,9 @@ let cachedFontBase64: string | null = null;
 
 async function loadFontBase64(): Promise<string> {
 	if (cachedFontBase64) return cachedFontBase64;
-	const fontUrl = new URL("../assets/fonts/inter-latin-wght-normal.woff2", import.meta.url);
+	const fontUrl = new URL('../assets/fonts/inter-latin-wght-normal.woff2', import.meta.url);
 	const response = await fetch(fontUrl);
-	if (!response.ok) throw new Error("Font fetch failed");
+	if (!response.ok) throw new Error('Font fetch failed');
 	const buffer = await response.arrayBuffer();
 	cachedFontBase64 = arrayBufferToBase64(buffer);
 	return cachedFontBase64;
@@ -98,12 +102,11 @@ export async function warmFontCache(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export function validateImageDataUrls(svgDoc: Document): boolean {
-	const images = svgDoc.querySelectorAll("image");
+	const images = svgDoc.querySelectorAll('image');
 	for (const img of images) {
 		const href =
-			img.getAttribute("href") ||
-			img.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-		if (href && !href.startsWith("data:")) {
+			img.getAttribute('href') || img.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+		if (href && !href.startsWith('data:')) {
 			return false;
 		}
 	}
@@ -115,7 +118,7 @@ export function validateImageDataUrls(svgDoc: Document): boolean {
 // ---------------------------------------------------------------------------
 
 export function injectFont(svgDoc: Document, fontBase64: string): void {
-	const styleEl = svgDoc.createElementNS("http://www.w3.org/2000/svg", "style");
+	const styleEl = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'style');
 	styleEl.textContent = `
 		@font-face {
 			font-family: 'Inter';
@@ -133,55 +136,75 @@ export function injectFont(svgDoc: Document, fontBase64: string): void {
 // Fix context-stroke markers (DOM-based, not regex)
 // ---------------------------------------------------------------------------
 
+/**
+ * Read the stroke color from a line element. Checks the `stroke` attribute
+ * first, then falls back to the inline `style` property (which is how
+ * ConnectionLine.svelte applies colors in practice).
+ */
+function getLineStroke(line: Element): string | null {
+	const attr = line.getAttribute('stroke');
+	if (attr) return attr;
+	const style = line.getAttribute('style');
+	if (style) {
+		const match = style.match(/(?:^|;\s*)stroke:\s*(#[0-9A-Fa-f]{3,8}|rgb[^;)]+\))/);
+		if (match) return match[1].trim();
+	}
+	return null;
+}
+
 export function fixContextStroke(svgDoc: Document): void {
-	const defs = svgDoc.querySelector("defs");
+	const defs = svgDoc.querySelector('defs');
 	if (!defs) return;
 
-	const lines = svgDoc.querySelectorAll("line");
+	const lines = svgDoc.querySelectorAll('line');
+	const lineColors = new Map<Element, string>();
 	const uniqueColors = new Set<string>();
 	for (const line of lines) {
-		const stroke = line.getAttribute("stroke");
-		if (stroke) uniqueColors.add(stroke);
+		const stroke = getLineStroke(line);
+		if (stroke) {
+			lineColors.set(line, stroke);
+			uniqueColors.add(stroke);
+		}
 	}
 
 	if (uniqueColors.size === 0) return;
 
-	const arrowheadMarker = defs.querySelector("#arrowhead");
-	const sourceDotMarker = defs.querySelector("#source-dot");
+	const arrowheadMarker = defs.querySelector('#arrowhead');
+	const sourceDotMarker = defs.querySelector('#source-dot');
 
 	for (const color of uniqueColors) {
-		const colorSuffix = color.replace("#", "");
+		const colorSuffix = color.replace(/[^a-zA-Z0-9]/g, '');
 
 		if (arrowheadMarker) {
 			const cloned = arrowheadMarker.cloneNode(true) as Element;
-			cloned.setAttribute("id", `arrowhead-${colorSuffix}`);
-			const path = cloned.querySelector("path");
-			if (path) path.setAttribute("fill", color);
+			cloned.setAttribute('id', `arrowhead-${colorSuffix}`);
+			const path = cloned.querySelector('path');
+			if (path) path.setAttribute('fill', color);
 			defs.appendChild(cloned);
 		}
 
 		if (sourceDotMarker) {
 			const cloned = sourceDotMarker.cloneNode(true) as Element;
-			cloned.setAttribute("id", `source-dot-${colorSuffix}`);
-			const circle = cloned.querySelector("circle");
-			if (circle) circle.setAttribute("fill", color);
+			cloned.setAttribute('id', `source-dot-${colorSuffix}`);
+			const circle = cloned.querySelector('circle');
+			if (circle) circle.setAttribute('fill', color);
 			defs.appendChild(cloned);
 		}
 	}
 
 	for (const line of lines) {
-		const stroke = line.getAttribute("stroke");
+		const stroke = lineColors.get(line);
 		if (!stroke) continue;
-		const colorSuffix = stroke.replace("#", "");
+		const colorSuffix = stroke.replace(/[^a-zA-Z0-9]/g, '');
 
-		const markerEnd = line.getAttribute("marker-end");
-		if (markerEnd && markerEnd.includes("arrowhead")) {
-			line.setAttribute("marker-end", `url(#arrowhead-${colorSuffix})`);
+		const markerEnd = line.getAttribute('marker-end');
+		if (markerEnd && markerEnd.includes('arrowhead')) {
+			line.setAttribute('marker-end', `url(#arrowhead-${colorSuffix})`);
 		}
 
-		const markerStart = line.getAttribute("marker-start");
-		if (markerStart && markerStart.includes("source-dot")) {
-			line.setAttribute("marker-start", `url(#source-dot-${colorSuffix})`);
+		const markerStart = line.getAttribute('marker-start');
+		if (markerStart && markerStart.includes('source-dot')) {
+			line.setAttribute('marker-start', `url(#source-dot-${colorSuffix})`);
 		}
 	}
 }
@@ -192,16 +215,16 @@ export function fixContextStroke(svgDoc: Document): void {
 
 export function ensureSvgDimensions(svgDoc: Document): void {
 	const svgRoot = svgDoc.documentElement;
-	if (!svgRoot.hasAttribute("width")) {
-		svgRoot.setAttribute("width", "1200");
+	if (!svgRoot.hasAttribute('width')) {
+		svgRoot.setAttribute('width', String(CANVAS_WIDTH));
 	}
-	if (!svgRoot.hasAttribute("height")) {
-		svgRoot.setAttribute("height", "800");
+	if (!svgRoot.hasAttribute('height')) {
+		svgRoot.setAttribute('height', String(CANVAS_HEIGHT));
 	}
 	// Remove percentage-based style (not meaningful in exported SVG)
-	const style = svgRoot.getAttribute("style");
-	if (style && style.includes("width: 100%")) {
-		svgRoot.removeAttribute("style");
+	const style = svgRoot.getAttribute('style');
+	if (style && style.includes('width: 100%')) {
+		svgRoot.removeAttribute('style');
 	}
 }
 
@@ -211,7 +234,7 @@ export function ensureSvgDimensions(svgDoc: Document): void {
 
 function triggerDownload(blob: Blob, filename: string): void {
 	const url = URL.createObjectURL(blob);
-	const a = document.createElement("a");
+	const a = document.createElement('a');
 	a.href = url;
 	a.download = filename;
 	document.body.appendChild(a);
@@ -222,7 +245,7 @@ function triggerDownload(blob: Blob, filename: string): void {
 
 function downloadSvg(svgString: string, filename: string): void {
 	const withDeclaration = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
-	const blob = new Blob([withDeclaration], { type: "image/svg+xml;charset=utf-8" });
+	const blob = new Blob([withDeclaration], { type: 'image/svg+xml;charset=utf-8' });
 	triggerDownload(blob, filename);
 }
 
@@ -230,26 +253,26 @@ async function downloadPng(svgString: string, filename: string): Promise<void> {
 	const dataUrl = svgToDataUrl(svgString);
 
 	const img = new Image();
-	img.width = 1200;
-	img.height = 800;
+	img.width = CANVAS_WIDTH;
+	img.height = CANVAS_HEIGHT;
 
 	const blob = await new Promise<Blob>((resolve, reject) => {
 		img.onload = () => {
-			const canvas = document.createElement("canvas");
-			canvas.width = 2400;
-			canvas.height = 1600;
-			const ctx = canvas.getContext("2d");
+			const canvas = document.createElement('canvas');
+			canvas.width = CANVAS_WIDTH * EXPORT_SCALE;
+			canvas.height = CANVAS_HEIGHT * EXPORT_SCALE;
+			const ctx = canvas.getContext('2d');
 			if (!ctx) {
-				reject(new Error("Failed to get canvas context"));
+				reject(new Error('Failed to get canvas context'));
 				return;
 			}
-			ctx.drawImage(img, 0, 0, 2400, 1600);
+			ctx.drawImage(img, 0, 0, CANVAS_WIDTH * EXPORT_SCALE, CANVAS_HEIGHT * EXPORT_SCALE);
 			canvas.toBlob((b) => {
 				if (b) resolve(b);
-				else reject(new Error("Canvas toBlob returned null"));
-			}, "image/png");
+				else reject(new Error('Canvas toBlob returned null'));
+			}, 'image/png');
 		};
-		img.onerror = () => reject(new Error("Failed to load SVG as image"));
+		img.onerror = () => reject(new Error('Failed to load SVG as image'));
 		img.src = dataUrl;
 	});
 
@@ -262,21 +285,18 @@ async function downloadPng(svgString: string, filename: string): Promise<void> {
 
 let exportInFlight = false;
 
-export async function exportDiagram(
-	svgEl: SVGSVGElement,
-	options: ExportOptions,
-): Promise<void> {
+export async function exportDiagram(svgEl: SVGSVGElement, options: ExportOptions): Promise<void> {
 	if (exportInFlight) return;
 	exportInFlight = true;
 	try {
 		// Clone SVG to Document via serialization + parse (DOM-based, not regex)
 		const serialized = new XMLSerializer().serializeToString(svgEl);
 		const parser = new DOMParser();
-		const svgDoc = parser.parseFromString(serialized, "image/svg+xml");
+		const svgDoc = parser.parseFromString(serialized, 'image/svg+xml');
 
 		// Validate logo data URLs (EXPO-03 assertion)
 		if (!validateImageDataUrls(svgDoc)) {
-			console.warn("Some images are not base64 data URLs -- export may have missing logos");
+			console.warn('Some images are not base64 data URLs -- export may have missing logos');
 		}
 
 		// Ensure dimensions for standalone SVG
@@ -287,7 +307,7 @@ export async function exportDiagram(
 			const fontBase64 = await loadFontBase64();
 			injectFont(svgDoc, fontBase64);
 		} catch {
-			console.warn("Font injection failed, exporting without embedded font");
+			console.warn('Font injection failed, exporting without embedded font');
 		}
 
 		// Fix context-stroke markers
@@ -300,7 +320,7 @@ export async function exportDiagram(
 		const filename = generateFilename(options.customerName, options.title, options.format);
 
 		// Branch on format
-		if (options.format === "svg") {
+		if (options.format === 'svg') {
 			downloadSvg(finalSvg, filename);
 		} else {
 			await downloadPng(finalSvg, filename);
