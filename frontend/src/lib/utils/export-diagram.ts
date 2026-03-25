@@ -55,7 +55,12 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 // ---------------------------------------------------------------------------
 
 export function svgToDataUrl(svgString: string): string {
-	const base64 = btoa(unescape(encodeURIComponent(svgString)));
+	const bytes = new TextEncoder().encode(svgString);
+	let binary = "";
+	for (const byte of bytes) {
+		binary += String.fromCharCode(byte);
+	}
+	const base64 = btoa(binary);
 	return `data:image/svg+xml;base64,${base64}`;
 }
 
