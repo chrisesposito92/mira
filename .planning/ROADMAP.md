@@ -13,9 +13,9 @@ Four phases that build the diagrammer from the ground up: database and backend A
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Foundation** - DB schema, backend CRUD, component library seed with schema_version (completed 2026-03-24)
-- [ ] **Phase 2: Rendering Engine** - SVG renderer, DiagramStore, logo proxy, inline-style color conventions
-- [ ] **Phase 3: Configurator UI** - Builder layout, system picker, connection form, diagram list, auto-save
-- [ ] **Phase 4: Export Pipeline** - PNG/SVG export with font inlining, 2x HiDPI, pre-fetch logo base64
+- [x] **Phase 2: Rendering Engine** - SVG renderer, DiagramStore, logo proxy, inline-style color conventions (completed 2026-03-24)
+- [x] **Phase 3: Configurator UI** - Builder layout, system picker, connection form, diagram list, auto-save (completed 2026-03-25)
+- [x] **Phase 4: Export Pipeline** - PNG/SVG export with font inlining, 2x HiDPI, pre-fetch logo base64 (completed 2026-03-25)
 
 ## Phase Details
 
@@ -89,8 +89,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01-PLAN.md — Export utility module (DOM-based SVG manipulation, font injection, context-stroke fix, logo validation, UTF-8-safe encoding, font cache warming) + Inter variable font asset + unit tests
-- [ ] 04-02-PLAN.md — ExportDropdown component with wrapper-span tooltip + component tests, DiagramBuilder header integration with font preloading, visual verification
+- [x] 04-01-PLAN.md — Export utility module (DOM-based SVG manipulation, font injection, context-stroke fix, logo validation, UTF-8-safe encoding, font cache warming) + Inter variable font asset + unit tests
+- [x] 04-02-PLAN.md — ExportDropdown component with wrapper-span tooltip + component tests, DiagramBuilder header integration with font preloading, visual verification
 
 ## Progress
 
@@ -100,6 +100,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Foundation | 5/5 | Completed | 2026-03-24 |
-| 2. Rendering Engine | 0/5 | Planned | - |
-| 3. Configurator UI | 0/4 | Planned | - |
-| 4. Export Pipeline | 0/2 | Planned | - |
+| 2. Rendering Engine | 5/5 | Completed | 2026-03-24 |
+| 3. Configurator UI | 4/4 | Completed | 2026-03-25 |
+| 4. Export Pipeline | 2/2 | Completed | 2026-03-25 |

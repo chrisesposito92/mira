@@ -8,7 +8,7 @@
 ### Component Library
 
 - [x] **COMP-01**: Pre-populated system nodes for all m3ter native connectors with company logos
-- [ ] **COMP-02**: User can create custom system nodes with a name and optional logo (fetched via Logo.dev)
+- [x] **COMP-02**: User can create custom system nodes with a name and optional logo (fetched via Logo.dev)
 - [x] **COMP-03**: Systems organized into grouped categories (Front Office Stack, Finance Stack, Analytics Stack, etc.)
 - [x] **COMP-04**: Customizable "Your Product/Platform" prospect node with editable name
 - [x] **COMP-05**: m3ter hub node always present and centered, displaying internal capability labels (Usage, Pricing, Rating, Credits, Alerts, Limits)
@@ -49,7 +49,7 @@
 
 ### Navigation & Organization
 
-- [ ] **NAV-01**: Top-level "Diagrams" section in the sidebar navigation
+- [x] **NAV-01**: Top-level "Diagrams" section in the sidebar navigation
 - [x] **NAV-02**: Diagram optionally linked to an existing MIRA Project
 - [x] **NAV-03**: User can create a new diagram from the Diagrams section
 - [x] **NAV-04**: User can delete a diagram
@@ -90,7 +90,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | COMP-01 | Phase 1 | Complete |
-| COMP-02 | Phase 2 | Pending |
+| COMP-02 | Phase 2 | Complete |
 | COMP-03 | Phase 1 | Complete |
 | COMP-04 | Phase 2 | Complete |
 | COMP-05 | Phase 2 | Complete |
@@ -129,4 +129,4 @@
 
 ---
 *Requirements defined: 2026-03-23*
-*Last updated: 2026-03-23 after roadmap creation — traceability complete, PERS-06 moved to v2*
+*Last updated: 2026-03-25 — all v1 requirements complete, milestone audit passed*
