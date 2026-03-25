@@ -5,8 +5,10 @@
 	import { DiagramRenderer, AddCustomSystemDialog } from '$lib/components/diagram';
 	import BuilderSidebar from './builder/BuilderSidebar.svelte';
 	import SaveStatusIndicator from './builder/SaveStatusIndicator.svelte';
+	import ExportDropdown from './builder/ExportDropdown.svelte';
 	import { diagramStore } from '$lib/stores';
 	import { createApiClient, createDiagramService } from '$lib/services';
+	import { warmFontCache } from '$lib/utils/export-diagram.js';
 	import { ArrowLeft } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import type { Diagram, DiagramSystem, ComponentLibraryItem } from '$lib/types';
@@ -39,6 +41,23 @@
 		diagramStore.componentLibrary = data.components;
 		return () => diagramStore.clearEditor();
 	});
+
+	// Pre-warm the export font cache so first export is instant (D-02).
+	// Safe to call multiple times -- no-ops if already cached.
+	$effect(() => {
+		warmFontCache();
+	});
+
+	/**
+	 * Export is enabled when the diagram has at least one user-added system.
+	 * "User-added" means role is NOT 'hub' (always present) and NOT 'prospect'
+	 * (always synthetic). Systems with role 'system' or null are user-added.
+	 */
+	const hasUserSystems = $derived(
+		(diagramStore.currentDiagram?.content.systems.filter(
+			(s) => s.role !== 'hub' && s.role !== 'prospect',
+		).length ?? 0) > 0,
+	);
 
 	const contentSnapshot = $derived(
 		diagramStore.currentDiagram ? JSON.stringify(diagramStore.currentDiagram.content) : null,
@@ -169,7 +188,14 @@
 				{/if}
 			</div>
 		</div>
-		<SaveStatusIndicator status={saveStatus} />
+		<div class="flex items-center gap-2">
+			<SaveStatusIndicator status={saveStatus} />
+			<ExportDropdown
+				disabled={!hasUserSystems}
+				customerName={diagramStore.currentDiagram?.customer_name ?? ''}
+				title={diagramStore.currentDiagram?.title ?? ''}
+			/>
+		</div>
 	</div>
 
 	<!-- Body: sidebar + preview -->
