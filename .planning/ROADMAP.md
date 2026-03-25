@@ -89,8 +89,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01-PLAN.md — Export utility module (exportDiagram, font injection, context-stroke fix, slugify) + Inter variable font asset + unit tests
-- [ ] 04-02-PLAN.md — ExportDropdown component, DiagramBuilder header integration, visual verification
+- [ ] 04-01-PLAN.md — Export utility module (DOM-based SVG manipulation, font injection, context-stroke fix, logo validation, UTF-8-safe encoding, font cache warming) + Inter variable font asset + unit tests
+- [ ] 04-02-PLAN.md — ExportDropdown component with wrapper-span tooltip + component tests, DiagramBuilder header integration with font preloading, visual verification
 
 ## Progress
 
