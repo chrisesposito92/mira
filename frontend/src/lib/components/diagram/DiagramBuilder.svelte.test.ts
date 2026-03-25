@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 
 describe('Auto-save version counter logic', () => {
 	it('increments version on each save call', () => {
-		let saveVersion = 0;
-		const v1 = ++saveVersion;
-		const v2 = ++saveVersion;
+		const counter = { value: 0 };
+		const v1 = ++counter.value;
+		const v2 = ++counter.value;
 		expect(v1).toBe(1);
 		expect(v2).toBe(2);
 		expect(v2).not.toBe(v1);

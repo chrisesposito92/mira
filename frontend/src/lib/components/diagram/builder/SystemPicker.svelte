@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { ChevronDown, Plus, X } from 'lucide-svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { diagramStore } from '$lib/stores';
 	import { snakeToTitle } from '$lib/utils.js';
 	import SystemPickerItem from './SystemPickerItem.svelte';
@@ -22,10 +23,8 @@
 
 	const filteredGroups = $derived.by(() => {
 		const query = searchQuery.toLowerCase();
-		const filtered = componentLibrary.filter((item) =>
-			item.name.toLowerCase().includes(query),
-		);
-		const groups = new Map<string, ComponentLibraryItem[]>();
+		const filtered = componentLibrary.filter((item) => item.name.toLowerCase().includes(query));
+		const groups = new SvelteMap<string, ComponentLibraryItem[]>();
 		for (const item of filtered.sort((a, b) => a.display_order - b.display_order)) {
 			const existing = groups.get(item.category) ?? [];
 			existing.push(item);
@@ -67,11 +66,7 @@
 	<!-- Search -->
 	<div class="shrink-0 p-3">
 		<search aria-label="Search systems">
-			<Input
-				placeholder="Search systems..."
-				bind:value={searchQuery}
-				class="h-9"
-			/>
+			<Input placeholder="Search systems..." bind:value={searchQuery} class="h-9" />
 		</search>
 	</div>
 
@@ -81,7 +76,9 @@
 			<!-- Current Systems (removable) -->
 			{#if currentSystems.length > 0}
 				<div class="mb-3">
-					<p class="text-muted-foreground mb-1.5 px-2 text-xs font-semibold uppercase tracking-wider">
+					<p
+						class="text-muted-foreground mb-1.5 px-2 text-xs font-semibold tracking-wider uppercase"
+					>
 						Current Systems
 					</p>
 					{#each currentSystems as system (system.id)}
@@ -111,7 +108,9 @@
 					<Collapsible.Trigger
 						class="hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-1.5 transition-colors"
 					>
-						<ChevronDown class="size-4 shrink-0 transition-transform [[data-state=closed]>&]:rotate-[-90deg]" />
+						<ChevronDown
+							class="size-4 shrink-0 transition-transform [[data-state=closed]>&]:rotate-[-90deg]"
+						/>
 						<span class="text-sm font-semibold">{snakeToTitle(category)}</span>
 						<Badge variant="secondary" class="ml-auto text-xs">{items.length}</Badge>
 					</Collapsible.Trigger>

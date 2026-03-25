@@ -36,7 +36,8 @@
 <div class="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
 	<div class="min-w-0 flex-1">
 		<p class="truncate text-sm">
-			{systemName(connection.source_id)} {arrow}
+			{systemName(connection.source_id)}
+			{arrow}
 			{systemName(connection.target_id)}
 		</p>
 		{#if connection.label}

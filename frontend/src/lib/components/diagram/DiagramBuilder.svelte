@@ -50,18 +50,24 @@
 		const thisVersion = ++saveVersion;
 		saveStatus = 'saving';
 
-		await diagramStore.updateContent(service, diagramStore.currentDiagram.content);
+		try {
+			// Send content to server but DON'T replace local state with response.
+			// This prevents stale responses from overwriting newer local edits
+			// when the user makes changes while a save is in flight.
+			await service.update(diagramStore.currentDiagram.id, {
+				content: diagramStore.currentDiagram.content,
+			});
 
-		if (thisVersion !== saveVersion) return;
+			if (thisVersion !== saveVersion) return;
 
-		if (!diagramStore.error) {
 			saveStatus = 'saved';
 			const now = Date.now();
 			if (now - lastThumbnailTime > 10_000) {
 				lastThumbnailTime = now;
 				await generateAndPersistThumbnail();
 			}
-		} else {
+		} catch {
+			if (thisVersion !== saveVersion) return;
 			saveStatus = 'error';
 			toast.error('Changes could not be saved. Check your connection and try again.');
 		}
@@ -69,7 +75,8 @@
 
 	// Auto-save $effect: triggers on content changes with 500ms debounce
 	$effect(() => {
-		const _snapshot = contentSnapshot;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const _track = contentSnapshot;
 
 		if (isInitialLoad) {
 			isInitialLoad = false;
@@ -96,7 +103,7 @@
 			saveTimeoutId = null;
 			performSave();
 		}
-		if (diagramStore.currentDiagram) {
+		if (diagramStore.currentDiagram && saveStatus !== 'error') {
 			generateAndPersistThumbnail();
 		}
 	});

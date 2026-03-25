@@ -140,9 +140,7 @@ class DiagramStore {
 			...this.currentDiagram,
 			content: {
 				...this.currentDiagram.content,
-				connections: this.currentDiagram.content.connections.filter(
-					(c) => c.id !== connectionId,
-				),
+				connections: this.currentDiagram.content.connections.filter((c) => c.id !== connectionId),
 			},
 		};
 	}

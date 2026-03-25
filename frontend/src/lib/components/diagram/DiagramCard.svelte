@@ -22,11 +22,7 @@
 	<Card.Root class="hover:border-primary/50 h-full overflow-hidden transition-colors">
 		<div class="bg-muted relative aspect-video w-full overflow-hidden rounded-t-xl">
 			{#if diagram.thumbnail_base64}
-				<img
-					src={diagram.thumbnail_base64}
-					alt=""
-					class="h-full w-full object-cover"
-				/>
+				<img src={diagram.thumbnail_base64} alt="" class="h-full w-full object-cover" />
 			{:else}
 				<div class="flex h-full w-full items-center justify-center">
 					<Network class="text-muted-foreground size-8" aria-hidden="true" />

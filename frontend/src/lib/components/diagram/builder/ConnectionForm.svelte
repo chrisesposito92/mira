@@ -25,6 +25,7 @@
 
 	let sourceId = $state<string>(editingConnection?.source_id ?? '');
 	let targetId = $state<string>(editingConnection?.target_id ?? '');
+	// eslint-disable-next-line svelte/prefer-writable-derived -- direction is synced from isBidirectional toggle + edit prefill
 	let direction = $state<'unidirectional' | 'bidirectional'>(
 		editingConnection?.direction ?? 'unidirectional',
 	);
@@ -64,10 +65,18 @@
 		}
 	});
 
-	// Reset userHasChangedType when source/target changes (BEFORE auto-suggest)
+	// Reset userHasChangedType when source/target changes from user selection.
+	// Skip during edit prefill (source/target match editing connection) to preserve saved type.
 	$effect(() => {
-		const _s = sourceId;
-		const _t = targetId;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const _track = `${sourceId}:${targetId}`;
+		if (
+			editingConnection &&
+			sourceId === editingConnection.source_id &&
+			targetId === editingConnection.target_id
+		) {
+			return;
+		}
 		userHasChangedType = false;
 	});
 
