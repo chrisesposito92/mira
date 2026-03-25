@@ -86,9 +86,7 @@ describe('ExportDropdown logic', () => {
 				mockToastError('Export failed. Try refreshing the page and exporting again.');
 			}
 
-			expect(errors).toContain(
-				'Export failed. Try refreshing the page and exporting again.',
-			);
+			expect(errors).toContain('Export failed. Try refreshing the page and exporting again.');
 		});
 
 		it('shows error when SVG element is not found', () => {
@@ -102,9 +100,7 @@ describe('ExportDropdown logic', () => {
 			}
 
 			expect(errors).toHaveLength(1);
-			expect(errors[0]).toBe(
-				'Export failed. Try refreshing the page and exporting again.',
-			);
+			expect(errors[0]).toBe('Export failed. Try refreshing the page and exporting again.');
 		});
 	});
 
@@ -146,9 +142,7 @@ describe('ExportDropdown logic', () => {
 				{ id: '2', name: 'Custom System', role: undefined },
 			];
 			const hasUserSystems =
-				systems.filter(
-					(s) => s.role !== 'hub' && s.role !== 'prospect',
-				).length > 0;
+				systems.filter((s) => s.role !== 'hub' && s.role !== 'prospect').length > 0;
 			expect(hasUserSystems).toBe(true);
 		});
 
