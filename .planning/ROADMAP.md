@@ -85,8 +85,12 @@ Plans:
   2. SE can export the diagram as SVG — file opens correctly in vector tools with all text and paths intact
   3. All logos are pre-fetched and inlined as base64 data URLs before export — no blank logo squares in the output
   4. Fonts render consistently in the exported file regardless of whether the receiving machine has the font installed
-**Plans**: TBD
+**Plans:** 2 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 04-01-PLAN.md — Export utility module (exportDiagram, font injection, context-stroke fix, slugify) + Inter variable font asset + unit tests
+- [ ] 04-02-PLAN.md — ExportDropdown component, DiagramBuilder header integration, visual verification
 
 ## Progress
 
@@ -98,4 +102,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Data Foundation | 5/5 | Completed | 2026-03-24 |
 | 2. Rendering Engine | 0/5 | Planned | - |
 | 3. Configurator UI | 0/4 | Planned | - |
-| 4. Export Pipeline | 0/? | Not started | - |
+| 4. Export Pipeline | 0/2 | Planned | - |
