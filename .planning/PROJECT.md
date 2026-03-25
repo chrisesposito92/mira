@@ -17,23 +17,24 @@ An SE can produce a professional, customer-ready integration architecture diagra
 - ✓ Supabase database with repository pattern — existing
 - ✓ FastAPI backend with async handlers — existing
 - ✓ Project entity model (customer-scoped) — existing
+- ✓ Top-level "Diagrams" nav section accessible from sidebar — Phase 1
+- ✓ Diagram entity tied to a customer name, optionally linked to a Project — Phase 1
+- ✓ Component library with m3ter native connector systems plus custom nodes — Phase 1
+- ✓ Company logos for all systems in the component library — Phase 1/2
+- ✓ Custom node support (user-defined name, optional logo fetch) — Phase 2
+- ✓ Live preview rendering in m3ter's branded visual style — Phase 2
+- ✓ Grouped system categories with sub-items and multiple logos — Phase 2
+- ✓ m3ter always centered as the hub node with internal capability labels — Phase 2
+- ✓ "Your Product/Platform" customizable top node for the prospect's product — Phase 2
+- ✓ Configurator UI to add systems, define connections, set data flow direction and labels — Phase 3
+- ✓ Color-coded connection types: Native Connector (green), Webhook/API (blue), Custom Build (orange) — Phase 3
+- ✓ Diagrams persisted to Supabase — revisitable and editable — Phase 3
+- ✓ Diagram list view with customer name, last edited, thumbnail — Phase 3
+- ✓ Export to PNG and SVG — Phase 4
 
 ### Active
 
-- [ ] Top-level "Diagrams" nav section accessible from sidebar
-- [ ] Diagram entity tied to a customer name, optionally linked to a Project
-- [ ] Component library with m3ter native connector systems (from docs.m3ter.com/guides/integrations) plus custom nodes
-- [ ] Company logos for all systems in the component library
-- [ ] Custom node support (user-defined name, optional logo fetch)
-- [ ] Configurator UI to add systems, define connections, set data flow direction and labels
-- [ ] Color-coded connection types: Native Connector (green), Webhook/API (blue), Custom Build (orange)
-- [ ] Live preview rendering in m3ter's branded visual style (navy background, white card containers, green m3ter accent, company logos, colored data flow pills, dashed connection lines)
-- [ ] Grouped system categories (Front Office Stack, Finance Stack, Analytics Stack, etc.) with sub-items and multiple logos
-- [ ] m3ter always centered as the hub node with internal capability labels
-- [ ] "Your Product/Platform" customizable top node for the prospect's product
-- [ ] Export to PNG and SVG
-- [ ] Diagrams persisted to Supabase — revisitable and editable
-- [ ] Diagram list view with customer name, last edited, thumbnail
+(All v1.0 requirements validated.)
 
 ### Out of Scope
 
@@ -89,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-23 after initialization*
+*Last updated: 2026-03-25 after Phase 4 completion — all v1.0 milestone phases complete*
