@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-25T14:32:55.155Z"
+status: Milestone complete
+stopped_at: "Paused at 04-02 Task 2 checkpoint:human-verify"
+last_updated: "2026-03-25T16:27:50.640Z"
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 14
-  completed_plans: 14
+  completed_phases: 4
+  total_plans: 16
+  completed_plans: 16
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** An SE can produce a professional, customer-ready integration architecture diagram in minutes instead of hand-drawing on calls or cobbling together slides.
-**Current focus:** Phase 03 — configurator-ui
+**Current focus:** Phase 04 — export-pipeline
 
 ## Current Position
 
-Phase: 4
+Phase: 04
 Plan: Not started
 
 ## Performance Metrics
@@ -59,6 +59,7 @@ Plan: Not started
 | Phase 03 P02 | 5min | 2 tasks | 10 files |
 | Phase 03 P03 | 5min | 2 tasks | 7 files |
 | Phase 03 P04 | 146min | 3 tasks | 5 files |
+| Phase 04 P01 | 240s | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Recent decisions affecting current work:
 - [Phase 02]: All SVG text uses truncateSvgText to prevent overflow; tests check both hex and rgb() for jsdom compatibility
 - [Phase 02]: Three-layer SVG rendering (rect bg → nodes → connection pills) ensures clean export
 - [Phase 02]: Service built in component, not returned from +page.ts load
+- [Phase 04]: Variable font (wght 100-900) instead of single 400 weight -- SVG uses font-weights 500, 600, 700
+- [Phase 04]: DOM-based SVG manipulation via DOMParser instead of regex string surgery for reliability
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T14:32:55.152Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-export-pipeline/04-CONTEXT.md
+Last session: 2026-03-25T16:14:32.487Z
+Stopped at: Paused at 04-02 Task 2 checkpoint:human-verify
+Resume file: None
