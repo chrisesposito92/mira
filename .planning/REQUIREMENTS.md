@@ -44,7 +44,7 @@
 - [x] **PERS-02**: Diagram list view showing customer name, last edited date
 - [x] **PERS-03**: User can load and continue editing a saved diagram
 - [x] **PERS-04**: Auto-save with debounced 500ms idle trigger
-- [ ] **PERS-05**: Thumbnail preview generated and displayed in diagram list view
+- [x] **PERS-05**: Thumbnail preview generated and displayed in diagram list view
 - [x] **PERS-07**: Diagram data model includes schema_version field for future migration safety
 
 ### Navigation & Organization
@@ -114,7 +114,7 @@
 | PERS-02 | Phase 3 | Complete |
 | PERS-03 | Phase 3 | Complete |
 | PERS-04 | Phase 3 | Complete |
-| PERS-05 | Phase 3 | Pending |
+| PERS-05 | Phase 3 | Complete |
 | PERS-06 | v2 | Deferred |
 | PERS-07 | Phase 1 | Complete |
 | NAV-01 | Phase 1 | Complete |

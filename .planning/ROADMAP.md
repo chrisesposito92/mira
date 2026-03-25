@@ -74,7 +74,7 @@ Plans:
 - [x] 03-01-PLAN.md — Backend thumbnail in list response, DiagramStore connection CRUD + removeSystem, utility functions (debounce, formatRelativeTime)
 - [x] 03-02-PLAN.md — Install shadcn components, DiagramBuilder layout + SystemPicker + SaveStatusIndicator
 - [x] 03-03-PLAN.md — ConnectionForm with auto-suggest, ConnectionList, SettingsPanel
-- [ ] 03-04-PLAN.md — Auto-save with thumbnail generation, DiagramCard enhancement, visual verification
+- [x] 03-04-PLAN.md — Auto-save with thumbnail generation, DiagramCard enhancement, visual verification
 
 ### Phase 4: Export Pipeline
 **Goal**: An SE can export a finished diagram as a high-quality PNG or SVG suitable for slides and proposals
