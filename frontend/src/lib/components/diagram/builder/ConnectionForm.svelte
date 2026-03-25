@@ -1,10 +1,10 @@
 <script lang="ts">
 	import * as Select from '$lib/components/ui/select';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
-	import { Switch } from '$lib/components/ui/switch';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
+	import { ArrowRight, ArrowLeftRight } from 'lucide-svelte';
 	import { diagramStore } from '$lib/stores';
 	import { HUB_ENDPOINT, getSuggestionsForSystem } from './suggestions.js';
 	import type { DiagramConnection, DiagramSystem, ComponentLibraryItem } from '$lib/types';
@@ -184,9 +184,28 @@
 	</div>
 
 	<!-- Direction -->
-	<div class="flex items-center justify-between">
-		<Label>{isBidirectional ? 'Two-way' : 'One-way'}</Label>
-		<Switch bind:checked={isBidirectional} />
+	<div class="space-y-1.5">
+		<Label>Direction</Label>
+		<div class="flex gap-2">
+			<Button
+				variant={!isBidirectional ? 'default' : 'outline'}
+				size="sm"
+				class="flex-1 gap-1.5"
+				onclick={() => (isBidirectional = false)}
+			>
+				<ArrowRight class="size-3.5" />
+				One-way
+			</Button>
+			<Button
+				variant={isBidirectional ? 'default' : 'outline'}
+				size="sm"
+				class="flex-1 gap-1.5"
+				onclick={() => (isBidirectional = true)}
+			>
+				<ArrowLeftRight class="size-3.5" />
+				Two-way
+			</Button>
+		</div>
 	</div>
 
 	<!-- Integration Type -->

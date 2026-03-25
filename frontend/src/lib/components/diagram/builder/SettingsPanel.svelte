@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Button } from '$lib/components/ui/button';
+	import { Eye, EyeOff } from 'lucide-svelte';
 	import { diagramStore } from '$lib/stores';
 	import type { DiagramSettings } from '$lib/types';
 
@@ -41,18 +41,10 @@
 		diagramStore.currentDiagram?.content.settings.show_labels ?? true,
 	);
 
-	// Sync showLabels toggle with store — untrack store reads to prevent infinite loop
-	let showLabelsInit = false;
-	$effect(() => {
-		const val = showLabels;
-		if (!showLabelsInit) {
-			showLabelsInit = true;
-			return;
-		}
-		untrack(() => {
-			updateSettings({ show_labels: val });
-		});
-	});
+	function toggleShowLabels() {
+		showLabels = !showLabels;
+		updateSettings({ show_labels: showLabels });
+	}
 </script>
 
 <div class="space-y-6">
@@ -72,8 +64,21 @@
 	</div>
 
 	<!-- Show Connection Labels -->
-	<div class="flex items-center justify-between">
+	<div class="space-y-1.5">
 		<Label class="text-sm font-semibold">Show Connection Labels</Label>
-		<Switch bind:checked={showLabels} />
+		<Button
+			variant={showLabels ? 'default' : 'outline'}
+			size="sm"
+			class="gap-1.5"
+			onclick={toggleShowLabels}
+		>
+			{#if showLabels}
+				<Eye class="size-3.5" />
+				Visible
+			{:else}
+				<EyeOff class="size-3.5" />
+				Hidden
+			{/if}
+		</Button>
 	</div>
 </div>
