@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-stopped_at: "Paused at 04-02 Task 2 checkpoint:human-verify"
-last_updated: "2026-03-25T16:27:50.640Z"
+milestone_name: MVP
+status: v1.0 shipped
+stopped_at: "Milestone complete"
+last_updated: "2026-03-25T19:15:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -16,96 +16,53 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-23)
+See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** An SE can produce a professional, customer-ready integration architecture diagram in minutes instead of hand-drawing on calls or cobbling together slides.
-**Current focus:** Phase 04 — export-pipeline
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 04
-Plan: Not started
+Milestone: v1.0 MVP shipped
+Next: `/gsd:new-milestone` to define v1.1
 
 ## Performance Metrics
 
-**Velocity:**
+**v1.0 Velocity:**
 
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
-
-**Recent Trend:**
-
-- Last 5 plans: —
-- Trend: —
-
-*Updated after each plan completion*
-| Phase 01 P02 | 2min | 2 tasks | 6 files |
-| Phase 01 P01 | 2min | 2 tasks | 5 files |
-| Phase 01 P03 | 2min | 2 tasks | 6 files |
-| Phase 01 P05 | 229s | 2 tasks | 4 files |
-| Phase 02 P02 | 215s | 1 tasks | 2 files |
-| Phase 02 P01 | 342s | 3 tasks | 6 files |
-| Phase 02 P04 | 215s | 1 tasks | 3 files |
-| Phase 02 P03 | 514s | 2 tasks | 14 files |
-| Phase 02 P05 | 408s | 2 tasks | 9 files |
-| Phase 03 P01 | 4min | 3 tasks | 8 files |
-| Phase 03 P02 | 5min | 2 tasks | 10 files |
-| Phase 03 P03 | 5min | 2 tasks | 7 files |
-| Phase 03 P04 | 146min | 3 tasks | 5 files |
-| Phase 04 P01 | 240s | 1 tasks | 5 files |
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 01 P01 | 2min | 2 | 5 |
+| Phase 01 P02 | 2min | 2 | 6 |
+| Phase 01 P03 | 2min | 2 | 6 |
+| Phase 01 P05 | 229s | 2 | 4 |
+| Phase 02 P01 | 342s | 3 | 6 |
+| Phase 02 P02 | 215s | 1 | 2 |
+| Phase 02 P03 | 514s | 2 | 14 |
+| Phase 02 P04 | 215s | 1 | 3 |
+| Phase 02 P05 | 408s | 2 | 9 |
+| Phase 03 P01 | 4min | 3 | 8 |
+| Phase 03 P02 | 5min | 2 | 10 |
+| Phase 03 P03 | 5min | 2 | 7 |
+| Phase 03 P04 | 146min | 3 | 5 |
+| Phase 04 P01 | 240s | 1 | 5 |
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- [Roadmap]: Configurator over WYSIWYG canvas — guarantees polished output, faster to build
-- [Roadmap]: Export is Phase 4 (last) — wraps the stable renderer; export pitfalls (canvas taint, font inlining) mitigated in Phase 2
-- [Roadmap]: Logo proxy established in Phase 1/2 — cannot be retrofitted; canvas taint is a silent failure
-- [Roadmap]: PERS-06 (versioning/changelog) deferred — conflicts with PROJECT.md Out of Scope; confirm with user if v1 or v2
-- [Phase 01]: Diagram types in separate diagram.ts file (not api.ts) since diagrams are a new feature domain
-- [Phase 01]: 29 seed systems in component_library across 10 categories with slug UNIQUE for upsert safety
-- [Phase 01]: DiagramListResponse excludes content and thumbnail_base64 for list performance
-- [Phase 01]: Component library service takes no user_id -- shared reference data with auth enforced at API layer
-- [Phase 01]: Logo proxy uses multi-layer SSRF protection: FQDN regex + IP rejection + hostname blocklist + content-type + size cap
-- [Phase 01]: Used get_supabase_client() in seed script (outside FastAPI DI context)
-- [Phase 01]: Monogram format monogram:<INITIALS>:<COLOR> for Phase 2 renderer parsing
-- [Phase 02]: clearEditor() as separate method for granular reset; clear() delegates to it
-- [Phase 02]: updateContent replaces full currentDiagram from server response for consistency
-- [Phase 02]: Prospect detection uses explicit role field first with heuristic fallback for backward compatibility
-- [Phase 02]: NodePositionMap keyed by system ID plus hub for O(1) connection anchor lookup
-- [Phase 02]: jsdom normalizes hex colors to rgb() in style attributes -- tests assert rgb() values not hex
-- [Phase 02]: GroupCard uses compact GroupItem renderer (not nested SystemCards) to match spec logo grid visual
-- [Phase 02]: All SVG text uses truncateSvgText to prevent overflow; tests check both hex and rgb() for jsdom compatibility
-- [Phase 02]: Three-layer SVG rendering (rect bg → nodes → connection pills) ensures clean export
-- [Phase 02]: Service built in component, not returned from +page.ts load
-- [Phase 04]: Variable font (wght 100-900) instead of single 400 weight -- SVG uses font-weights 500, 600, 700
-- [Phase 04]: DOM-based SVG manipulation via DOMParser instead of regex string surgery for reliability
+Full decision log in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-- [Phase 1]: Confirm exact component library seed list (~9 from research vs "~30" in AGENTS.md) before schema migration
-- [Phase 1]: Confirm Logo.dev free tier (500K req/mo) is sufficient for SE usage volume
-- [Phase 2]: SVG renderer requires precise layout math for hub-and-spoke — prototype coordinate system before full build
-- [Phase 2]: Confirm m3ter brand font name/file; if unavailable, use Inter (simplifies Phase 4 font inlining)
-- [Phase 4]: Verify base64 font injection approach works with html-to-image@1.11.11 before full ExportService build
-- [Coverage]: PERS-06 ("multiple versions with changelog") is listed as v1 in REQUIREMENTS.md but is in PROJECT.md Out of Scope — deferred to v2 pending user confirmation
+None — v1.0 complete.
 
 ## Session Continuity
 
-Last session: 2026-03-25T16:14:32.487Z
-Stopped at: Paused at 04-02 Task 2 checkpoint:human-verify
+Last session: 2026-03-25
+Stopped at: Milestone v1.0 complete
 Resume file: None
