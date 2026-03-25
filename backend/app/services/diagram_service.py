@@ -7,10 +7,11 @@ from supabase import Client
 
 from app.schemas.diagrams import DiagramCreate, DiagramUpdate
 
-# Fields to SELECT for list queries -- excludes content and thumbnail_base64
-# for performance (addresses Codex review concern about list payload size)
+# Fields to SELECT for list queries -- excludes content JSONB for performance
+# but includes thumbnail_base64 for card display (typically 5-15KB)
 LIST_SELECT_FIELDS = (
-    "id,user_id,customer_name,title,project_id,schema_version,created_at,updated_at"
+    "id,user_id,customer_name,title,project_id,schema_version,"
+    "thumbnail_base64,created_at,updated_at"
 )
 
 

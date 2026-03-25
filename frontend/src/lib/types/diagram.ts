@@ -45,8 +45,7 @@ export interface Diagram {
 	updated_at: string;
 }
 
-/** Lightweight diagram for list queries -- excludes content and thumbnail_base64.
- *  Addresses review concern: list endpoint performance. */
+/** Lightweight diagram for list queries -- excludes content JSONB. */
 export interface DiagramListItem {
 	id: string;
 	user_id: string;
@@ -54,6 +53,7 @@ export interface DiagramListItem {
 	title: string;
 	project_id: string | null;
 	schema_version: number;
+	thumbnail_base64: string | null;
 	created_at: string;
 	updated_at: string;
 }

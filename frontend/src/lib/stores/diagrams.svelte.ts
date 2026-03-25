@@ -40,7 +40,7 @@ class DiagramStore {
 		this.error = null;
 		try {
 			const diagram = await service.create(data);
-			// Append to list as a DiagramListItem (omit content/thumbnail)
+			// Append to list as a DiagramListItem (omit content)
 			this.diagrams = [
 				...this.diagrams,
 				{
@@ -50,6 +50,7 @@ class DiagramStore {
 					title: diagram.title,
 					project_id: diagram.project_id,
 					schema_version: diagram.schema_version,
+					thumbnail_base64: null,
 					created_at: diagram.created_at,
 					updated_at: diagram.updated_at,
 				},

@@ -87,9 +87,8 @@ class DiagramResponse(BaseModel):
 class DiagramListResponse(BaseModel):
     """Lightweight diagram response for list endpoint.
 
-    Excludes content and thumbnail_base64 to avoid returning large
-    JSONB payloads and base64 strings in list queries.
-    Addresses review concern: list performance degradation.
+    Excludes content JSONB but includes thumbnail_base64 for card display.
+    Thumbnail is typically 5-15KB base64 — acceptable for v1 list sizes (<50).
     """
 
     id: UUID
@@ -98,6 +97,7 @@ class DiagramListResponse(BaseModel):
     title: str
     project_id: UUID | None = None
     schema_version: int
+    thumbnail_base64: str | None = None
     created_at: datetime
     updated_at: datetime
 
